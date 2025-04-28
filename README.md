@@ -2,7 +2,7 @@
 
 |Source|Version|CI|License|
 |------|-------|-------|-------|
-|[![Source Code](https://img.shields.io/badge/source-github-blue.svg)](https://github.com/grzegorzfranus/ansible-role-nftables)|[![Version](https://img.shields.io/github/v/release/grzegorzfranus/ansible-role-nftables)](https://github.com/grzegorzfranus/ansible-role-nftables/releases)|[![tests](https://github.com/grzegorzfranus/ansible-role-nftables/actions/workflows/ci.yml/badge.svg)](https://github.com/grzegorzfranus/ansible-role-nftables/actions)|[![Repository License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)|
+|[![Source Code](https://img.shields.io/badge/source-github-blue.svg)](https://github.com/grzegorzfranus/ansible-role-nftables)|[![Version](https://img.shields.io/github/v/release/grzegorzfranus/ansible-role-nftables)](https://github.com/grzegorzfranus/ansible-role-nftables/releases)|[![tests](https://github.com/grzegorzfranus/ansible-role-nftables/actions/workflows/ci.yml/badge.svg)](https://github.com/grzegorzfranus/ansible-role-nftables/actions)|[![Repository License](https://img.shields.io/badge/license-apache2.0-brightgreen.svg)](LICENSE)|
 
 This Ansible role installs and configures NFTables, a powerful and flexible firewall system for Linux. It provides a comprehensive solution for network packet filtering with features like stateful connection tracking, rate limiting, logging, and NAT.
 
@@ -31,6 +31,7 @@ List of officially supported operating systems:
 | Debian | 12 (Bookworm) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 11 (Bullseye) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Rocky Linux | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
+| Oracle Linux | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 
 ### Ansible version
 
