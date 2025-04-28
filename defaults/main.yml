@@ -1,0 +1,265 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Default Variables
+# =============================================================================
+# This file defines default configuration values for the NFTables firewall.
+# These values can be overridden by setting them in your playbook or inventory.
+#
+# Sections:
+#   1. General Settings
+#   2. Logging Configuration
+#   3. Base Filter Chain Policies
+#   4. ICMP/Ping Settings
+#   5. Basic Access Control Settings
+#   6. Cluster Communication Settings
+#   7. User-Defined Rules Settings
+#   8. NAT Rules Settings
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. General Settings
+# -----------------------------------------------------------------------------
+# Role execution control and basic service configuration
+
+# Define which parts of the role to execute (Options: 'all', 'requirements', 'install', 'configure', 'rules', 'acl', 'logrotate', 'upgrade')
+nftables_role_action: "all"
+
+# Enable/disable NFTables service on boot
+nftables_service_enabled: true
+
+# Enable/disable logrotate configuration for NFTables logs
+nftables_configure_logrotate: true
+
+# Additional rule set configurations
+nftables_configure_security_rules: false
+
+# -----------------------------------------------------------------------------
+# 2. Logging Configuration
+# -----------------------------------------------------------------------------
+# Configuration for log rotation to manage NFTables log files
+nftables_logrotate_options:
+  # Directory where archived logs will be stored
+  archive_directory_path: "/var/log/nftables"
+  # How often to rotate logs (options: hourly, daily, weekly, monthly)
+  frequency: "daily"
+  # Number of rotated log files to keep
+  count: 90
+  # Don't error if log file is missing
+  missingok: true
+  # Compress rotated logs using gzip
+  compress: true
+  # Don't create new empty log file
+  nocreate: false
+  # Add date extension to rotated logs
+  dateext: true
+  # Note: copytruncate is always enabled to ensure continuous logging without service interruption
+
+# -----------------------------------------------------------------------------
+# 3. Base Filter Chain Policies
+# -----------------------------------------------------------------------------
+# Default policy for base filter chains (Options: 'accept', 'drop', 'reject')
+nftables_input_default_policy: "drop"
+nftables_forward_default_policy: "drop"
+nftables_output_default_policy: "drop"
+
+# Logging options for dropped packets in base filter chains
+# Enable/disable logging for packets dropped by respective chains
+nftables_log_input_dropped: true
+nftables_log_forward_dropped: true
+nftables_log_output_dropped: true
+
+# Rate limit settings for logging dropped packets
+# Syntax: "X/period" where period can be: second, minute, hour, day
+# Format example: "10/minute" means max 10 logs per minute
+nftables_log_input_dropped_rate_limit: "10/minute"
+nftables_log_input_dropped_burst: 10
+nftables_log_forward_dropped_rate_limit: "10/minute"
+nftables_log_forward_dropped_burst: 10
+nftables_log_output_dropped_rate_limit: "10/minute"
+nftables_log_output_dropped_burst: 10
+
+# -----------------------------------------------------------------------------
+# 4. ICMP/Ping Settings
+# -----------------------------------------------------------------------------
+# ICMP/Ping input configuration
+nftables_ping_input:
+  enabled: true
+  rate_limit: "3/second"
+  burst: 4
+  log: false
+  comment: "Allow limited ICMP/ping input"
+
+# ICMP/Ping output configuration
+nftables_ping_output:
+  enabled: true
+  rate_limit: "6/second"
+  burst: 8
+  log: false
+  comment: "Allow limited ICMP/ping output"
+
+# -----------------------------------------------------------------------------
+# 5. Basic Access Control Settings
+# -----------------------------------------------------------------------------
+# SSH configuration
+nftables_ssh:
+  enabled: true
+  port: 2202
+  source: "0.0.0.0/0"
+  rate_limit: "10/minute"
+  burst: 5
+  log: true
+  comment: "Allow SSH access"
+
+# -----------------------------------------------------------------------------
+# 6. Cluster Communication Settings
+# -----------------------------------------------------------------------------
+# Enable/disable cluster communication rules
+nftables_cluster_enabled: false
+
+# List of IP addresses for cluster nodes
+nftables_cluster_nodes:
+  - "192.168.1.10"
+  - "192.168.1.11"
+  - "192.168.1.12"
+
+# Rules for communication between cluster nodes
+nftables_cluster_rules:
+  # Example: Allow PostgreSQL database traffic
+  - port: 5432
+    protocol: tcp
+    log: false
+    comment: "PostgreSQL replication"
+  # Example: Allow Redis replication
+  - port: 6379
+    protocol: tcp
+    log: false
+    comment: "Redis replication"
+
+# -----------------------------------------------------------------------------
+# 7. User-Defined Rules Settings
+# -----------------------------------------------------------------------------
+# Enable/disable user-defined rules for each chain
+nftables_user_defined_input_enabled: false
+nftables_user_defined_forward_enabled: false
+nftables_user_defined_output_enabled: false
+
+# User-defined input rules
+nftables_user_defined_input_rules:
+  # Example: All options used
+  - source: "10.0.0.1"
+    destination: "192.168.1.100"
+    protocol: "tcp"
+    port: 12345
+    action: "accept"
+    log: true
+    counter: true
+    comment: "Full example: input rule with all options"
+  # Example: Allow HTTP traffic
+  - protocol: "tcp"
+    port: 80
+    action: "accept"
+    log: false
+    counter: true
+    comment: "Allow HTTP traffic"
+  # Example: Allow specific IP to access management port
+  - source: "10.0.0.100"
+    protocol: "tcp"
+    port: 8080
+    action: "accept"
+    log: true
+    counter: true
+    comment: "Allow management access from admin"
+
+# User-defined forward rules
+nftables_user_defined_forward_rules:
+  # Example: All options used
+  - in_interface: "eth0"
+    out_interface: "eth1"
+    source: "10.0.0.1"
+    destination: "192.168.1.100"
+    protocol: "udp"
+    port: 54321
+    action: "accept"
+    log: true
+    counter: true
+    comment: "Full example: forward rule with all options"
+  # Example: Forward traffic between specific interfaces
+  - in_interface: "eth0"
+    out_interface: "eth1"
+    action: "accept"
+    log: false
+    counter: true
+    comment: "Forward traffic from eth0 to eth1"
+
+# User-defined output rules
+nftables_user_defined_output_rules:
+  # Example: All options used
+  - source: "10.0.0.1"
+    destination: "192.168.1.100"
+    protocol: "tcp"
+    port: "2221,2222"
+    action: "accept"
+    log: true
+    counter: true
+    comment: "Full example: output rule with all options"
+  # Example: Allow DNS queries
+  - protocol: "udp"
+    port: 53
+    action: "accept"
+    log: false
+    counter: true
+    comment: "Allow DNS queries"
+  # Example: Allow HTTPS to specific destination
+  - destination: "192.168.10.20"
+    protocol: "tcp"
+    port: 443
+    action: "accept"
+    log: false
+    counter: true
+    comment: "Allow HTTPS to internal server"
+
+# -----------------------------------------------------------------------------
+# 8. NAT Rules Settings
+# -----------------------------------------------------------------------------
+# Enable/disable NAT rules for each chain
+nftables_nat_prerouting_enabled: false
+nftables_nat_postrouting_enabled: false
+
+# Destination NAT (DNAT) rules for port forwarding, etc.
+nftables_nat_prerouting_rules:
+  # Example: Port forwarding rule (forward port 80 to internal web server)
+  - in_interface: "eth0"
+    protocol: "tcp"
+    port: "80"
+    nat_action: "dnat"
+    nat_to: "192.168.1.100:80"
+    counter: true
+    log: false
+    comment: "Forward HTTP to internal web server"
+  # Example: Forward range of ports to DMZ server
+  - in_interface: "eth0"
+    protocol: "tcp"
+    port: "5000-5100"
+    nat_action: "dnat"
+    nat_to: "192.168.2.50"
+    counter: true
+    log: false
+    comment: "Forward port range to DMZ server"
+
+# Source NAT (SNAT) and masquerading rules for outbound connections
+nftables_nat_postrouting_rules:
+  # Example: Basic masquerading rule for internet access
+  - out_interface: "eth0"
+    source: "192.168.1.0/24"
+    nat_action: "masquerade"
+    counter: true
+    log: false
+    comment: "NAT for LAN clients"
+  # Example: Specific SNAT for a subnet
+  - out_interface: "eth0"
+    source: "192.168.2.0/24"
+    nat_action: "snat"
+    nat_to: "203.0.113.2"
+    counter: true
+    log: false
+    comment: "SNAT for DMZ subnet"

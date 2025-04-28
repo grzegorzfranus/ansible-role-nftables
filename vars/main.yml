@@ -1,0 +1,47 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Common Variables
+# =============================================================================
+# This file defines common variables shared across all distributions.
+# These values are distribution-agnostic and apply to all supported systems.
+#
+# Sections:
+#   1. Service Settings
+#   2. Package Settings
+#   3. Directory Paths
+#   4. Logging Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Service Settings
+# -----------------------------------------------------------------------------
+# Service name is consistent across most distributions
+# Note: This may be overridden in OS-specific vars if needed
+nftables_service_name: "nftables"
+
+# -----------------------------------------------------------------------------
+# 2. Package Settings
+# -----------------------------------------------------------------------------
+# Package name is consistent across most distributions
+# Note: This may be overridden in OS-specific vars if needed
+nftables_package_name: "nftables"
+
+# -----------------------------------------------------------------------------
+# 3. Directory Paths
+# -----------------------------------------------------------------------------
+# Standard location for NFTables rule files
+nftables_rules_directory_path: "/etc/nftables"
+
+# Standard location for NFTables log files
+nftables_log_directory_path: "/var/log/nftables"
+
+# -----------------------------------------------------------------------------
+# 4. Logging Configuration
+# -----------------------------------------------------------------------------
+# Path to logrotate configuration file
+# This path is standard across most Linux distributions
+nftables_logrotate_config_path: "/etc/logrotate.d/nftables"
+
+# Path to rsyslog configuration file for NFTables
+# Using prefix 55- to ensure proper ordering and avoid conflicts with other configs
+nftables_rsyslog_config_path: "/etc/rsyslog.d/55-nftables.conf"

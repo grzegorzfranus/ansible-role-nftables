@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Ubuntu-Specific Variables
+# =============================================================================
+# This file defines variables specific to Ubuntu-based distributions.
+# These values override or supplement the common variables defined in main.yml.
+#
+# Sections:
+#   1. Configuration Paths
+#   2. Logging Settings
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Configuration Paths
+# -----------------------------------------------------------------------------
+# Path to the main NFTables configuration file on Ubuntu systems
+nftables_config_path: "/etc/nftables.conf"
+
+# -----------------------------------------------------------------------------
+# 2. Logging Settings
+# -----------------------------------------------------------------------------
+# Path to the system log file on Ubuntu systems
+nftables_system_log_path: "/var/log/syslog"
+
+# User owner for log files and log directory
+# Ubuntu uses syslog user instead of root
+nftables_log_directory_user: "syslog"
+
+# Group owner for log files and log directory
+# Ubuntu uses adm group for log access
+nftables_log_directory_group: "adm"

@@ -1,0 +1,44 @@
+---
+galaxy_info:
+  role_name: nftables
+  author: Grzegorz Franus
+  namespace: grzegorzfranus
+  description: >
+    Ansible role to install and configure NFTables firewall.
+  license: Apache-2.0
+  company: EWARE
+  min_ansible_version: "2.15"
+
+  platforms:
+    - name: Debian
+      versions:
+        - "bookworm"
+        - "bullseye"
+      galaxy_tags:
+        - debian
+        - debian12
+        - debian11
+    - name: Ubuntu
+      versions:
+        - "noble"
+        - "jammy"
+      galaxy_tags:
+        - ubuntu
+        - ubuntu24
+        - ubuntu22
+    - name: Rocky
+      versions:
+        - "9.0"
+      galaxy_tags:
+        - rocky
+        - rocky9
+
+  galaxy_tags:
+    - nftables
+    - nft
+    - netfilter
+    - firewall
+    - security
+    - networking
+
+dependencies: []

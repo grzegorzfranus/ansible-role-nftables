@@ -1,0 +1,133 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Main Tasks
+# =============================================================================
+# This is the main task file for the NFTables role. It orchestrates the execution
+# of all role components in the correct order. Each task is tagged appropriately
+# to allow for selective execution.
+#
+# Flow:
+# 1. Load OS-specific variables
+# 2. Validate role requirements and variables
+# 3. Check system prerequisites
+# 4. Reboot system if required
+# 5. Install NFTables
+# 6. Configure NFTables
+# 7. Configure NFTables access control lists
+# 8. Setup logrotate (optional)
+# 9. Upgrade if requested
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. OS-Specific Variables
+# -----------------------------------------------------------------------------
+- name: NFTables | include_vars | Gather OS specific variables
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_major_version'] | lower }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_major_version'].split('.')[0] }}.yml"
+        - "{{ ansible_facts['os_family'] | lower }}.yml"
+        - "main.yml"
+      paths:
+        - "{{ role_path }}/vars"
+  tags:
+    - always
+    - setup
+    - init
+
+# -----------------------------------------------------------------------------
+# 2. Variable Validation
+# -----------------------------------------------------------------------------
+- name: NFTables | assert | Validate role variables and requirements
+  ansible.builtin.import_tasks: assert.yml
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - always
+    - validate
+    - check
+
+# -----------------------------------------------------------------------------
+# 3. System Prerequisites
+# -----------------------------------------------------------------------------
+- name: NFTables | prerequisites | Verify system prerequisites
+  ansible.builtin.include_tasks: prerequisites.yml
+  when: >
+    nftables_role_action in ['all', 'requirements']
+  tags:
+    - setup
+    - requirements
+
+# -----------------------------------------------------------------------------
+# 4. System Reboot (If Required)
+# -----------------------------------------------------------------------------
+- name: NFTables | reboot | Reboot system if required
+  ansible.builtin.include_tasks: reboot.yml
+  when: >
+    nftables_reboot_required | default(false) and
+    not (ansible_virtualization_type is defined and
+      ansible_virtualization_type == 'docker')
+  tags:
+    - reboot
+
+# -----------------------------------------------------------------------------
+# 5. Package Installation
+# -----------------------------------------------------------------------------
+- name: NFTables | install | Install NFTables package
+  ansible.builtin.include_tasks: install.yml
+  when: >
+    nftables_role_action in ['all', 'install']
+  tags:
+    - setup
+    - install
+
+# -----------------------------------------------------------------------------
+# 6. Service Configuration
+# -----------------------------------------------------------------------------
+- name: NFTables | configure | Configure NFTables service
+  ansible.builtin.include_tasks: configure.yml
+  when: >
+    nftables_role_action in ['all', 'configure']
+  tags:
+    - setup
+    - configure
+
+# -----------------------------------------------------------------------------
+# 7. Rules Configuration
+# -----------------------------------------------------------------------------
+- name: NFTables | acl | Configure access control lists for NFTables
+  ansible.builtin.include_tasks: acl.yml
+  when: >
+    nftables_role_action in ['all', 'configure', 'rules', 'acl']
+  tags:
+    - configure
+    - rules
+    - acl
+
+# -----------------------------------------------------------------------------
+# 8. Logrotate Configuration (Optional)
+# -----------------------------------------------------------------------------
+- name: NFTables | logrotate | Configure logrotate for NFTables service
+  ansible.builtin.include_tasks: logrotate.yml
+  when: >
+    nftables_role_action in ['all', 'configure', 'logrotate'] and
+    nftables_configure_logrotate | default(false)
+  tags:
+    - configure
+    - logrotate
+
+# -----------------------------------------------------------------------------
+# 9. Package Upgrade
+# -----------------------------------------------------------------------------
+- name: NFTables | upgrade | Upgrade NFTables package
+  ansible.builtin.include_tasks: upgrade.yml
+  when: >
+    nftables_role_action in ['upgrade']
+  tags:
+    - upgrade
+    - never

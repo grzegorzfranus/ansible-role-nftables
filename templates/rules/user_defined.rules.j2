@@ -1,0 +1,77 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# NFTables User-Defined Rules
+# =============================================================================
+# This file defines user-defined rules for the NFTables firewall.
+# It configures dedicated chains for custom rules which are referenced
+# from the main input, forward and output chains in the base.rules.j2 file.
+# =============================================================================
+
+{% if nftables_user_defined_input_enabled | default(false) or 
+      nftables_user_defined_forward_enabled | default(false) or 
+      nftables_user_defined_output_enabled | default(false) %}
+# -----------------------------------------------------------------------------
+# Extend the Base Filter Table with User-Defined Rules
+# -----------------------------------------------------------------------------
+table inet filter {
+    {% if nftables_user_defined_input_enabled | default(false) %}
+    # Define dedicated chain for user-defined input rules
+    chain user_defined_input {
+        {% for rule in nftables_user_defined_input_rules | default([]) %}
+        {%- set parts = [] -%}
+        {%- if rule.source is defined %} {%- set _ = parts.append('ip saddr ' ~ rule.source) %} {%- endif %}
+        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.protocol is defined %}
+            {%- if rule.port is defined %}
+                {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
+            {%- else %}
+                {%- set _ = parts.append(rule.protocol) %}
+            {%- endif %}
+        {%- endif %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : {{ rule.action | default('accept') }} : user : input : "{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined input rule') }}"
+        {% endfor %}
+    }
+    {% endif %}
+
+    {% if nftables_user_defined_forward_enabled | default(false) %}
+    # Define dedicated chain for user-defined forward rules
+    chain user_defined_forward {
+        {% for rule in nftables_user_defined_forward_rules | default([]) %}
+        {%- set parts = [] -%}
+        {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
+        {%- if rule.out_interface is defined %} {%- set _ = parts.append('oifname ' ~ rule.out_interface) %} {%- endif %}
+        {%- if rule.source is defined %} {%- set _ = parts.append('ip saddr ' ~ rule.source) %} {%- endif %}
+        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.protocol is defined %}
+            {%- if rule.port is defined %}
+                {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
+            {%- else %}
+                {%- set _ = parts.append(rule.protocol) %}
+            {%- endif %}
+        {%- endif %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : {{ rule.action | default('accept') }} : user : forward : "{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined forward rule') }}"
+        {% endfor %}
+    }
+    {% endif %}
+
+    {% if nftables_user_defined_output_enabled | default(false) %}
+    # Define dedicated chain for user-defined output rules
+    chain user_defined_output {
+        {% for rule in nftables_user_defined_output_rules | default([]) %}
+        {%- set parts = [] -%}
+        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.protocol is defined %}
+            {%- if rule.port is defined %}
+                {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
+            {%- else %}
+                {%- set _ = parts.append(rule.protocol) %}
+            {%- endif %}
+        {%- endif %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : {{ rule.action | default('accept') }} : user : output : "{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined output rule') }}"
+        {% endfor %}
+    }
+    {% endif %}
+}
+{% endif %}

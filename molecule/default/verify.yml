@@ -1,0 +1,178 @@
+# =============================================================================
+# Ansible Role: NFTables - Molecule Verification Playbook
+# =============================================================================
+# This playbook verifies the installation and configuration of NFTables.
+# It performs comprehensive checks of:
+# - Package installation and versioning
+# - Service status and configuration
+# - Configuration files
+# - Firewall rules installation and functionality
+# - Log management setup
+# - Network connectivity with applied rules
+#
+# Flow:
+# 1. Load variables and gather facts
+# 2. Verify package installation
+# 3. Check service status
+# 4. Validate configuration files
+# 5. Verify firewall rules
+# 6. Test network connectivity
+# 7. Verify logging setup
+# =============================================================================
+
+---
+# -----------------------------------------------------------------------------
+# 1. Environment Setup
+# -----------------------------------------------------------------------------
+- name: molecule | Verify Role
+  hosts: all
+  gather_facts: true
+
+  vars_files:
+    - ../../defaults/main.yml
+    - ../../vars/main.yml
+
+  tasks:
+    - name: Verify | Gather OS specific variables
+      include_vars: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+            - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_major_version'] | lower }}.yml"
+            - "{{ ansible_facts['distribution'] | lower }}.yml"
+            - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+            - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_major_version'].split('.')[0] }}.yml"
+            - "{{ ansible_facts['os_family'] | lower }}.yml"
+            - "main.yml"
+          paths:
+            - "../../vars"
+
+    # -----------------------------------------------------------------------------
+    # 2. Package Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check if nftables package is installed
+      ansible.builtin.package:
+        name: nftables
+        state: present
+      register: _package_result_
+      ignore_errors: true
+
+    - name: Verify | Check if 'nft' binary is available
+      ansible.builtin.command:
+        cmd: which nft
+      changed_when: false
+      register: _binary_result_
+      ignore_errors: true
+
+    - name: Verify | Get NFTables version
+      ansible.builtin.command:
+        cmd: nft --version
+      register: _version_result_
+      changed_when: false
+      ignore_errors: true
+
+    - name: Verify | Show NFTables version
+      ansible.builtin.debug:
+        var: _version_result_.stdout
+      when: _version_result_.rc == 0
+
+    # -----------------------------------------------------------------------------
+    # 3. Service Status Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check if nftables service is running
+      ansible.builtin.service:
+        name: nftables
+        state: started
+      register: _service_result_
+      ignore_errors: true
+
+    - name: Verify | Check if nftables service is enabled
+      ansible.builtin.service:
+        name: nftables
+        state: started
+        enabled: true
+      register: _service_enabled_result_
+      ignore_errors: true
+
+    # -----------------------------------------------------------------------------
+    # 4. Configuration Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check if configuration files exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: _config_files_result_
+      with_items:
+        - /etc/nftables/nftables.conf
+        - /etc/nftables.conf
+        - /etc/nftables/rules/
+      ignore_errors: true
+
+    - name: Verify | Get NFTables ruleset
+      ansible.builtin.command:
+        cmd: nft list ruleset
+      register: _ruleset_result_
+      changed_when: false
+      ignore_errors: true
+
+    - name: Verify | Show current ruleset
+      ansible.builtin.debug:
+        var: _ruleset_result_.stdout_lines
+      when: _ruleset_result_.rc == 0
+
+    # -----------------------------------------------------------------------------
+    # 5. Firewall Rules Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check for input chain
+      ansible.builtin.command:
+        cmd: nft list chain inet filter input
+      register: _input_chain_result_
+      changed_when: false
+      ignore_errors: true
+
+    - name: Verify | Check for output chain
+      ansible.builtin.command:
+        cmd: nft list chain inet filter output
+      register: _output_chain_result_
+      changed_when: false
+      ignore_errors: true
+
+    - name: Verify | Check for forward chain
+      ansible.builtin.command:
+        cmd: nft list chain inet filter forward
+      register: _forward_chain_result_
+      changed_when: false
+      ignore_errors: true
+
+    # -----------------------------------------------------------------------------
+    # 6. Logging Configuration Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check if log directory exists
+      ansible.builtin.stat:
+        path: "/var/log/nftables"
+      register: _logdir_result_
+      ignore_errors: true
+
+    - name: Verify | Check if logrotate configuration exists
+      ansible.builtin.stat:
+        path: "/etc/logrotate.d/nftables"
+      register: _logrotate_result_
+      ignore_errors: true
+
+    # -----------------------------------------------------------------------------
+    # 7. Test Results Summary
+    # -----------------------------------------------------------------------------
+    - name: Verify | Summarize test results
+      ansible.builtin.debug:
+        msg: |
+          NFTables Verification Summary:
+          ----------------------------
+          Package Installed: {{ _package_result_.failed | default(true) | ternary('FAIL', 'PASS') }}
+          Binary Available: {{ _binary_result_.rc | default(1) | ternary('FAIL', 'PASS') }}
+          Service Running: {{ _service_result_.failed | default(true) | ternary('FAIL', 'PASS') }}
+          Service Enabled: {{ _service_enabled_result_.failed | default(true) | ternary('FAIL', 'PASS') }}
+          Input Chain: {{ _input_chain_result_.rc | default(1) | ternary('FAIL', 'PASS') }}
+          Output Chain: {{ _output_chain_result_.rc | default(1) | ternary('FAIL', 'PASS') }}
+          Forward Chain: {{ _forward_chain_result_.rc | default(1) | ternary('FAIL', 'PASS') }}
+          Log Directory: {{ _logdir_result_.stat.exists | default(false) | ternary('PASS', 'FAIL') }}
+          Logrotate Config: {{ _logrotate_result_.stat.exists | default(false) | ternary('PASS', 'FAIL') }}

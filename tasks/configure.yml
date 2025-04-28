@@ -1,0 +1,90 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Configuration Tasks
+# =============================================================================
+# This file handles the configuration of the NFTables service, including:
+# 1. Service management (enable/disable)
+# 2. Setting up directory structure
+# 3. Configuring main NFTables settings
+# 4. Setting up logging infrastructure
+#
+# The tasks ensure proper configuration across different Linux distributions.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Service Management
+# -----------------------------------------------------------------------------
+- name: NFTables | configure | Enable NFTables service on system startup
+  become: true
+  ansible.builtin.service:
+    name: "{{ nftables_service_name }}"
+    enabled: true
+  when: >
+    nftables_service_enabled | default(false)
+
+- name: NFTables | configure | Disable NFTables service on system startup
+  become: true
+  ansible.builtin.service:
+    name: "{{ nftables_service_name }}"
+    enabled: false
+  when: >
+    not nftables_service_enabled | default(false)
+
+# -----------------------------------------------------------------------------
+# 2. Directory Structure
+# -----------------------------------------------------------------------------
+- name: NFTables | configure | Create directory for rules
+  become: true
+  ansible.builtin.file:
+    path: "{{ nftables_rules_directory_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: NFTables | configure | Clear default NFT files with rules (RedHat-specific)
+  become: true
+  ansible.builtin.file:
+    path: "/etc/nftables/{{ item }}"
+    state: absent
+  with_items:
+    - main.nft
+    - nat.nft
+    - router.nft
+  when: >
+    ansible_os_family | lower == "redhat"
+
+# -----------------------------------------------------------------------------
+# 3. Main Configuration
+# -----------------------------------------------------------------------------
+- name: NFTables | configure | Deploy configuration file
+  become: true
+  ansible.builtin.template:
+    src: templates/nftables.conf.j2
+    dest: "{{ nftables_config_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: NFTables | handlers | Restart nftables service
+
+# -----------------------------------------------------------------------------
+# 4. Logging Setup
+# -----------------------------------------------------------------------------
+- name: NFTables | configure | Create directory for log files
+  become: true
+  ansible.builtin.file:
+    path: "{{ nftables_log_directory_path }}"
+    state: directory
+    owner: "{{ nftables_log_directory_user }}"
+    group: "{{ nftables_log_directory_group }}"
+    mode: "0750"
+
+- name: NFTables | configure | Deploy rsyslog configuration file
+  become: true
+  ansible.builtin.template:
+    src: templates/rsyslog/nftables.conf.j2
+    dest: "{{ nftables_rsyslog_config_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: NFTables | handlers | Restart rsyslog service

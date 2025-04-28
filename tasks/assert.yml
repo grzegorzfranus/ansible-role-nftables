@@ -1,0 +1,299 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Assertions
+# =============================================================================
+# This file contains assertions to validate all role variables before execution.
+# These checks ensure that the provided variable values are of the correct type
+# and within valid ranges/options, preventing runtime errors.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. General Settings
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_role_action is valid
+  assert:
+    that:
+      - nftables_role_action is defined
+      - nftables_role_action is string
+      - nftables_role_action in [ "all", "requirements", "install", "configure", "rules", "acl", "logrotate", "upgrade" ]
+    quiet: true
+    fail_msg: "nftables_role_action must be one of: all, requirements, install, configure, rules, acl, logrotate, upgrade"
+
+- name: nftables_asserts | Test if nftables_service_enabled is valid
+  assert:
+    that:
+      - nftables_service_enabled is defined
+      - nftables_service_enabled is boolean
+    quiet: true
+    fail_msg: "nftables_service_enabled must be a boolean (true/false)"
+
+- name: nftables_asserts | Test if nftables_configure_logrotate is valid
+  assert:
+    that:
+      - nftables_configure_logrotate is defined
+      - nftables_configure_logrotate is boolean
+    quiet: true
+    fail_msg: "nftables_configure_logrotate must be a boolean (true/false)"
+
+- name: nftables_asserts | Test if nftables_configure_security_rules is valid
+  assert:
+    that:
+      - nftables_configure_security_rules is defined
+      - nftables_configure_security_rules is boolean
+    quiet: true
+    fail_msg: "nftables_configure_security_rules must be a boolean (true/false)"
+
+# -----------------------------------------------------------------------------
+# 2. Logging Configuration
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_logrotate_options is valid
+  assert:
+    that:
+      - nftables_logrotate_options is defined
+      - nftables_logrotate_options is mapping
+      - nftables_logrotate_options.archive_directory_path is defined
+      - nftables_logrotate_options.archive_directory_path is string
+      - nftables_logrotate_options.frequency is defined
+      - nftables_logrotate_options.frequency in ["hourly", "daily", "weekly", "monthly"]
+      - nftables_logrotate_options.count is defined
+      - nftables_logrotate_options.count is integer
+      - nftables_logrotate_options.missingok is defined
+      - nftables_logrotate_options.missingok is boolean
+      - nftables_logrotate_options.compress is defined
+      - nftables_logrotate_options.compress is boolean
+      - nftables_logrotate_options.nocreate is defined
+      - nftables_logrotate_options.nocreate is boolean
+      - nftables_logrotate_options.dateext is defined
+      - nftables_logrotate_options.dateext is boolean
+    quiet: true
+    fail_msg: "nftables_logrotate_options is missing required fields or contains invalid values"
+
+# -----------------------------------------------------------------------------
+# 3. Base Filter Chain Policies
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_input_default_policy is valid
+  assert:
+    that:
+      - nftables_input_default_policy is defined
+      - nftables_input_default_policy is string
+      - nftables_input_default_policy in ["accept", "drop", "reject"]
+    quiet: true
+    fail_msg: "nftables_input_default_policy must be one of: accept, drop, reject"
+
+- name: nftables_asserts | Test if nftables_forward_default_policy is valid
+  assert:
+    that:
+      - nftables_forward_default_policy is defined
+      - nftables_forward_default_policy is string
+      - nftables_forward_default_policy in ["accept", "drop", "reject"]
+    quiet: true
+    fail_msg: "nftables_forward_default_policy must be one of: accept, drop, reject"
+
+- name: nftables_asserts | Test if nftables_output_default_policy is valid
+  assert:
+    that:
+      - nftables_output_default_policy is defined
+      - nftables_output_default_policy is string
+      - nftables_output_default_policy in ["accept", "drop", "reject"]
+    quiet: true
+    fail_msg: "nftables_output_default_policy must be one of: accept, drop, reject"
+
+- name: nftables_asserts | Test if logging options for dropped packets are valid
+  assert:
+    that:
+      - nftables_log_input_dropped is defined
+      - nftables_log_input_dropped is boolean
+      - nftables_log_forward_dropped is defined
+      - nftables_log_forward_dropped is boolean
+      - nftables_log_output_dropped is defined
+      - nftables_log_output_dropped is boolean
+      - nftables_log_input_dropped_rate_limit is defined
+      - nftables_log_input_dropped_rate_limit is string
+      - nftables_log_input_dropped_burst is defined
+      - nftables_log_input_dropped_burst is integer
+      - nftables_log_forward_dropped_rate_limit is defined
+      - nftables_log_forward_dropped_rate_limit is string
+      - nftables_log_forward_dropped_burst is defined
+      - nftables_log_forward_dropped_burst is integer
+      - nftables_log_output_dropped_rate_limit is defined
+      - nftables_log_output_dropped_rate_limit is string
+      - nftables_log_output_dropped_burst is defined
+      - nftables_log_output_dropped_burst is integer
+    quiet: true
+    fail_msg: "Logging options for dropped packets contain invalid values"
+
+# -----------------------------------------------------------------------------
+# 4. ICMP/Ping Settings
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_ping_input is valid
+  assert:
+    that:
+      - nftables_ping_input is defined
+      - nftables_ping_input is mapping
+      - nftables_ping_input.enabled is defined
+      - nftables_ping_input.enabled is boolean
+      - nftables_ping_input.rate_limit is defined
+      - nftables_ping_input.rate_limit is string
+      - nftables_ping_input.burst is defined
+      - nftables_ping_input.burst is integer
+      - nftables_ping_input.log is defined
+      - nftables_ping_input.log is boolean
+      - nftables_ping_input.comment is defined
+      - nftables_ping_input.comment is string
+    quiet: true
+    fail_msg: "nftables_ping_input contains invalid values"
+
+- name: nftables_asserts | Test if nftables_ping_output is valid
+  assert:
+    that:
+      - nftables_ping_output is defined
+      - nftables_ping_output is mapping
+      - nftables_ping_output.enabled is defined
+      - nftables_ping_output.enabled is boolean
+      - nftables_ping_output.rate_limit is defined
+      - nftables_ping_output.rate_limit is string
+      - nftables_ping_output.burst is defined
+      - nftables_ping_output.burst is integer
+      - nftables_ping_output.log is defined
+      - nftables_ping_output.log is boolean
+      - nftables_ping_output.comment is defined
+      - nftables_ping_output.comment is string
+    quiet: true
+    fail_msg: "nftables_ping_output contains invalid values"
+
+# -----------------------------------------------------------------------------
+# 5. Basic Access Control Settings
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_ssh is valid
+  assert:
+    that:
+      - nftables_ssh is defined
+      - nftables_ssh is mapping
+      - nftables_ssh.enabled is defined
+      - nftables_ssh.enabled is boolean
+      - nftables_ssh.port is defined
+      - nftables_ssh.port is integer
+      - nftables_ssh.port >= 1
+      - nftables_ssh.port <= 65535
+      - nftables_ssh.source is defined
+      - nftables_ssh.source is string
+      - nftables_ssh.rate_limit is defined
+      - nftables_ssh.rate_limit is string
+      - nftables_ssh.burst is defined
+      - nftables_ssh.burst is integer
+      - nftables_ssh.log is defined
+      - nftables_ssh.log is boolean
+      - nftables_ssh.comment is defined
+      - nftables_ssh.comment is string
+    quiet: true
+    fail_msg: "nftables_ssh contains invalid values"
+
+# -----------------------------------------------------------------------------
+# 6. Cluster Communication Settings
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_cluster_enabled is valid
+  assert:
+    that:
+      - nftables_cluster_enabled is defined
+      - nftables_cluster_enabled is boolean
+    quiet: true
+    fail_msg: "nftables_cluster_enabled must be a boolean (true/false)"
+
+- name: nftables_asserts | Test if nftables_cluster_nodes is valid
+  assert:
+    that:
+      - nftables_cluster_nodes is defined
+      - nftables_cluster_nodes is sequence
+    quiet: true
+    fail_msg: "nftables_cluster_nodes must be a list"
+
+- name: nftables_asserts | Test if nftables_cluster_rules is valid
+  assert:
+    that:
+      - nftables_cluster_rules is defined
+      - nftables_cluster_rules is sequence
+      - (nftables_cluster_rules | map(attribute='port') | list | reject('number') | list | length) == 0
+    quiet: true
+    fail_msg: "nftables_cluster_rules must be a list where each item has a valid port"
+
+# -----------------------------------------------------------------------------
+# 7. User-Defined Rules Settings
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if user-defined rules enabled flags are valid
+  assert:
+    that:
+      - nftables_user_defined_input_enabled is defined
+      - nftables_user_defined_input_enabled is boolean
+      - nftables_user_defined_forward_enabled is defined
+      - nftables_user_defined_forward_enabled is boolean
+      - nftables_user_defined_output_enabled is defined
+      - nftables_user_defined_output_enabled is boolean
+    quiet: true
+    fail_msg: "User-defined rules enabled flags must be boolean values"
+
+- name: nftables_asserts | Test if user-defined rules lists are valid
+  assert:
+    that:
+      - nftables_user_defined_input_rules is defined
+      - nftables_user_defined_input_rules is sequence
+      - nftables_user_defined_forward_rules is defined
+      - nftables_user_defined_forward_rules is sequence
+      - nftables_user_defined_output_rules is defined
+      - nftables_user_defined_output_rules is sequence
+      # Validate port field for all user-defined rules (input, forward, output)
+      - >
+        (
+          nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list +
+          nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list +
+          nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list
+        ) | map('regex_search', '^(\d{1,5}(-\d{1,5})?|\d{1,5}(,\d{1,5})*)$') | min
+
+- name: nftables_asserts | Test if user-defined rules 'counter' field is valid
+  assert:
+    that:
+      - >
+        (
+          nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules
+        ) | selectattr('counter', 'defined') | map(attribute='counter') | list | map('type_debug') | map('regex_search', '^bool$') | min
+    quiet: true
+    fail_msg: "User-defined rules 'counter' field must be a boolean value"
+
+# -----------------------------------------------------------------------------
+# 8. NAT Rules Settings
+# -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if NAT enabled flags are valid
+  assert:
+    that:
+      - nftables_nat_prerouting_enabled is defined
+      - nftables_nat_prerouting_enabled is boolean
+      - nftables_nat_postrouting_enabled is defined
+      - nftables_nat_postrouting_enabled is boolean
+    quiet: true
+    fail_msg: "NAT enabled flags must be boolean values"
+
+- name: nftables_asserts | Test if NAT rules lists are valid
+  assert:
+    that:
+      - nftables_nat_prerouting_rules is defined
+      - nftables_nat_prerouting_rules is sequence
+      - nftables_nat_postrouting_rules is defined
+      - nftables_nat_postrouting_rules is sequence
+      # Validate nat_action and port for all NAT rules
+      - >
+        (
+          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
+        ) | map('type_debug') | map('regex_search', '^dict$') | min
+      - >
+        (
+          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
+        ) | selectattr('port', 'defined') | map(attribute='port') | list | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | min
+      - >
+        (
+          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
+        ) | selectattr('nat_action', 'defined') | map(attribute='nat_action') | list | difference(['dnat', 'snat', 'masquerade']) | length == 0
+      - >
+        (
+          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
+        ) | selectattr('counter', 'defined') | map(attribute='counter') | list | map('type_debug') | map('regex_search', '^bool$') | min
+    quiet: true
+    fail_msg: "NAT rules must be a list of dicts. Each port must be a valid port number, range, or comma-separated list as a string. nat_action must be one of: dnat, snat, masquerade."

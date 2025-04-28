@@ -1,0 +1,42 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# Log rotation configuration for NFTables firewall
+# =============================================================================
+# This template manages the rotation of NFTables log files to prevent disk space
+# issues and maintain organized log archives. The configuration uses copytruncate
+# to ensure that service continues logging without interruption.
+# =============================================================================
+
+# Define log files to rotate
+{{ nftables_log_directory_path }}/nftables.log {
+  # Rotation frequency (daily, weekly, monthly)
+  {{ nftables_logrotate_options.frequency }}
+  # Number of rotated files to keep
+  rotate {{ nftables_logrotate_options.count }}
+  {% if nftables_logrotate_options.missingok | default(true) %}
+  # Don't error if log file is missing
+  missingok
+  {% endif %}
+  {% if nftables_logrotate_options.compress | default(true) %}
+  # Compress rotated log files
+  compress
+  {% endif %}
+  {% if nftables_logrotate_options.nocreate | default(false) %}
+  # Don't create new log files after rotation
+  nocreate
+  {% endif %}
+  # Copy and truncate instead of moving log files
+  # This ensures NFTables continues logging without interruption
+  copytruncate
+  {% if nftables_logrotate_options.dateext | default(true) %}
+  # Add date to name of archive log files
+  dateext
+  dateformat .%Y-%m-%d
+  {% endif %}
+  # Archive log directory path
+  olddir {{ nftables_logrotate_options.archive_directory_path }}
+  # Run scripts only once for multiple files
+  sharedscripts
+}

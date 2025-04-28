@@ -1,0 +1,178 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# NFTables Base Structure and Rules
+# =============================================================================
+# This file defines the base structure for NFTables firewall, including:
+# - Table and chain definitions
+# - Basic stateful connection handling
+# - Default policies
+# - Loopback interface handling
+# - Connection tracking
+# =============================================================================
+
+flush ruleset
+
+# -----------------------------------------------------------------------------
+# Define Base Filter Table
+# -----------------------------------------------------------------------------
+table inet filter {
+
+    # Base chains for filtering
+    chain input {
+        type filter hook input priority 0; policy {{ nftables_input_default_policy | default('drop') }};
+
+        # Allow loopback traffic (processed first for efficiency)
+        iifname lo accept comment "Allow loopback traffic"
+        iifname != lo ip daddr 127.0.0.1/8 drop comment "Drop traffic to loopback not coming from loopback"
+        iifname != lo ip6 daddr ::1/128 drop comment "Drop traffic to loopback not coming from loopback"
+
+        # Reject invalid connections
+        ct state invalid drop comment "Drop invalid packets"
+
+        # Allow established/related connections
+        jump existing
+
+        # ICMP/Ping handling for input chain
+        {% if nftables_ping_input.enabled | default(true) %}
+        meta l4proto icmp limit rate {{ nftables_ping_input.rate_limit | default('3/second') }} burst {{ nftables_ping_input.burst | default(4) }} packets {% if nftables_ping_input.log | default(false) %}log prefix "[nftables] : accept : input : icmp : "{% endif %} counter accept comment "{{ nftables_ping_input.comment | default('Allow limited ICMP/ping input') }}"
+        {% endif %}
+
+        # Jump to security protection chain if enabled
+        {% if nftables_configure_security_rules | default(false) %}
+        jump security_protection
+        {% endif %}
+
+        # Jump to cluster input chain if enabled
+        {% if nftables_cluster_enabled | default(false) %}
+        jump cluster_input
+        {% endif %}
+
+        # Jump to user-defined input chain if enabled
+        {% if nftables_user_defined_input_enabled | default(false) %}
+        jump user_defined_input
+        {% endif %}
+        
+        # SSH access rule
+        {% if nftables_ssh.enabled | default(true) %}
+        ip saddr {{ nftables_ssh.source | default('0.0.0.0/0') }} tcp dport { {{ nftables_ssh.port | default(22) }} } ct state new limit rate {{ nftables_ssh.rate_limit | default('10/minute') }} burst {{ nftables_ssh.burst | default(5) }} packets {% if nftables_ssh.log | default(true) %}log prefix "{{ nftables_ssh.log_prefix | default('[nftables] : accept : input : ssh : ') }}"{% endif %} counter accept comment "{{ nftables_ssh.comment | default('SSH access') }}"
+        {% endif %}
+
+        # Log dropped packets if enabled
+        {% if nftables_log_input_dropped | default(true) %}
+        limit rate {{ nftables_log_input_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_input_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : input : " flags all counter comment "Log dropped input packets"
+        {% endif %}
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy {{ nftables_forward_default_policy | default('drop') }};
+
+        # Reject invalid connections
+        ct state invalid drop comment "Drop invalid packets"
+
+        # Allow established/related connections
+        jump existing
+
+        # Jump to security protection chain if enabled
+        {% if nftables_configure_security_rules | default(false) %}
+        jump security_protection
+        {% endif %}
+        
+        # Jump to user-defined forward chain if enabled
+        {% if nftables_user_defined_forward_enabled | default(false) %}
+        jump user_defined_forward
+        {% endif %}
+
+        # Log dropped packets if enabled
+        {% if nftables_log_forward_dropped | default(true) %}
+        limit rate {{ nftables_log_forward_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_forward_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : forward : " flags all counter comment "Log dropped forward packets"
+        {% endif %}
+    }
+
+    chain output {
+        type filter hook output priority 0; policy {{ nftables_output_default_policy | default('drop') }};
+
+        # Allow loopback traffic (processed first for efficiency)
+        oifname lo accept comment "Allow loopback traffic"
+
+        # Reject invalid connections
+        ct state invalid drop comment "Drop invalid packets"
+
+        # Allow established/related connections
+        jump existing
+
+        # ICMP/Ping handling for output chain
+        {% if nftables_ping_output.enabled | default(true) %}
+        meta l4proto icmp limit rate {{ nftables_ping_output.rate_limit | default('6/second') }} burst {{ nftables_ping_output.burst | default(8) }} packets {% if nftables_ping_output.log | default(false) %}log prefix "[nftables] : accept : output : icmp : "{% endif %} counter accept comment "{{ nftables_ping_output.comment | default('Allow limited ICMP/ping output') }}"
+        {% endif %}
+
+        # Jump to cluster output chain if enabled
+        {% if nftables_cluster_enabled | default(false) %}
+        jump cluster_output
+        {% endif %}
+
+        # Jump to user-defined output chain if enabled
+        {% if nftables_user_defined_output_enabled | default(false) %}
+        jump user_defined_output
+        {% endif %}
+
+        # Log dropped packets if enabled
+        {% if nftables_log_output_dropped | default(true) %}
+        limit rate {{ nftables_log_output_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_output_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : output : " flags all counter comment "Log dropped output packets"
+        {% endif %}
+    }
+
+    # Chain for handling established/related connections
+    chain existing {
+        # Allow established/related connections
+        ip protocol tcp ct state { established, related } counter accept comment "Allow established/related TCP connections"
+        ip protocol udp ct state { established, related } counter accept comment "Allow established/related UDP connections"
+        ip protocol icmp ct state { established, related } counter accept comment "Allow established/related ICMP connections"
+    }
+
+    {% if nftables_configure_security_rules | default(false) %}
+    # Empty security protection chain (when security rules are disabled)
+    chain security_protection {
+        # This chain is empty as security rules are disabled
+        # It exists only for structural integrity when referenced by other chains
+    }
+    {% endif %}
+
+    {% if nftables_cluster_enabled | default(false) %}
+    # Empty cluster chains (when cluster functionality is disabled)
+    chain cluster_input {
+        # This chain is empty as cluster functionality is disabled
+        # It exists only for structural integrity when referenced by other chains]
+    }
+
+    chain cluster_output {
+        # This chain is empty as cluster functionality is disabled
+        # It exists only for structural integrity when referenced by other chains
+    }
+    {% endif %}
+
+    {% if nftables_user_defined_input_enabled | default(false) %}
+    # Empty user-defined input chain (when user-defined input rules are disabled)
+    chain user_defined_input {
+        # This chain is empty as user-defined input rules are disabled
+        # It exists only for structural integrity when referenced by other chains
+    }
+    {% endif %}
+
+    {% if nftables_user_defined_forward_enabled | default(false) %}
+    # Empty user-defined forward chain (when user-defined forward rules are disabled)
+    chain user_defined_forward {
+        # This chain is empty as user-defined forward rules are disabled
+        # It exists only for structural integrity when referenced by other chains
+    }
+    {% endif %}
+
+    {% if nftables_user_defined_output_enabled | default(false) %}
+    # Empty user-defined output chain (when user-defined output rules are disabled)
+    chain user_defined_output {
+        # This chain is empty as user-defined output rules are disabled
+        # It exists only for structural integrity when referenced by other chains
+    }
+    {% endif %}
+}

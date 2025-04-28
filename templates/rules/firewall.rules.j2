@@ -1,0 +1,53 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# NFTables Firewall Security Rules
+# =============================================================================
+# This file contains security rules to protect against common network attacks.
+# It configures a dedicated chain that can be attached to the input chain.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Extend the Base Filter Table
+# -----------------------------------------------------------------------------
+table inet filter {
+    # -----------------------------------------------------------------------------
+    # Security Protection Chain
+    # -----------------------------------------------------------------------------
+    chain security_protection {
+        # Block fragmented packets
+        ip frag-off & 0x1fff != 0 counter drop comment "Block fragmented packets"
+        
+        # Block IP packets with bad lengths
+        ip length < 20 counter drop comment "Block malformed IP packets (length < 20)"
+        
+        # Block invalid TCP flags combinations
+        tcp flags & (fin|syn|rst|psh|ack|urg) == 0 counter drop comment "Block NULL scan packets"
+        tcp flags & (fin|syn) == (fin|syn) counter drop comment "Block invalid FIN+SYN flags"
+        tcp flags & (syn|rst) == (syn|rst) counter drop comment "Block invalid SYN+RST flags"
+        tcp flags & (fin|rst) == (fin|rst) counter drop comment "Block invalid FIN+RST flags"
+        tcp flags & (fin|syn|rst|psh|ack|urg) == (fin|psh|urg) counter drop comment "Block XMAS scan packets"
+        tcp flags & (fin|syn|rst|psh|ack|urg) == fin counter drop comment "Block FIN scan packets"
+        
+        # Block packets with bogus TCP flags (with exception for SSH)
+        tcp flags & (fin|syn|rst|ack) != syn ct state new tcp dport != {{ nftables_ssh.port | default(22) }} counter drop comment "Block new connections not starting with SYN (except SSH)"
+        
+        # Rate limit new TCP connections (anti SYN flood) with exception for SSH
+        tcp flags & (fin|syn|rst|ack) == syn tcp dport != {{ nftables_ssh.port | default(22) }} limit rate 20/second burst 40 packets counter accept comment "Rate limit SYN packets (except SSH)"
+        tcp flags & (fin|syn|rst|ack) == syn tcp dport != {{ nftables_ssh.port | default(22) }} counter drop comment "Block SYN flood (except SSH)"
+        
+        # Block common port scan packets
+        tcp dport 0 counter drop comment "Block port 0 TCP scans"
+        udp dport 0 counter drop comment "Block port 0 UDP scans"
+        
+        # Block bogus MSS values
+        tcp flags syn tcp option maxseg size 1-500 counter drop comment "Block bogus MSS values"
+        
+        # Block packets from reserved address spaces
+        ip saddr { 0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.0.0.0/24, 192.0.2.0/24, 224.0.0.0/3 } iifname != lo counter drop comment "Block spoofed private IP ranges"
+        
+        # Return to continue processing
+        return
+    }
+}

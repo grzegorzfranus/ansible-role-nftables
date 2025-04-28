@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Upgrade Tasks
+# =============================================================================
+# This file handles the upgrade of the NFTables package on the target system.
+# It ensures that the latest version of the software is installed according to
+# the distribution-specific package name defined in variables.
+#
+# The role uses the generic package module to be compatible with various
+# package managers across different Linux distributions and triggers a service
+# restart after the upgrade.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Package Upgrade
+# -----------------------------------------------------------------------------
+- name: NFTables | upgrade | Upgrade NFTables package to the latest version
+  become: true
+  ansible.builtin.package:
+    name: "{{ nftables_package_name }}"
+    state: latest
+    update_cache: true
+  notify: NFTables | handlers | Restart nftables Service

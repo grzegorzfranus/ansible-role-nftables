@@ -1,0 +1,74 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# NFTables NAT Rules
+# =============================================================================
+# This file defines Network Address Translation (NAT) rules for the firewall.
+# It configures dedicated chains for NAT operations in prerouting and postrouting.
+# =============================================================================
+
+{% if nftables_nat_prerouting_enabled | default(false) or nftables_nat_postrouting_enabled | default(false) %}
+# -----------------------------------------------------------------------------
+# Define NAT Table and Chains
+# -----------------------------------------------------------------------------
+table ip nat {
+    {% if nftables_nat_prerouting_enabled | default(false) %}
+    # Define chain for DNAT operations (destination NAT, port forwarding)
+    chain prerouting {
+        type nat hook prerouting priority -100; policy accept;
+        
+        {% for rule in nftables_nat_prerouting_rules | default([]) %}
+        {%- set parts = [] -%}
+        {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
+        {%- if rule.out_interface is defined %} {%- set _ = parts.append('oifname ' ~ rule.out_interface) %} {%- endif %}
+        {%- if rule.source is defined %} {%- set _ = parts.append('ip saddr ' ~ rule.source) %} {%- endif %}
+        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.protocol is defined %}
+            {%- if rule.port is defined %}
+                {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
+            {%- else %}
+                {%- set _ = parts.append(rule.protocol) %}
+            {%- endif %}
+        {%- endif %}
+        {%- if rule.nat_action == 'dnat' and rule.nat_to is defined %}
+            {%- set nat = 'dnat to ' ~ rule.nat_to %}
+        {%- else %}
+            {%- set nat = '' %}
+        {%- endif %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {{ nat }} {% if rule.log | default(false) %}log prefix "[nftables] : nat : prerouting : "{% endif %} comment "{{ rule.comment | default('DNAT rule') }}"
+        {% endfor %}
+    }
+    {% endif %}
+
+    {% if nftables_nat_postrouting_enabled | default(false) %}
+    # Define chain for SNAT operations (source NAT, masquerading)
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+        
+        {% for rule in nftables_nat_postrouting_rules | default([]) %}
+        {%- set parts = [] -%}
+        {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
+        {%- if rule.out_interface is defined %} {%- set _ = parts.append('oifname ' ~ rule.out_interface) %} {%- endif %}
+        {%- if rule.source is defined %} {%- set _ = parts.append('ip saddr ' ~ rule.source) %} {%- endif %}
+        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.protocol is defined %}
+            {%- if rule.port is defined %}
+                {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
+            {%- else %}
+                {%- set _ = parts.append(rule.protocol) %}
+            {%- endif %}
+        {%- endif %}
+        {%- if rule.nat_action == 'snat' and rule.nat_to is defined %}
+            {%- set nat = 'snat to ' ~ rule.nat_to %}
+        {%- elif rule.nat_action == 'masquerade' %}
+            {%- set nat = 'masquerade' %}
+        {%- else %}
+            {%- set nat = '' %}
+        {%- endif %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {{ nat }} {% if rule.log | default(false) %}log prefix "[nftables] : nat : postrouting : "{% endif %} comment "{{ rule.comment | default('SNAT rule') }}"
+        {% endfor %}
+    }
+    {% endif %}
+}
+{% endif %}

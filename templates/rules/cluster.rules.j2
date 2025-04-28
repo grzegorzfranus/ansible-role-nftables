@@ -1,0 +1,33 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# NFTables Cluster Communication Rules
+# =============================================================================
+# This file defines rules for allowing communication between servers in a cluster.
+# It configures dedicated chains for cluster traffic which are referenced
+# from the main input and output chains in the base.rules.j2 file.
+# =============================================================================
+
+{% if nftables_cluster_enabled | default(false) %}
+# -----------------------------------------------------------------------------
+# Extend the Base Filter Table with Cluster Communication Rules
+# -----------------------------------------------------------------------------
+table inet filter {
+    # Define dedicated chain for cluster input traffic
+    chain cluster_input {
+        {% for rule in nftables_cluster_rules | default([]) %}
+        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} from cluster nodes
+        ip saddr { {{ nftables_cluster_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if rule.limit is defined %}limit rate {{ rule.limit }}{% endif %} {% if rule.burst is defined %}burst {{ rule.burst }} packets{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : accept : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %} counter accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' from cluster nodes') }}"
+        {% endfor %}
+    }
+
+    # Define dedicated chain for cluster output traffic
+    chain cluster_output {
+        {% for rule in nftables_cluster_rules | default([]) %}
+        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} to cluster nodes
+        ip daddr { {{ nftables_cluster_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : accept : output : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %} counter accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' to cluster nodes') }}"
+        {% endfor %}
+    }
+}
+{% endif %}
