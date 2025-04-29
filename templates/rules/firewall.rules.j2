@@ -45,7 +45,9 @@ table inet filter {
         tcp flags syn tcp option maxseg size 1-500 counter drop comment "Block bogus MSS values"
         
         # Block packets from reserved address spaces
-        ip saddr { 0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.0.0.0/24, 192.0.2.0/24, 224.0.0.0/3 } iifname != lo counter drop comment "Block spoofed private IP ranges"
+        {% if nftables_blocked_reserved_ranges | default([]) | length > 0 %}
+        ip saddr { {{ nftables_blocked_reserved_ranges | join(', ') }} } iifname != lo counter drop comment "Block spoofed private IP ranges"
+        {% endif %}
         
         # Return to continue processing
         return

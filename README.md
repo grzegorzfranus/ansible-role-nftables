@@ -115,14 +115,33 @@ This role requires root access, so either configure it in your inventory files, 
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `nftables_blocked_reserved_ranges` | List of reserved address spaces to block (anti-spoofing protection) | See below |
 | `nftables_ssh` | SSH configuration dictionary | See below |
 | `nftables_ssh.enabled` | Enable/disable SSH access | `true` |
 | `nftables_ssh.port` | SSH port number | `2202` |
 | `nftables_ssh.source` | Source IP/network to allow SSH access from | `"0.0.0.0/0"` |
+| `nftables_ssh.state` | Connection state to allow for SSH | `"new"` |
 | `nftables_ssh.rate_limit` | Rate limit for SSH connections | `"10/minute"` |
 | `nftables_ssh.burst` | Burst value for SSH connections | `5` |
 | `nftables_ssh.log` | Enable/disable logging for SSH connections | `true` |
+| `nftables_ssh.counter` | Enable/disable packet/byte counting for SSH connections | `true` |
 | `nftables_ssh.comment` | Comment for SSH rule | `"Allow SSH access"` |
+
+**Reserved address ranges:**
+By default, the following address ranges are blocked on external interfaces to prevent spoofing:
+```yaml
+nftables_blocked_reserved_ranges:
+  - "0.0.0.0/8"        # "This" Network
+  - "10.0.0.0/8"       # Private-Use Networks
+  - "127.0.0.0/8"      # Loopback
+  - "169.254.0.0/16"   # Link Local
+  - "172.16.0.0/12"    # Private-Use Networks
+  - "192.0.0.0/24"     # IETF Protocol Assignments
+  - "192.0.2.0/24"     # Documentation (TEST-NET-1)
+  - "224.0.0.0/3"      # Multicast & Reserved
+```
+
+To disable this protection or customize the ranges, modify this variable in your playbook.
 
 ### 6. Cluster Communication Settings
 
@@ -150,6 +169,7 @@ This role requires root access, so either configure it in your inventory files, 
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `in_interface` (optional, forward only): Input interface (string)
 - `out_interface` (optional, forward only): Output interface (string)
+- `state` (optional): Connection state to match (e.g. "new", "established,related") - defaults to "new" if not specified
 - `action`: Action to take (e.g. "accept", "drop")
 - `log`: Enable/disable logging (boolean)
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
@@ -325,25 +345,42 @@ nftables_nat_postrouting_rules:
         
         # Custom input rules
         nftables_user_defined_input_rules:
-          - rule: "tcp dport { 80, 443 }"
+          - protocol: "tcp"
+            port: "80,443"
+            state: "new,established"
             action: "accept"
             log: false
             comment: "Allow HTTP and HTTPS traffic"
-          - rule: "udp dport { 53 }"
+          - protocol: "udp"
+            port: "53"
+            state: "new"
             action: "accept"
             log: false
             comment: "Allow DNS queries"
         
         # Custom output rules
         nftables_user_defined_output_rules:
-          - rule: "udp dport { 53 }"
+          - protocol: "udp"
+            port: "53"
+            state: "new"
             action: "accept"
             log: false
             comment: "Allow DNS resolution"
-          - rule: "tcp dport { 80, 443 }"
+          - protocol: "tcp"
+            port: "80,443"
+            state: "established,related"
             action: "accept"
             log: false
             comment: "Allow HTTP and HTTPS traffic"
+        
+        # Customize blocked address ranges
+        nftables_blocked_reserved_ranges:
+          - "0.0.0.0/8"        # "This" Network
+          - "127.0.0.0/8"      # Loopback
+          - "169.254.0.0/16"   # Link Local
+          - "192.0.0.0/24"     # IETF Protocol Assignments
+          - "224.0.0.0/3"      # Multicast & Reserved
+          # Note: 10.0.0.0/8 removed to allow local private network
 ```
 
 ### Cluster Configuration

@@ -100,14 +100,27 @@ nftables_ping_output:
 # -----------------------------------------------------------------------------
 # 5. Basic Access Control Settings
 # -----------------------------------------------------------------------------
+# Reserved address spaces to block (anti-spoofing protection)
+nftables_blocked_reserved_ranges:
+  - "0.0.0.0/8"        # "This" Network
+  - "10.0.0.0/8"       # Private-Use Networks
+  - "127.0.0.0/8"      # Loopback
+  - "169.254.0.0/16"   # Link Local
+  - "172.16.0.0/12"    # Private-Use Networks
+  - "192.0.0.0/24"     # IETF Protocol Assignments
+  - "192.0.2.0/24"     # Documentation (TEST-NET-1)
+  - "224.0.0.0/3"      # Multicast & Reserved
+
 # SSH configuration
 nftables_ssh:
   enabled: true
   port: 2202
   source: "0.0.0.0/0"
+  state: "new"
   rate_limit: "10/minute"
   burst: 5
   log: true
+  counter: true
   comment: "Allow SSH access"
 
 # -----------------------------------------------------------------------------
@@ -150,6 +163,7 @@ nftables_user_defined_input_rules:
     destination: "192.168.1.100"
     protocol: "tcp"
     port: 12345
+    state: "new,established,related"
     action: "accept"
     log: true
     counter: true
@@ -157,6 +171,7 @@ nftables_user_defined_input_rules:
   # Example: Allow HTTP traffic
   - protocol: "tcp"
     port: 80
+    state: "new,established"
     action: "accept"
     log: false
     counter: true
@@ -165,6 +180,7 @@ nftables_user_defined_input_rules:
   - source: "10.0.0.100"
     protocol: "tcp"
     port: 8080
+    state: "new"
     action: "accept"
     log: true
     counter: true
@@ -179,6 +195,7 @@ nftables_user_defined_forward_rules:
     destination: "192.168.1.100"
     protocol: "udp"
     port: 54321
+    state: "new,established"
     action: "accept"
     log: true
     counter: true
@@ -186,6 +203,7 @@ nftables_user_defined_forward_rules:
   # Example: Forward traffic between specific interfaces
   - in_interface: "eth0"
     out_interface: "eth1"
+    state: "established,related"
     action: "accept"
     log: false
     counter: true
@@ -198,6 +216,7 @@ nftables_user_defined_output_rules:
     destination: "192.168.1.100"
     protocol: "tcp"
     port: "2221,2222"
+    state: "new,established"
     action: "accept"
     log: true
     counter: true
@@ -205,6 +224,7 @@ nftables_user_defined_output_rules:
   # Example: Allow DNS queries
   - protocol: "udp"
     port: 53
+    state: "new"
     action: "accept"
     log: false
     counter: true
@@ -213,6 +233,7 @@ nftables_user_defined_output_rules:
   - destination: "192.168.10.20"
     protocol: "tcp"
     port: 443
+    state: "new,established"
     action: "accept"
     log: false
     counter: true

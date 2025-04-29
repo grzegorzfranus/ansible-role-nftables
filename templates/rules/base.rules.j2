@@ -56,7 +56,7 @@ table inet filter {
         
         # SSH access rule
         {% if nftables_ssh.enabled | default(true) %}
-        ip saddr {{ nftables_ssh.source | default('0.0.0.0/0') }} tcp dport { {{ nftables_ssh.port | default(22) }} } ct state new limit rate {{ nftables_ssh.rate_limit | default('10/minute') }} burst {{ nftables_ssh.burst | default(5) }} packets {% if nftables_ssh.log | default(true) %}log prefix "{{ nftables_ssh.log_prefix | default('[nftables] : accept : input : ssh : ') }}"{% endif %} counter accept comment "{{ nftables_ssh.comment | default('SSH access') }}"
+        ip saddr {{ nftables_ssh.source | default('0.0.0.0/0') }} tcp dport { {{ nftables_ssh.port | default(22) }} } ct state { {{ nftables_ssh.state | default('new') }} } limit rate {{ nftables_ssh.rate_limit | default('10/minute') }} burst {{ nftables_ssh.burst | default(5) }} packets {% if nftables_ssh.log | default(true) %}log prefix "{{ nftables_ssh.log_prefix | default('[nftables] : accept : input : ssh : ') }}"{% endif %} {% if nftables_ssh.counter | default(true) %}counter{% endif %} accept comment "{{ nftables_ssh.comment | default('SSH access') }}"
         {% endif %}
 
         # Log dropped packets if enabled

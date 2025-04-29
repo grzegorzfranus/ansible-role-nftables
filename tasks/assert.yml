@@ -164,6 +164,14 @@
 # -----------------------------------------------------------------------------
 # 5. Basic Access Control Settings
 # -----------------------------------------------------------------------------
+- name: nftables_asserts | Test if nftables_blocked_reserved_ranges is valid
+  assert:
+    that:
+      - nftables_blocked_reserved_ranges is defined
+      - nftables_blocked_reserved_ranges is sequence
+    quiet: true
+    fail_msg: "nftables_blocked_reserved_ranges must be a list of IP ranges"
+
 - name: nftables_asserts | Test if nftables_ssh is valid
   assert:
     that:
@@ -177,12 +185,16 @@
       - nftables_ssh.port <= 65535
       - nftables_ssh.source is defined
       - nftables_ssh.source is string
+      - nftables_ssh.state is defined
+      - nftables_ssh.state is string
       - nftables_ssh.rate_limit is defined
       - nftables_ssh.rate_limit is string
       - nftables_ssh.burst is defined
       - nftables_ssh.burst is integer
       - nftables_ssh.log is defined
       - nftables_ssh.log is boolean
+      - nftables_ssh.counter is defined
+      - nftables_ssh.counter is boolean
       - nftables_ssh.comment is defined
       - nftables_ssh.comment is string
     quiet: true
