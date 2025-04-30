@@ -172,34 +172,6 @@
     quiet: true
     fail_msg: "nftables_blocked_reserved_ranges must be a list of IP ranges"
 
-- name: nftables_asserts | Test if nftables_ssh is valid
-  assert:
-    that:
-      - nftables_ssh is defined
-      - nftables_ssh is mapping
-      - nftables_ssh.enabled is defined
-      - nftables_ssh.enabled is boolean
-      - nftables_ssh.port is defined
-      - nftables_ssh.port is integer
-      - nftables_ssh.port >= 1
-      - nftables_ssh.port <= 65535
-      - nftables_ssh.source is defined
-      - nftables_ssh.source is string
-      - nftables_ssh.state is defined
-      - nftables_ssh.state is string
-      - nftables_ssh.rate_limit is defined
-      - nftables_ssh.rate_limit is string
-      - nftables_ssh.burst is defined
-      - nftables_ssh.burst is integer
-      - nftables_ssh.log is defined
-      - nftables_ssh.log is boolean
-      - nftables_ssh.counter is defined
-      - nftables_ssh.counter is boolean
-      - nftables_ssh.comment is defined
-      - nftables_ssh.comment is string
-    quiet: true
-    fail_msg: "nftables_ssh contains invalid values"
-
 # -----------------------------------------------------------------------------
 # 6. Cluster Communication Settings
 # -----------------------------------------------------------------------------

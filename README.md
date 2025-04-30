@@ -116,16 +116,6 @@ This role requires root access, so either configure it in your inventory files, 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_blocked_reserved_ranges` | List of reserved address spaces to block (anti-spoofing protection) | See below |
-| `nftables_ssh` | SSH configuration dictionary | See below |
-| `nftables_ssh.enabled` | Enable/disable SSH access | `true` |
-| `nftables_ssh.port` | SSH port number | `2202` |
-| `nftables_ssh.source` | Source IP/network to allow SSH access from | `"0.0.0.0/0"` |
-| `nftables_ssh.state` | Connection state to allow for SSH | `"new"` |
-| `nftables_ssh.rate_limit` | Rate limit for SSH connections | `"10/minute"` |
-| `nftables_ssh.burst` | Burst value for SSH connections | `5` |
-| `nftables_ssh.log` | Enable/disable logging for SSH connections | `true` |
-| `nftables_ssh.counter` | Enable/disable packet/byte counting for SSH connections | `true` |
-| `nftables_ssh.comment` | Comment for SSH rule | `"Allow SSH access"` |
 
 **Reserved address ranges:**
 By default, the following address ranges are blocked on external interfaces to prevent spoofing:
@@ -170,6 +160,8 @@ To disable this protection or customize the ranges, modify this variable in your
 - `in_interface` (optional, forward only): Input interface (string)
 - `out_interface` (optional, forward only): Output interface (string)
 - `state` (optional): Connection state to match (e.g. "new", "established,related") - defaults to "new" if not specified
+- `rate_limit` (optional): Rate limit in format "X/period" where period can be: second, minute, hour, day (e.g. "10/minute")
+- `burst` (optional): Burst value for the rate limit (integer)
 - `action`: Action to take (e.g. "accept", "drop")
 - `log`: Enable/disable logging (boolean)
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
@@ -182,6 +174,9 @@ nftables_user_defined_output_rules:
     destination: "192.168.1.100"
     protocol: "tcp"
     port: "2221,2222"
+    state: "new,established"
+    rate_limit: "15/minute"
+    burst: 8
     action: "accept"
     log: true
     counter: true
@@ -289,16 +284,6 @@ nftables_nat_postrouting_rules:
           burst: 5
           log: true
           comment: "Allow controlled ICMP input"
-        
-        # SSH Access Configuration
-        nftables_ssh:
-          enabled: true
-          port: 22
-          source: "10.0.0.0/8"
-          rate_limit: "5/minute"
-          burst: 3
-          log: true
-          comment: "Allow SSH access from internal network"
 ```
 
 ### Advanced Configuration with NAT and User Rules
@@ -348,6 +333,8 @@ nftables_nat_postrouting_rules:
           - protocol: "tcp"
             port: "80,443"
             state: "new,established"
+            rate_limit: "30/minute"
+            burst: 15
             action: "accept"
             log: false
             comment: "Allow HTTP and HTTPS traffic"

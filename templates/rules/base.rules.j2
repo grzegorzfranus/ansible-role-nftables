@@ -34,14 +34,14 @@ table inet filter {
         # Allow established/related connections
         jump existing
 
-        # ICMP/Ping handling for input chain
-        {% if nftables_ping_input.enabled | default(true) %}
-        meta l4proto icmp limit rate {{ nftables_ping_input.rate_limit | default('3/second') }} burst {{ nftables_ping_input.burst | default(4) }} packets {% if nftables_ping_input.log | default(false) %}log prefix "[nftables] : accept : input : icmp : "{% endif %} counter accept comment "{{ nftables_ping_input.comment | default('Allow limited ICMP/ping input') }}"
-        {% endif %}
-
         # Jump to security protection chain if enabled
         {% if nftables_configure_security_rules | default(false) %}
         jump security_protection
+        {% endif %}
+
+        # ICMP/Ping handling for input chain
+        {% if nftables_ping_input.enabled | default(true) %}
+        meta l4proto icmp limit rate {{ nftables_ping_input.rate_limit | default('3/second') }} burst {{ nftables_ping_input.burst | default(4) }} packets {% if nftables_ping_input.log | default(false) %}log prefix "[nftables] : accept : input : icmp : "{% endif %} counter accept comment "{{ nftables_ping_input.comment | default('Allow limited ICMP/ping input') }}"
         {% endif %}
 
         # Jump to cluster input chain if enabled
@@ -54,11 +54,6 @@ table inet filter {
         jump user_defined_input
         {% endif %}
         
-        # SSH access rule
-        {% if nftables_ssh.enabled | default(true) %}
-        ip saddr {{ nftables_ssh.source | default('0.0.0.0/0') }} tcp dport { {{ nftables_ssh.port | default(22) }} } ct state { {{ nftables_ssh.state | default('new') }} } limit rate {{ nftables_ssh.rate_limit | default('10/minute') }} burst {{ nftables_ssh.burst | default(5) }} packets {% if nftables_ssh.log | default(true) %}log prefix "{{ nftables_ssh.log_prefix | default('[nftables] : accept : input : ssh : ') }}"{% endif %} {% if nftables_ssh.counter | default(true) %}counter{% endif %} accept comment "{{ nftables_ssh.comment | default('SSH access') }}"
-        {% endif %}
-
         # Log dropped packets if enabled
         {% if nftables_log_input_dropped | default(true) %}
         limit rate {{ nftables_log_input_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_input_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : input : " flags all counter comment "Log dropped input packets"

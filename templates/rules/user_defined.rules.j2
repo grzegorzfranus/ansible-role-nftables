@@ -35,7 +35,10 @@ table inet filter {
         {%- else %}
             {%- set _ = parts.append('ct state { new }') %}
         {%- endif %}
-        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : {{ rule.action | default('accept') }} : input : "{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined input rule') }}"
+        {{ parts | join(' ') }}
+        {%- if rule.rate_limit is defined %} limit rate {{ rule.rate_limit }} burst {% if rule.burst is defined %}{{ rule.burst }}{% else %}5{% endif %} packets{% endif %}
+        {%- if rule.log | default(false) %} log prefix "[nftables] : {{ rule.action | default('accept') }} : input : {% if rule.protocol is defined %}{{ rule.protocol }}{% endif %} : "{% endif %}
+        {%- if rule.counter | default(false) %} counter{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined input rule') }}";
         {% endfor %}
     }
     {% endif %}
@@ -61,7 +64,10 @@ table inet filter {
         {%- else %}
             {%- set _ = parts.append('ct state { new }') %}
         {%- endif %}
-        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : {{ rule.action | default('accept') }} : forward : "{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined forward rule') }}"
+        {{ parts | join(' ') }}
+        {%- if rule.rate_limit is defined %} limit rate {{ rule.rate_limit }} burst {% if rule.burst is defined %}{{ rule.burst }}{% else %}5{% endif %} packets{% endif %}
+        {%- if rule.log | default(false) %} log prefix "[nftables] : {{ rule.action | default('accept') }} : forward : {% if rule.protocol is defined %}{{ rule.protocol }}{% endif %} : "{% endif %}
+        {%- if rule.counter | default(false) %} counter{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined forward rule') }}";
         {% endfor %}
     }
     {% endif %}
@@ -85,7 +91,10 @@ table inet filter {
         {%- else %}
             {%- set _ = parts.append('ct state { new }') %}
         {%- endif %}
-        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %} {% if rule.log | default(false) %}log prefix "[nftables] : {{ rule.action | default('accept') }} : output : "{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined output rule') }}"
+        {{ parts | join(' ') }}
+        {%- if rule.rate_limit is defined %} limit rate {{ rule.rate_limit }} burst {% if rule.burst is defined %}{{ rule.burst }}{% else %}5{% endif %} packets{% endif %}
+        {%- if rule.log | default(false) %} log prefix "[nftables] : {{ rule.action | default('accept') }} : output : {% if rule.protocol is defined %}{{ rule.protocol }}{% endif %} : "{% endif %}
+        {%- if rule.counter | default(false) %} counter{% endif %} {{ rule.action | default('accept') }} comment "{{ rule.comment | default('User-defined output rule') }}";
         {% endfor %}
     }
     {% endif %}

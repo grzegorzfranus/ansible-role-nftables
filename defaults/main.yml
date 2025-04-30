@@ -109,19 +109,11 @@ nftables_blocked_reserved_ranges:
   - "172.16.0.0/12"    # Private-Use Networks
   - "192.0.0.0/24"     # IETF Protocol Assignments
   - "192.0.2.0/24"     # Documentation (TEST-NET-1)
+  - "192.168.0.0/16"   # Private-Use Networks
+  - "198.18.0.0/15"    # Network Interconnect Device Benchmark Testing
+  - "198.51.100.0/24"  # Documentation (TEST-NET-2)
+  - "203.0.113.0/24"   # Reserved for TEST-NET-3
   - "224.0.0.0/3"      # Multicast & Reserved
-
-# SSH configuration
-nftables_ssh:
-  enabled: true
-  port: 2202
-  source: "0.0.0.0/0"
-  state: "new"
-  rate_limit: "10/minute"
-  burst: 5
-  log: true
-  counter: true
-  comment: "Allow SSH access"
 
 # -----------------------------------------------------------------------------
 # 6. Cluster Communication Settings
@@ -164,6 +156,8 @@ nftables_user_defined_input_rules:
     protocol: "tcp"
     port: 12345
     state: "new,established,related"
+    rate_limit: "10/minute"
+    burst: 5
     action: "accept"
     log: true
     counter: true
@@ -196,6 +190,8 @@ nftables_user_defined_forward_rules:
     protocol: "udp"
     port: 54321
     state: "new,established"
+    rate_limit: "20/minute"
+    burst: 10
     action: "accept"
     log: true
     counter: true
@@ -217,6 +213,8 @@ nftables_user_defined_output_rules:
     protocol: "tcp"
     port: "2221,2222"
     state: "new,established"
+    rate_limit: "15/minute"
+    burst: 8
     action: "accept"
     log: true
     counter: true
