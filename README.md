@@ -153,8 +153,8 @@ To disable this protection or customize the ranges, modify this variable in your
 | `nftables_user_defined_output_rules` | List of user-defined output rules | See defaults/main.yml |
 
 **User-defined rule fields:**
-- `source` (optional): Source IP/network (string)
-- `destination` (optional): Destination IP/network (string)
+- `source` (optional): Source IP/network (string or list of strings for multiple sources)
+- `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
 - `protocol` (optional): Protocol (e.g. "tcp", "udp")
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `in_interface` (optional, forward only): Input interface (string)
@@ -167,7 +167,7 @@ To disable this protection or customize the ranges, modify this variable in your
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `comment`: Description of the rule (string)
 
-**Example:**
+**Example with single IP addresses:**
 ```yaml
 nftables_user_defined_output_rules:
   - source: "10.0.0.1"
@@ -183,6 +183,20 @@ nftables_user_defined_output_rules:
     comment: "Full example: output rule with all options"
 ```
 
+**Example with multiple IP addresses:**
+```yaml
+nftables_user_defined_input_rules:
+  - source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+    destination: ["192.168.1.100", "192.168.1.101"]
+    protocol: "tcp"
+    port: "22"
+    state: "new,established"
+    action: "accept"
+    log: true
+    counter: true
+    comment: "Allow SSH from multiple source IPs to multiple destination IPs"
+```
+
 ### 8. NAT Rules Settings
 
 | Variable | Description | Default |
@@ -195,8 +209,8 @@ nftables_user_defined_output_rules:
 **NAT rule fields:**
 - `in_interface` (optional): Input interface (string)
 - `out_interface` (optional): Output interface (string)
-- `source` (optional): Source IP/network (string)
-- `destination` (optional): Destination IP/network (string)
+- `source` (optional): Source IP/network (string or list of strings for multiple sources)
+- `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
 - `protocol` (optional): Protocol (e.g. "tcp", "udp")
 - `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
 - `nat_action`: NAT action ("dnat", "snat", "masquerade")
@@ -224,6 +238,16 @@ nftables_nat_prerouting_rules:
     counter: true
     log: false
     comment: "Forward port range to DMZ server"
+  # Example with multiple source IPs
+  - in_interface: "eth0"
+    source: ["203.0.113.10", "203.0.113.11", "203.0.113.12"]
+    protocol: "tcp"
+    port: "22"
+    nat_action: "dnat"
+    nat_to: "192.168.1.50:22"
+    counter: true
+    log: true
+    comment: "Forward SSH from specific external IPs to internal server"
 
 nftables_nat_postrouting_rules:
   - out_interface: "eth0"
@@ -239,6 +263,15 @@ nftables_nat_postrouting_rules:
     counter: true
     log: false
     comment: "SNAT for DMZ subnet"
+  # Example with multiple source and destination networks
+  - out_interface: "eth0"
+    source: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    destination: ["198.51.100.0/24", "203.0.113.0/24"]
+    nat_action: "snat"
+    nat_to: "198.51.100.1"
+    counter: true
+    log: true
+    comment: "SNAT for multiple internal subnets to specific external networks"
 ```
 
 ## Tags

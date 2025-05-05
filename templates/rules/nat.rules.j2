@@ -22,8 +22,20 @@ table ip nat {
         {%- set parts = [] -%}
         {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
         {%- if rule.out_interface is defined %} {%- set _ = parts.append('oifname ' ~ rule.out_interface) %} {%- endif %}
-        {%- if rule.source is defined %} {%- set _ = parts.append('ip saddr ' ~ rule.source) %} {%- endif %}
-        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.source is defined -%}
+            {%- if rule.source is string -%}
+                {%- set _ = parts.append('ip saddr ' ~ rule.source) -%}
+            {%- else -%}
+                {%- set _ = parts.append('ip saddr { ' ~ rule.source | join(', ') ~ ' }') -%}
+            {%- endif -%}
+        {%- endif -%}
+        {%- if rule.destination is defined -%}
+            {%- if rule.destination is string -%}
+                {%- set _ = parts.append('ip daddr ' ~ rule.destination) -%}
+            {%- else -%}
+                {%- set _ = parts.append('ip daddr { ' ~ rule.destination | join(', ') ~ ' }') -%}
+            {%- endif -%}
+        {%- endif -%}
         {%- if rule.protocol is defined %}
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
@@ -50,8 +62,20 @@ table ip nat {
         {%- set parts = [] -%}
         {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
         {%- if rule.out_interface is defined %} {%- set _ = parts.append('oifname ' ~ rule.out_interface) %} {%- endif %}
-        {%- if rule.source is defined %} {%- set _ = parts.append('ip saddr ' ~ rule.source) %} {%- endif %}
-        {%- if rule.destination is defined %} {%- set _ = parts.append('ip daddr ' ~ rule.destination) %} {%- endif %}
+        {%- if rule.source is defined -%}
+            {%- if rule.source is string -%}
+                {%- set _ = parts.append('ip saddr ' ~ rule.source) -%}
+            {%- else -%}
+                {%- set _ = parts.append('ip saddr { ' ~ rule.source | join(', ') ~ ' }') -%}
+            {%- endif -%}
+        {%- endif -%}
+        {%- if rule.destination is defined -%}
+            {%- if rule.destination is string -%}
+                {%- set _ = parts.append('ip daddr ' ~ rule.destination) -%}
+            {%- else -%}
+                {%- set _ = parts.append('ip daddr { ' ~ rule.destination | join(', ') ~ ' }') -%}
+            {%- endif -%}
+        {%- endif -%}
         {%- if rule.protocol is defined %}
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}

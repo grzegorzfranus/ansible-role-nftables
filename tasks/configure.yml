@@ -42,18 +42,6 @@
     group: root
     mode: "0700"
 
-- name: NFTables | configure | Clear default NFT files with rules (RedHat-specific)
-  become: true
-  ansible.builtin.file:
-    path: "/etc/nftables/{{ item }}"
-    state: absent
-  with_items:
-    - main.nft
-    - nat.nft
-    - router.nft
-  when: >
-    ansible_os_family | lower == "redhat"
-
 # -----------------------------------------------------------------------------
 # 3. Main Configuration
 # -----------------------------------------------------------------------------

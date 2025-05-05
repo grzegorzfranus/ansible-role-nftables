@@ -6,16 +6,33 @@
 # It handles the deployment of various rule sets to control network traffic.
 #
 # Configuration includes:
-# 1. Security protection rules
-# 2. Cluster communication rules
-# 3. User-defined rules
-# 4. NAT rules
-# 5. Base structure (tables and chains)
-# 6. Service validation after rule changes
+# 1. Clearing default rule files
+# 2. Security protection rules
+# 3. Cluster communication rules
+# 4. User-defined rules
+# 5. NAT rules
+# 6. Base structure (tables and chains)
+# 7. Service validation after rule changes
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# 1. Security Protection Rules
+# 1. Clearing Default Rule Files
+# -----------------------------------------------------------------------------
+- name: NFTables | acl | Clear default NFT files with rules (RedHat-specific)
+  become: true
+  ansible.builtin.file:
+    path: "/etc/nftables/{{ item }}"
+    state: absent
+  with_items:
+    - main.nft
+    - nat.nft
+    - router.nft
+  register: _nftables_default_rules_removed_
+  when: >
+    ansible_os_family | lower == "redhat"
+
+# -----------------------------------------------------------------------------
+# 2. Security Protection Rules
 # -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy security protection rules file
   become: true
@@ -40,7 +57,7 @@
     not nftables_configure_security_rules | default(false)
 
 # -----------------------------------------------------------------------------
-# 2. Cluster Communication Rules
+# 3. Cluster Communication Rules
 # -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy cluster communication rules file
   become: true
@@ -65,7 +82,7 @@
     not nftables_cluster_enabled | default(false)
 
 # -----------------------------------------------------------------------------
-# 3. User-Defined Rules
+# 4. User-Defined Rules
 # -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy user-defined rules file
   become: true
@@ -94,7 +111,7 @@
     not nftables_user_defined_output_enabled | default(false)
 
 # -----------------------------------------------------------------------------
-# 4. NAT Rules
+# 5. NAT Rules
 # -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy NAT rules file
   become: true
@@ -121,7 +138,7 @@
     not nftables_nat_postrouting_enabled | default(false)
 
 # -----------------------------------------------------------------------------
-# 5. Base Structure
+# 6. Base Structure
 # -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy base structure file
   become: true
@@ -135,7 +152,7 @@
   register: _nftables_base_rules_
 
 # -----------------------------------------------------------------------------
-# 6. Service Verification
+# 7. Service Verification
 # -----------------------------------------------------------------------------
 - block:
     - name: NFTables | acl | Force restart nftables service
@@ -163,7 +180,9 @@
       when: >
         _nftables_service_state_.stdout == "inactive" or
         _nftables_service_state_.stdout == "failed"
+  # Restart service if any of the rules files have changed
   when: >
+    _nftables_default_rules_removed_.changed | default(false) or
     _nftables_base_rules_.changed | default(false) or
     _nftables_security_rules_.changed | default(false) or
     _nftables_security_rules_removed_.changed | default(false) or

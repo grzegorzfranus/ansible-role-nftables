@@ -151,8 +151,8 @@ nftables_user_defined_output_enabled: false
 # User-defined input rules
 nftables_user_defined_input_rules:
   # Example: All options used
-  - source: "10.0.0.1"
-    destination: "192.168.1.100"
+  - source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
+    destination: ["192.168.1.100", "192.168.1.101"]  # Multiple destination IPs supported
     protocol: "tcp"
     port: 12345
     state: "new,established,related"
@@ -170,23 +170,23 @@ nftables_user_defined_input_rules:
     log: false
     counter: true
     comment: "Allow HTTP traffic"
-  # Example: Allow specific IP to access management port
-  - source: "10.0.0.100"
+  # Example: Allow specific IPs to access management port
+  - source: ["10.0.0.100", "10.0.0.101", "10.0.0.102"]
     protocol: "tcp"
     port: 8080
     state: "new"
     action: "accept"
     log: true
     counter: true
-    comment: "Allow management access from admin"
+    comment: "Allow management access from admin IPs"
 
 # User-defined forward rules
 nftables_user_defined_forward_rules:
   # Example: All options used
   - in_interface: "eth0"
     out_interface: "eth1"
-    source: "10.0.0.1"
-    destination: "192.168.1.100"
+    source: ["10.0.0.1", "10.0.0.2"]  # Multiple source IPs supported
+    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
     protocol: "udp"
     port: 54321
     state: "new,established"
@@ -208,8 +208,8 @@ nftables_user_defined_forward_rules:
 # User-defined output rules
 nftables_user_defined_output_rules:
   # Example: All options used
-  - source: "10.0.0.1"
-    destination: "192.168.1.100"
+  - source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
+    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
     protocol: "tcp"
     port: "2221,2222"
     state: "new,established"
@@ -227,15 +227,15 @@ nftables_user_defined_output_rules:
     log: false
     counter: true
     comment: "Allow DNS queries"
-  # Example: Allow HTTPS to specific destination
-  - destination: "192.168.10.20"
+  # Example: Allow HTTPS to specific destinations
+  - destination: ["192.168.10.20", "192.168.10.21", "192.168.10.22"]
     protocol: "tcp"
     port: 443
     state: "new,established"
     action: "accept"
     log: false
     counter: true
-    comment: "Allow HTTPS to internal server"
+    comment: "Allow HTTPS to internal servers"
 
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
@@ -264,6 +264,16 @@ nftables_nat_prerouting_rules:
     counter: true
     log: false
     comment: "Forward port range to DMZ server"
+  # Example: Forward ports to multiple destination IPs
+  - in_interface: "eth0"
+    source: ["203.0.113.10", "203.0.113.11", "203.0.113.12"]
+    protocol: "tcp"
+    port: "22"
+    nat_action: "dnat"
+    nat_to: "192.168.1.50:22"
+    counter: true
+    log: true
+    comment: "Forward SSH from specific external IPs to internal server"
 
 # Source NAT (SNAT) and masquerading rules for outbound connections
 nftables_nat_postrouting_rules:
@@ -282,3 +292,12 @@ nftables_nat_postrouting_rules:
     counter: true
     log: false
     comment: "SNAT for DMZ subnet"
+  # Example: SNAT for multiple source subnets
+  - out_interface: "eth0"
+    source: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    destination: ["198.51.100.0/24", "203.0.113.0/24"]
+    nat_action: "snat"
+    nat_to: "198.51.100.1"
+    counter: true
+    log: true
+    comment: "SNAT for multiple internal subnets to specific external networks"
