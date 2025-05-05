@@ -230,7 +230,7 @@
           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list)
-        ) | select() | map('regex_search', '^(\d{1,5}(-\d{1,5})?|\d{1,5}(,\d{1,5})*)$') | select('string') | list | length == 
+        ) | select() | map('regex_search', '^(\d{1,5}(-\d{1,5})?|\d{1,5}(,\d{1,5})*)$') | select('string') | list | length ==
         (
           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
@@ -242,7 +242,7 @@
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | list) +
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | list) +
           (nftables_user_defined_output_rules | selectattr('source', 'defined') | list)
-        ) | select() | map(attribute='source') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length == 
+        ) | select() | map(attribute='source') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length ==
         (
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | list) +
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | list) +
@@ -254,7 +254,7 @@
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | list) +
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | list) +
           (nftables_user_defined_output_rules | selectattr('destination', 'defined') | list)
-        ) | select() | map(attribute='destination') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length == 
+        ) | select() | map(attribute='destination') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length ==
         (
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | list) +
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | list) +
@@ -266,7 +266,7 @@
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_user_defined_output_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
-        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length == 
+        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length ==
         (
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
@@ -278,7 +278,7 @@
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_user_defined_output_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
-        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length == 
+        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length ==
         (
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
@@ -325,7 +325,7 @@
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('port', 'defined') | map(attribute='port') | select() | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | select('string') | list | length == 
+        ) | selectattr('port', 'defined') | map(attribute='port') | select() | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | select('string') | list | length ==
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
         ) | selectattr('port', 'defined') | select() | list | length or true
@@ -336,7 +336,7 @@
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('counter', 'defined') | map(attribute='counter') | select() | map('type_debug') | select('string') | map('regex_search', '^bool$') | select('string') | list | length == 
+        ) | selectattr('counter', 'defined') | map(attribute='counter') | select() | map('type_debug') | select('string') | map('regex_search', '^bool$') | select('string') | list | length ==
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
         ) | selectattr('counter', 'defined') | select() | list | length or true
@@ -345,7 +345,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | list)
-        ) | select() | map(attribute='source') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length == 
+        ) | select() | map(attribute='source') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length ==
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | list)
@@ -355,7 +355,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | list)
-        ) | select() | map(attribute='destination') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length == 
+        ) | select() | map(attribute='destination') | map('type_debug') | select('string') | map('regex_search', '^(str|list)$') | select('string') | list | length ==
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | list)
@@ -365,7 +365,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
-        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length == 
+        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length ==
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
@@ -375,10 +375,14 @@
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
-        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length == 
+        ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length ==
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
         ) | select() | flatten | select() | list | length or true
     quiet: true
-    fail_msg: "NAT rules validation failed: Each rule must be a dict. Ports must be valid numeric format. nat_action must be one of: dnat, snat, masquerade. Source and destination must be either strings or lists of strings (all items in the list must be strings)."
+    fail_msg: >-
+      NAT rules validation failed: Each rule must be a dict.
+      Ports must be valid numeric format.
+      nat_action must be one of: dnat, snat, masquerade.
+      Source and destination must be either strings or lists of strings (all items in the list must be strings).
