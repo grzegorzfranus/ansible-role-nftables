@@ -9,7 +9,7 @@
 # Flow:
 # 1. General Settings
 # 2. Logging Configuration
-# 3. Base Filter Chain Policies 
+# 3. Base Filter Chain Policies
 # 4. ICMP/Ping Settings
 # 5. Basic Access Control Settings
 # 6. Cluster Communication Settings
