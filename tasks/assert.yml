@@ -5,12 +5,20 @@
 # This file contains assertions to validate all role variables before execution.
 # These checks ensure that the provided variable values are of the correct type
 # and within valid ranges/options, preventing runtime errors.
+#
+# Flow:
+# 1. General Settings
+# 2. Logging Configuration
+# 3. Base Filter Chain Policies 
+# 4. ICMP/Ping Settings
+# 5. Basic Access Control Settings
+# 6. Cluster Communication Settings
 # =============================================================================
 
 # -----------------------------------------------------------------------------
 # 1. General Settings
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if nftables_role_action is valid
+- name: NFTables | assert | Validate role action parameter
   assert:
     that:
       - nftables_role_action is defined
@@ -19,7 +27,7 @@
     quiet: true
     fail_msg: "nftables_role_action must be one of: all, requirements, install, configure, rules, acl, logrotate, upgrade"
 
-- name: nftables_asserts | Test if nftables_service_enabled is valid
+- name: NFTables | assert | Validate service enabled parameter
   assert:
     that:
       - nftables_service_enabled is defined
@@ -27,7 +35,7 @@
     quiet: true
     fail_msg: "nftables_service_enabled must be a boolean (true/false)"
 
-- name: nftables_asserts | Test if nftables_configure_logrotate is valid
+- name: NFTables | assert | Validate logrotate configuration flag
   assert:
     that:
       - nftables_configure_logrotate is defined
@@ -35,7 +43,7 @@
     quiet: true
     fail_msg: "nftables_configure_logrotate must be a boolean (true/false)"
 
-- name: nftables_asserts | Test if nftables_configure_security_rules is valid
+- name: NFTables | assert | Validate security rules configuration flag
   assert:
     that:
       - nftables_configure_security_rules is defined
@@ -46,7 +54,7 @@
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if nftables_logrotate_options is valid
+- name: NFTables | assert | Validate logrotate options
   assert:
     that:
       - nftables_logrotate_options is defined
@@ -71,7 +79,7 @@
 # -----------------------------------------------------------------------------
 # 3. Base Filter Chain Policies
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if nftables_input_default_policy is valid
+- name: NFTables | assert | Validate input chain default policy
   assert:
     that:
       - nftables_input_default_policy is defined
@@ -80,7 +88,7 @@
     quiet: true
     fail_msg: "nftables_input_default_policy must be one of: accept, drop, reject"
 
-- name: nftables_asserts | Test if nftables_forward_default_policy is valid
+- name: NFTables | assert | Validate forward chain default policy
   assert:
     that:
       - nftables_forward_default_policy is defined
@@ -89,7 +97,7 @@
     quiet: true
     fail_msg: "nftables_forward_default_policy must be one of: accept, drop, reject"
 
-- name: nftables_asserts | Test if nftables_output_default_policy is valid
+- name: NFTables | assert | Validate output chain default policy
   assert:
     that:
       - nftables_output_default_policy is defined
@@ -98,7 +106,7 @@
     quiet: true
     fail_msg: "nftables_output_default_policy must be one of: accept, drop, reject"
 
-- name: nftables_asserts | Test if logging options for dropped packets are valid
+- name: NFTables | assert | Validate logging options for dropped packets
   assert:
     that:
       - nftables_log_input_dropped is defined
@@ -125,7 +133,7 @@
 # -----------------------------------------------------------------------------
 # 4. ICMP/Ping Settings
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if nftables_ping_input is valid
+- name: NFTables | assert | Validate input ICMP/ping settings
   assert:
     that:
       - nftables_ping_input is defined
@@ -143,7 +151,7 @@
     quiet: true
     fail_msg: "nftables_ping_input contains invalid values"
 
-- name: nftables_asserts | Test if nftables_ping_output is valid
+- name: NFTables | assert | Validate output ICMP/ping settings
   assert:
     that:
       - nftables_ping_output is defined
@@ -164,7 +172,7 @@
 # -----------------------------------------------------------------------------
 # 5. Basic Access Control Settings
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if nftables_blocked_reserved_ranges is valid
+- name: NFTables | assert | Validate blocked reserved IP ranges
   assert:
     that:
       - nftables_blocked_reserved_ranges is defined
@@ -175,7 +183,7 @@
 # -----------------------------------------------------------------------------
 # 6. Cluster Communication Settings
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if nftables_cluster_enabled is valid
+- name: NFTables | assert | Validate cluster mode configuration flag
   assert:
     that:
       - nftables_cluster_enabled is defined
@@ -183,7 +191,7 @@
     quiet: true
     fail_msg: "nftables_cluster_enabled must be a boolean (true/false)"
 
-- name: nftables_asserts | Test if nftables_cluster_nodes is valid
+- name: NFTables | assert | Validate cluster nodes list
   assert:
     that:
       - nftables_cluster_nodes is defined
@@ -191,7 +199,7 @@
     quiet: true
     fail_msg: "nftables_cluster_nodes must be a list"
 
-- name: nftables_asserts | Test if nftables_cluster_rules is valid
+- name: NFTables | assert | Validate cluster communication rules
   assert:
     that:
       - nftables_cluster_rules is defined
@@ -203,7 +211,7 @@
 # -----------------------------------------------------------------------------
 # 7. User-Defined Rules Settings
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if user-defined rules enabled flags are valid
+- name: NFTables | assert | Validate user-defined rules enabled flags
   assert:
     that:
       - nftables_user_defined_input_enabled is defined
@@ -215,7 +223,7 @@
     quiet: true
     fail_msg: "User-defined rules enabled flags must be boolean values"
 
-- name: nftables_asserts | Test if user-defined rules lists are valid
+- name: NFTables | assert | Validate user-defined rules lists
   assert:
     that:
       - nftables_user_defined_input_rules is defined
@@ -287,7 +295,7 @@
     quiet: true
     fail_msg: "User-defined rules validation failed: port must be a valid numeric format, source and destination must be either strings or lists of strings (all items in the list must be strings)"
 
-- name: nftables_asserts | Test if user-defined rules 'counter' field is valid
+- name: NFTables | assert | Validate user-defined rules counter field
   assert:
     that:
       - >
@@ -300,7 +308,7 @@
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
 # -----------------------------------------------------------------------------
-- name: nftables_asserts | Test if NAT enabled flags are valid
+- name: NFTables | assert | Validate NAT enabled flags
   assert:
     that:
       - nftables_nat_prerouting_enabled is defined
@@ -310,7 +318,7 @@
     quiet: true
     fail_msg: "NAT enabled flags must be boolean values"
 
-- name: nftables_asserts | Test if NAT rules lists are valid
+- name: NFTables | assert | Validate NAT rules lists
   assert:
     that:
       - nftables_nat_prerouting_rules is defined

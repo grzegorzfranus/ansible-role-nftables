@@ -2,7 +2,9 @@
 # =============================================================================
 # Ansible Role: NFTables - Configuration Tasks
 # =============================================================================
-# This file handles the configuration of the NFTables service, including:
+# This file handles the configuration of the NFTables service.
+#
+# Flow:
 # 1. Service management (enable/disable)
 # 2. Setting up directory structure
 # 3. Configuring main NFTables settings

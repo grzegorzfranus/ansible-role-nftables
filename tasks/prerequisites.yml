@@ -5,6 +5,8 @@
 # This file handles all prerequisite checks and configurations required by
 # NFTables before installation. It ensures the system environment is properly
 # prepared by:
+#
+# Flow:
 # 1. Setting up rsyslog for logging
 # 2. Disabling conflicting firewall services
 #

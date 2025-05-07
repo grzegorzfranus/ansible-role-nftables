@@ -3,7 +3,9 @@
 # Ansible Role: NFTables - Reboot Tasks
 # =============================================================================
 # This file manages the system reboot process required by certain NFTables
-# configuration changes. It handles:
+# configuration changes.
+#
+# Flow:
 # 1. Initiating a controlled reboot
 # 2. Waiting for the system to come back online
 # 3. Ensuring proper timing for post-reboot tasks

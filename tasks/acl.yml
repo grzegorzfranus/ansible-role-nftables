@@ -5,7 +5,7 @@
 # This file manages the configuration of NFTables access control lists (rules).
 # It handles the deployment of various rule sets to control network traffic.
 #
-# Configuration includes:
+# Flow:
 # 1. Clearing default rule files
 # 2. Security protection rules
 # 3. Cluster communication rules
