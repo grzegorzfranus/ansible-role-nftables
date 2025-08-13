@@ -12,7 +12,8 @@
 # -----------------------------------------------------------------------------
 # Service Handlers
 # -----------------------------------------------------------------------------
-- name: NFTables | handlers | Restart rsyslog service
+- name: 🔄 NFTables | handlers | Restart rsyslog service
+  listen: "NFTables | handlers | Restart rsyslog service"
   become: true
   ansible.builtin.service:
     name: rsyslog
@@ -21,7 +22,8 @@
     not (ansible_virtualization_type is defined and
       ansible_virtualization_type == 'docker')
 
-- name: NFTables | handlers | Restart nftables service
+- name: 🔄 NFTables | handlers | Restart nftables service
+  listen: "NFTables | handlers | Restart nftables service"
   become: true
   ansible.builtin.service:
     name: "{{ nftables_service_name }}"

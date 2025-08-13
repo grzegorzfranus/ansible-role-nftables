@@ -31,7 +31,6 @@ List of officially supported operating systems:
 | Debian | 12 (Bookworm) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 11 (Bullseye) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Rocky Linux | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
-| Oracle Linux | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 
 ### Ansible version
 
@@ -155,7 +154,7 @@ To disable this protection or customize the ranges, modify this variable in your
 **User-defined rule fields:**
 - `source` (optional): Source IP/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
-- `protocol` (optional): Protocol (e.g. "tcp", "udp")
+- `protocol` (optional): Protocol (e.g. "tcp", "udp"). If omitted but `port` is provided, the role defaults to `tcp`.
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `in_interface` (optional, forward only): Input interface (string)
 - `out_interface` (optional, forward only): Output interface (string)

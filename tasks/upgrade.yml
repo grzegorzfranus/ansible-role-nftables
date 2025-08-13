@@ -17,10 +17,10 @@
 # -----------------------------------------------------------------------------
 # Package Upgrade
 # -----------------------------------------------------------------------------
-- name: NFTables | upgrade | Upgrade NFTables package to the latest version
+- name: ⬆️ NFTables | upgrade | Upgrade NFTables package to the latest version
   become: true
   ansible.builtin.package:
     name: "{{ nftables_package_name }}"
     state: latest
     update_cache: true
-  notify: NFTables | handlers | Restart nftables Service
+  notify: NFTables | handlers | Restart nftables service

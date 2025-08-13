@@ -17,21 +17,21 @@
 # -----------------------------------------------------------------------------
 # 1. Rsyslog Setup
 # -----------------------------------------------------------------------------
-- name: NFTables | prerequisites | Install rsyslog package
+- name: 📦 NFTables | prerequisites | Install rsyslog package
   become: true
   ansible.builtin.package:
     name: rsyslog
     state: present
   register: _nftables_rsyslog_package_
 
-- name: NFTables | prerequisites | Ensure service is enabled
+- name: ⚙️ NFTables | prerequisites | Ensure service is enabled
   become: true
   ansible.builtin.service:
     name: rsyslog
     enabled: true
   register: _nftables_rsyslog_status_
 
-- name: NFTables | prerequisites | Check if system requires reboot
+- name: 🔄 NFTables | prerequisites | Check if system requires reboot
   ansible.builtin.set_fact:
     nftables_reboot_required: true
   when: >
@@ -41,11 +41,11 @@
 # -----------------------------------------------------------------------------
 # 2. Conflicting Firewall Services
 # -----------------------------------------------------------------------------
-- name: NFTables | prerequisites | Gather service facts
+- name: 🧾 NFTables | prerequisites | Gather service facts
   become: true
   ansible.builtin.service_facts:
 
-- name: NFTables | prerequisites | Stop firewalld service
+- name: 🧯 NFTables | prerequisites | Stop firewalld service
   become: true
   ansible.builtin.service:
     name: firewalld
@@ -56,7 +56,7 @@
     ansible_facts.services['firewalld.service'] is defined and
     ansible_facts.services['firewalld.service'].state == 'running'
 
-- name: NFTables | prerequisites | Disable firewalld service
+- name: 🧯 NFTables | prerequisites | Disable firewalld service
   become: true
   ansible.builtin.service:
     name: firewalld
@@ -67,7 +67,7 @@
     ansible_facts.services['firewalld.service'] is defined and
     ansible_facts.services['firewalld.service'].status == 'enabled'
 
-- name: NFTables | prerequisites | Stop iptables service
+- name: 🧯 NFTables | prerequisites | Stop iptables service
   become: true
   ansible.builtin.service:
     name: iptables
@@ -78,7 +78,7 @@
     ansible_facts.services['iptables.service'] is defined and
     ansible_facts.services['iptables.service'].state == 'running'
 
-- name: NFTables | prerequisites | Disable iptables service
+- name: 🧯 NFTables | prerequisites | Disable iptables service
   become: true
   ansible.builtin.service:
     name: iptables
@@ -89,7 +89,7 @@
     ansible_facts.services['iptables.service'] is defined and
     ansible_facts.services['iptables.service'].status == 'enabled'
 
-- name: NFTables | prerequisites | Stop netfilter-persistent service
+- name: 🧯 NFTables | prerequisites | Stop netfilter-persistent service
   become: true
   ansible.builtin.service:
     name: netfilter-persistent
@@ -100,7 +100,7 @@
     ansible_facts.services['netfilter-persistent.service'] is defined and
     ansible_facts.services['netfilter-persistent.service'].state == 'running'
 
-- name: NFTables | prerequisites | Disable netfilter-persistent service
+- name: 🧯 NFTables | prerequisites | Disable netfilter-persistent service
   become: true
   ansible.builtin.service:
     name: netfilter-persistent
@@ -111,7 +111,7 @@
     ansible_facts.services['netfilter-persistent.service'] is defined and
     ansible_facts.services['netfilter-persistent.service'].status == 'enabled'
 
-- name: NFTables | prerequisites | Stop ufw service
+- name: 🧯 NFTables | prerequisites | Stop ufw service
   become: true
   ansible.builtin.service:
     name: ufw
@@ -122,7 +122,7 @@
     ansible_facts.services['ufw.service'] is defined and
     ansible_facts.services['ufw.service'].state == 'running'
 
-- name: NFTables | prerequisites | Disable ufw service
+- name: 🧯 NFTables | prerequisites | Disable ufw service
   become: true
   ansible.builtin.service:
     name: ufw
