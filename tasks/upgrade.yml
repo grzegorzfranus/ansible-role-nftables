@@ -17,7 +17,7 @@
 # -----------------------------------------------------------------------------
 # Package Upgrade
 # -----------------------------------------------------------------------------
-- name: ⬆️ NFTables | upgrade | Upgrade NFTables package to the latest version
+- name: NFTables | upgrade | Upgrade NFTables package to the latest version
   become: true
   ansible.builtin.package:
     name: "{{ nftables_package_name }}"

@@ -16,7 +16,7 @@
 # -----------------------------------------------------------------------------
 # 1. Service Management
 # -----------------------------------------------------------------------------
-- name: ⚙️ NFTables | configure | Enable NFTables service on system startup
+- name: NFTables | configure | Enable NFTables service on system startup
   become: true
   ansible.builtin.service:
     name: "{{ nftables_service_name }}"
@@ -24,7 +24,7 @@
   when: >
     nftables_service_enabled | default(false)
 
-- name: ⚙️ NFTables | configure | Disable NFTables service on system startup
+- name: NFTables | configure | Disable NFTables service on system startup
   become: true
   ansible.builtin.service:
     name: "{{ nftables_service_name }}"
@@ -35,7 +35,7 @@
 # -----------------------------------------------------------------------------
 # 2. Directory Structure
 # -----------------------------------------------------------------------------
-- name: 📂 NFTables | configure | Create directory for rules
+- name: NFTables | configure | Create directory for rules
   become: true
   ansible.builtin.file:
     path: "{{ nftables_rules_directory_path }}"
@@ -47,7 +47,7 @@
 # -----------------------------------------------------------------------------
 # 3. Main Configuration
 # -----------------------------------------------------------------------------
-- name: 🧩 NFTables | configure | Deploy configuration file
+- name: NFTables | configure | Deploy configuration file
   become: true
   ansible.builtin.template:
     src: templates/nftables.conf.j2
@@ -60,7 +60,7 @@
 # -----------------------------------------------------------------------------
 # 4. Logging Setup
 # -----------------------------------------------------------------------------
-- name: 📂 NFTables | configure | Create directory for log files
+- name: NFTables | configure | Create directory for log files
   become: true
   ansible.builtin.file:
     path: "{{ nftables_log_directory_path }}"
@@ -69,7 +69,7 @@
     group: "{{ nftables_log_directory_group }}"
     mode: "0750"
 
-- name: 🧩 NFTables | configure | Deploy rsyslog configuration file
+- name: NFTables | configure | Deploy rsyslog configuration file
   become: true
   ansible.builtin.template:
     src: templates/rsyslog/nftables.conf.j2

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-11-30
+
+### Fixed 🔧
+- Fix Ansible 2.20 compatibility: assertion for user-defined rules counter field now returns proper boolean instead of string from regex match
+- Update conditional logic in `assert.yml` to use `select('equalto', 'bool')` pattern for type validation
+- Fix Ansible 2.24 deprecation warnings: replace top-level fact variables with `ansible_facts['...']` format across all task files, handlers, and molecule tests
+
+### Changed 🔄
+- Remove emojis from all task and handler names for cleaner output and better log parsing
+- Minimum Ansible version bumped to 2.20 compatibility
+
+---
+
 ## [1.4.0] - 2025-08-13
 ### Added ✅
 - CHANGELOG introduced and aligned with core rules.

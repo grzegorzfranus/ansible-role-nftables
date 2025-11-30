@@ -21,7 +21,7 @@
 # -----------------------------------------------------------------------------
 # 1. OS-Specific Variables
 # -----------------------------------------------------------------------------
-- name: 📂 NFTables | include_vars | Gather OS specific variables
+- name: NFTables | include_vars | Gather OS specific variables
   ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
   vars:
     params:
@@ -43,7 +43,7 @@
 # -----------------------------------------------------------------------------
 # 2. Variable Validation
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate role variables and requirements
+- name: NFTables | assert | Validate role variables and requirements
   ansible.builtin.import_tasks: assert.yml
   run_once: true
   delegate_to: localhost
@@ -55,7 +55,7 @@
 # -----------------------------------------------------------------------------
 # 3. System Prerequisites
 # -----------------------------------------------------------------------------
-- name: ⚙️ NFTables | prerequisites | Verify system prerequisites
+- name: NFTables | prerequisites | Verify system prerequisites
   ansible.builtin.include_tasks: prerequisites.yml
   when: >
     nftables_role_action in ['all', 'requirements']
@@ -66,19 +66,19 @@
 # -----------------------------------------------------------------------------
 # 4. System Reboot (If Required)
 # -----------------------------------------------------------------------------
-- name: 🔄 NFTables | reboot | Reboot system if required
+- name: NFTables | reboot | Reboot system if required
   ansible.builtin.include_tasks: reboot.yml
   when: >
     nftables_reboot_required | default(false) and
-    not (ansible_virtualization_type is defined and
-      ansible_virtualization_type == 'docker')
+    not (ansible_facts['virtualization_type'] is defined and
+      ansible_facts['virtualization_type'] == 'docker')
   tags:
     - reboot
 
 # -----------------------------------------------------------------------------
 # 5. Package Installation
 # -----------------------------------------------------------------------------
-- name: 📦 NFTables | install | Install NFTables package
+- name: NFTables | install | Install NFTables package
   ansible.builtin.include_tasks: install.yml
   when: >
     nftables_role_action in ['all', 'install']
@@ -89,7 +89,7 @@
 # -----------------------------------------------------------------------------
 # 6. Service Configuration
 # -----------------------------------------------------------------------------
-- name: ⚙️ NFTables | configure | Configure NFTables service
+- name: NFTables | configure | Configure NFTables service
   ansible.builtin.include_tasks: configure.yml
   when: >
     nftables_role_action in ['all', 'configure']
@@ -100,7 +100,7 @@
 # -----------------------------------------------------------------------------
 # 7. Rules Configuration
 # -----------------------------------------------------------------------------
-- name: ⚙️ NFTables | acl | Configure access control lists for NFTables
+- name: NFTables | acl | Configure access control lists for NFTables
   ansible.builtin.include_tasks: acl.yml
   when: >
     nftables_role_action in ['all', 'configure', 'rules', 'acl']
@@ -112,7 +112,7 @@
 # -----------------------------------------------------------------------------
 # 8. Logrotate Configuration (Optional)
 # -----------------------------------------------------------------------------
-- name: ⚙️ NFTables | logrotate | Configure logrotate for NFTables service
+- name: NFTables | logrotate | Configure logrotate for NFTables service
   ansible.builtin.include_tasks: logrotate.yml
   when: >
     nftables_role_action in ['all', 'configure', 'logrotate'] and
@@ -124,7 +124,7 @@
 # -----------------------------------------------------------------------------
 # 9. Package Upgrade
 # -----------------------------------------------------------------------------
-- name: 📦 NFTables | upgrade | Upgrade NFTables package
+- name: NFTables | upgrade | Upgrade NFTables package
   ansible.builtin.include_tasks: upgrade.yml
   when: >
     nftables_role_action in ['upgrade']

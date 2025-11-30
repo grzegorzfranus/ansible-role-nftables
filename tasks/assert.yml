@@ -18,7 +18,7 @@
 # -----------------------------------------------------------------------------
 # 1. General Settings
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate role action parameter
+- name: NFTables | assert | Validate role action parameter
   ansible.builtin.assert:
     that:
       - nftables_role_action is defined
@@ -27,7 +27,7 @@
     fail_msg: "❌ Invalid role action '{{ nftables_role_action | default('undefined') }}'. Must be one of: all, requirements, install, configure, rules, acl, logrotate, upgrade"
     success_msg: "✅ Role action parameter is valid: {{ nftables_role_action }}"
 
-- name: 🧪 NFTables | assert | Validate service enabled parameter
+- name: NFTables | assert | Validate service enabled parameter
   ansible.builtin.assert:
     that:
       - nftables_service_enabled is defined
@@ -35,7 +35,7 @@
     fail_msg: "❌ Invalid service enabled flag '{{ nftables_service_enabled | default('undefined') }}'. Must be boolean (true/false)"
     success_msg: "✅ Service enabled flag is valid: {{ nftables_service_enabled }}"
 
-- name: 🧪 NFTables | assert | Validate logrotate configuration flag
+- name: NFTables | assert | Validate logrotate configuration flag
   ansible.builtin.assert:
     that:
       - nftables_configure_logrotate is defined
@@ -43,7 +43,7 @@
     fail_msg: "❌ Invalid logrotate configuration flag '{{ nftables_configure_logrotate | default('undefined') }}'. Must be boolean (true/false)"
     success_msg: "✅ Logrotate configuration flag is valid: {{ nftables_configure_logrotate }}"
 
-- name: 🧪 NFTables | assert | Validate security rules configuration flag
+- name: NFTables | assert | Validate security rules configuration flag
   ansible.builtin.assert:
     that:
       - nftables_configure_security_rules is defined
@@ -54,7 +54,7 @@
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate logrotate options
+- name: NFTables | assert | Validate logrotate options
   ansible.builtin.assert:
     that:
       - nftables_logrotate_options is defined
@@ -79,7 +79,7 @@
 # -----------------------------------------------------------------------------
 # 3. Base Filter Chain Policies
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate input chain default policy
+- name: NFTables | assert | Validate input chain default policy
   ansible.builtin.assert:
     that:
       - nftables_input_default_policy is defined
@@ -88,7 +88,7 @@
     fail_msg: "❌ Invalid input default policy '{{ nftables_input_default_policy | default('undefined') }}'. Must be one of: accept, drop, reject"
     success_msg: "✅ Input default policy is valid: {{ nftables_input_default_policy }}"
 
-- name: 🧪 NFTables | assert | Validate forward chain default policy
+- name: NFTables | assert | Validate forward chain default policy
   ansible.builtin.assert:
     that:
       - nftables_forward_default_policy is defined
@@ -97,7 +97,7 @@
     fail_msg: "❌ Invalid forward default policy '{{ nftables_forward_default_policy | default('undefined') }}'. Must be one of: accept, drop, reject"
     success_msg: "✅ Forward default policy is valid: {{ nftables_forward_default_policy }}"
 
-- name: 🧪 NFTables | assert | Validate output chain default policy
+- name: NFTables | assert | Validate output chain default policy
   ansible.builtin.assert:
     that:
       - nftables_output_default_policy is defined
@@ -106,7 +106,7 @@
     fail_msg: "❌ Invalid output default policy '{{ nftables_output_default_policy | default('undefined') }}'. Must be one of: accept, drop, reject"
     success_msg: "✅ Output default policy is valid: {{ nftables_output_default_policy }}"
 
-- name: 🧪 NFTables | assert | Validate logging options for dropped packets
+- name: NFTables | assert | Validate logging options for dropped packets
   ansible.builtin.assert:
     that:
       - nftables_log_input_dropped is defined
@@ -133,7 +133,7 @@
 # -----------------------------------------------------------------------------
 # 4. ICMP/Ping Settings
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate input ICMP/ping settings
+- name: NFTables | assert | Validate input ICMP/ping settings
   ansible.builtin.assert:
     that:
       - nftables_ping_input is defined
@@ -151,7 +151,7 @@
     fail_msg: "❌ Invalid input ICMP/ping settings"
     success_msg: "✅ Input ICMP/ping settings are valid"
 
-- name: 🧪 NFTables | assert | Validate output ICMP/ping settings
+- name: NFTables | assert | Validate output ICMP/ping settings
   ansible.builtin.assert:
     that:
       - nftables_ping_output is defined
@@ -172,7 +172,7 @@
 # -----------------------------------------------------------------------------
 # 5. Basic Access Control Settings
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate blocked reserved IP ranges
+- name: NFTables | assert | Validate blocked reserved IP ranges
   ansible.builtin.assert:
     that:
       - nftables_blocked_reserved_ranges is defined
@@ -183,7 +183,7 @@
 # -----------------------------------------------------------------------------
 # 6. Cluster Communication Settings
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate cluster mode configuration flag
+- name: NFTables | assert | Validate cluster mode configuration flag
   ansible.builtin.assert:
     that:
       - nftables_cluster_enabled is defined
@@ -191,7 +191,7 @@
     fail_msg: "❌ Invalid cluster enabled flag '{{ nftables_cluster_enabled | default('undefined') }}'. Must be boolean (true/false)"
     success_msg: "✅ Cluster enabled flag is valid: {{ nftables_cluster_enabled }}"
 
-- name: 🧪 NFTables | assert | Validate cluster nodes list
+- name: NFTables | assert | Validate cluster nodes list
   ansible.builtin.assert:
     that:
       - nftables_cluster_nodes is defined
@@ -199,7 +199,7 @@
     fail_msg: "❌ Invalid cluster nodes list. Must be a list"
     success_msg: "✅ Cluster nodes list is valid"
 
-- name: 🧪 NFTables | assert | Validate cluster communication rules
+- name: NFTables | assert | Validate cluster communication rules
   ansible.builtin.assert:
     that:
       - nftables_cluster_rules is defined
@@ -211,7 +211,7 @@
 # -----------------------------------------------------------------------------
 # 7. User-Defined Rules Settings
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate user-defined rules enabled flags
+- name: NFTables | assert | Validate user-defined rules enabled flags
   ansible.builtin.assert:
     that:
       - nftables_user_defined_input_enabled is defined
@@ -223,7 +223,7 @@
     fail_msg: "❌ User-defined rules enabled flags must be boolean values"
     success_msg: "✅ User-defined rules enabled flags are valid"
 
-- name: 🧪 NFTables | assert | Validate user-defined rules lists
+- name: NFTables | assert | Validate user-defined rules lists
   ansible.builtin.assert:
     that:
       - nftables_user_defined_input_rules is defined
@@ -295,20 +295,23 @@
     fail_msg: "❌ User-defined rules validation failed: port must be numeric/range/list; source/destination must be strings or lists of strings"
     success_msg: "✅ User-defined rules structure looks valid"
 
-- name: 🧪 NFTables | assert | Validate user-defined rules counter field
+- name: NFTables | assert | Validate user-defined rules counter field
   ansible.builtin.assert:
     that:
       - >
         (
           nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules
-        ) | selectattr('counter', 'defined') | map(attribute='counter') | list | map('type_debug') | map('regex_search', '^bool$') | min
+        ) | selectattr('counter', 'defined') | map(attribute='counter') | map('type_debug') | select('equalto', 'bool') | list | length ==
+        (
+          nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules
+        ) | selectattr('counter', 'defined') | list | length
     fail_msg: "❌ User-defined rules 'counter' field must be boolean when provided"
     success_msg: "✅ User-defined rules 'counter' field types are valid"
 
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
 # -----------------------------------------------------------------------------
-- name: 🧪 NFTables | assert | Validate NAT enabled flags
+- name: NFTables | assert | Validate NAT enabled flags
   ansible.builtin.assert:
     that:
       - nftables_nat_prerouting_enabled is defined
@@ -318,7 +321,7 @@
     fail_msg: "❌ NAT enabled flags must be boolean values"
     success_msg: "✅ NAT enabled flags are valid"
 
-- name: 🧪 NFTables | assert | Validate NAT rules lists
+- name: NFTables | assert | Validate NAT rules lists
   ansible.builtin.assert:
     that:
       - nftables_nat_prerouting_rules is defined
