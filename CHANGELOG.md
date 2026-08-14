@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.5.0...v1.5.1) (2026-08-14)
+
+
+### CI/CD
+
+* modernize repository automation and configs ([#1](https://github.com/grzegorzfranus/ansible-role-nftables/issues/1)) ([4a347dc](https://github.com/grzegorzfranus/ansible-role-nftables/commit/4a347dc79abab8f9ee744cdf1c4b249e067fecd8))
+
 ## [1.5.0] - 2025-11-30
 
 ### Fixed 🔧
