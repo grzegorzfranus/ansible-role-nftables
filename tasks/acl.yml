@@ -154,32 +154,7 @@
 # -----------------------------------------------------------------------------
 # 7. Service Verification
 # -----------------------------------------------------------------------------
-- block:
-    - name: NFTables | acl | Force restart nftables service
-      become: true
-      ansible.builtin.service:
-        name: "{{ nftables_service_name }}"
-        state: restarted
-
-    - name: NFTables | acl | Pause for 5 seconds to load nftables service
-      ansible.builtin.pause:
-        seconds: 5
-
-    - name: NFTables | acl | Verify nftables service status
-      become: true
-      ansible.builtin.command: >
-        systemctl is-active {{ nftables_service_name }}
-      failed_when: false
-      changed_when: false
-      register: _nftables_service_state_
-
-    - name: NFTables | acl | Fail if nftables service is not running
-      ansible.builtin.fail:
-        msg: "nftables service is not running!"
-      when: >
-        _nftables_service_state_.stdout == "inactive" or
-        _nftables_service_state_.stdout == "failed"
-  # Restart service if any of the rules files have changed
+- name: NFTables | acl | Restart and verify nftables service
   when: >
     _nftables_default_rules_removed_.changed | default(false) or
     _nftables_base_rules_.changed | default(false) or
@@ -191,3 +166,25 @@
     _nftables_user_defined_rules_removed_.changed | default(false) or
     _nftables_nat_rules_.changed | default(false) or
     _nftables_nat_rules_removed_.changed | default(false)
+  block:
+    - name: NFTables | acl | Force restart nftables service
+      become: true
+      ansible.builtin.service:
+        name: "{{ nftables_service_name }}"
+        state: restarted
+
+    - name: NFTables | acl | Pause for 5 seconds to load nftables service
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: NFTables | acl | Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: NFTables | acl | Fail if nftables service is not running
+      ansible.builtin.fail:
+        msg: "nftables service is not running!"
+      when: >
+        (ansible_facts.services[nftables_service_name ~ '.service'] is defined and
+         ansible_facts.services[nftables_service_name ~ '.service'].state != 'running') or
+        (ansible_facts.services[nftables_service_name] is defined and
+         ansible_facts.services[nftables_service_name].state != 'running')
