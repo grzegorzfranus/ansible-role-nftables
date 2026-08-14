@@ -89,5 +89,7 @@
 
     nftables_reboot_required: false
 
-  roles:
-    - role: grzegorzfranus.nftables
+  tasks:
+    - name: Converge | Include NFTables role
+      ansible.builtin.include_role:
+        name: "{{ playbook_dir }}/../.."
