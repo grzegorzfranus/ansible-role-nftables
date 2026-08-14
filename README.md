@@ -1,67 +1,133 @@
 # Ansible Role: NFTables
 
 |Source|Version|CI|License|
-|------|-------|-------|-------|
-|[![Source Code](https://img.shields.io/badge/source-github-blue.svg)](https://github.com/grzegorzfranus/ansible-role-nftables)|[![Version](https://img.shields.io/github/v/release/grzegorzfranus/ansible-role-nftables)](https://github.com/grzegorzfranus/ansible-role-nftables/releases)|[![tests](https://github.com/grzegorzfranus/ansible-role-nftables/actions/workflows/ci.yml/badge.svg)](https://github.com/grzegorzfranus/ansible-role-nftables/actions)|[![Repository License](https://img.shields.io/badge/license-apache2.0-brightgreen.svg)](LICENSE)|
+|------|-------|--|-------|
+|[![Source Code](https://img.shields.io/badge/source-github-blue.svg)](https://github.com/grzegorzfranus/ansible-role-nftables)|[![Version](https://img.shields.io/github/v/release/grzegorzfranus/ansible-role-nftables)](https://github.com/grzegorzfranus/ansible-role-nftables/releases)|[![CI](https://github.com/grzegorzfranus/ansible-role-nftables/actions/workflows/ci.yml/badge.svg)](https://github.com/grzegorzfranus/ansible-role-nftables/actions/workflows/ci.yml)|[![Repository License](https://img.shields.io/badge/license-apache2.0-brightgreen.svg)](LICENSE)|
 
-This Ansible role installs and configures NFTables, a powerful and flexible firewall system for Linux. It provides a comprehensive solution for network packet filtering with features like stateful connection tracking, rate limiting, logging, and NAT.
+This Ansible role installs, configures, hardens, and manages NFTables, the modern Linux kernel packet classification framework. It provides a modular, enterprise-grade firewall solution featuring stateful connection tracking, rate-limited logging, anti-spoofing bogon filtering, cluster interconnect policies, user-defined rules, NAT / port forwarding, and automatic conflict mitigation.
 
-## Main Actions
+## ✨ Features
 
-- Verify and handle system requirements
-- Disable conflicting firewall services (firewalld, iptables, ufw)
-- Install NFTables package
-- Configure NFTables service
-- Deploy base filtering rules
-- Configure security protection rules (optional)
-- Set up cluster communication rules (optional)
-- Configure user-defined custom rules (optional)
-- Configure NAT rules (optional)
-- Set up logrotate for NFTables logs (optional)
-- Upgrade NFTables package (when requested)
+- 🛡️ **Modular Rule Architecture**: Divides firewall rules into distinct, sequentially loaded configuration files (`00-base` through `40-nat`)
+- 🔒 **Stateful Connection Tracking**: Automatic handling of `ct state established,related` with configurable default drop/reject policies
+- 🚫 **Anti-Spoofing & Reserved Range Filtering**: Built-in, customizable blocking of IETF/IANA reserved and bogon address spaces on external interfaces
+- 👥 **Cluster Interconnect Support**: Dedicated rules for trusted node-to-node communication across distributed cluster systems
+- 🔀 **Integrated NAT & Port Forwarding**: Native DNAT (prerouting) and SNAT / Masquerading (postrouting) support
+- 📝 **Rate-Limited Logging & Logrotate**: Drop-packet logging with configurable burst/rate limits and automated log rotation
+- 🛑 **Conflict Service Mitigation**: Automatically detects, stops, and disables conflicting firewall daemons (`firewalld`, `iptables`, `ufw`, `netfilter-persistent`)
+- 🧪 **Molecule Tested**: Multi-distribution testing across Ubuntu 22.04/24.04, Debian 11/12, and Rocky Linux 9
+- 🔄 **Idempotent & Safe Execution**: Pre-validates all generated rule files via `nft -c -f` before applying service reloads
 
-## Requirements
+## 🎯 Architecture
+
+The role structures firewall rules into a modular hierarchy inside `/etc/nftables/rules/`. The main configuration file (`/etc/nftables.conf` or `/etc/nftables/nftables.conf`) includes these files in strict lexicographical order:
+
+```mermaid
+flowchart TD
+    A["00-base.rules<br>Base tables (inet filter), chains (input, forward, output),<br>connection tracking, loopback accept, drop logging"] --> B["10-firewall.rules<br>ICMP/Ping rate-limited policies &<br>reserved subnet anti-spoofing filters"]
+    B --> C["20-cluster.rules<br>Trusted node-to-node communication<br>for multi-host cluster environments"]
+    C --> D["30-user-defined.rules<br>Custom user-defined rules for input,<br>forwarding, and outbound traffic"]
+    D --> E["40-nat.rules<br>NAT tables (ip nat) with DNAT prerouting<br>and SNAT / Masquerade postrouting"]
+```
+
+### Modular Rule Evaluation Sequence
+
+1. **`00-base.rules`**: Establishes the `inet filter` table, sets base chain policies (`drop`/`accept`), allows `established,related` traffic, permits loopback traffic, and configures rate-limited drop logging.
+2. **`10-firewall.rules`**: Applies ICMP/ping rate limiting and blocks reserved/bogon IPv4 subnets from entering external interfaces.
+3. **`20-cluster.rules`**: Permits bidirectional traffic among explicitly configured cluster node IPs on defined service ports.
+4. **`30-user-defined.rules`**: Evaluates custom firewall rules defined by administrators for input, forward, and output chains.
+5. **`40-nat.rules`**: Defines the `ip nat` table for destination NAT (port forwarding) and source NAT / masquerading.
+
+## 📋 Requirements
+
+- **Ansible**: 2.20 or higher
+- **Python**: 3.9 or higher on target hosts
+- **Privileges**: sudo/root access on target hosts
 
 ### Supported operating systems
-List of officially supported operating systems:
+
+List of officially supported operating systems for this role:
+
 | OS Family | Version | Status |
 |-----------|---------|---------|
 | Ubuntu | 24.04 (Noble) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Ubuntu | 22.04 (Jammy) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 12 (Bookworm) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 11 (Bullseye) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
-| Rocky Linux | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
-
-### Ansible version
-
-Ansible >= 2.20
-
-### Python version
-
-Python >= 3.9
+| EL (RHEL, Rocky, Alma) | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 
 ### Setup module
-The role uses facts gathered by Ansible on the remote host. If you disable the Setup module in your playbook, the role will not work properly.
+
+The role relies on facts gathered by Ansible on the remote host (`ansible_facts['os_family']`, `ansible_facts['distribution']`). If you disable the Setup module in your playbook, the role will not function properly.
 
 ### Root access
-This role requires root access, so either configure it in your inventory files, run it in a playbook with a global `become: true` or invoke the role in your playbook like:
+
+This role requires root privileges to install packages, configure kernel firewall tables, and manage systemd services. Ensure `become: true` is configured at the play or role level.
+
+## 🚀 Quick Start
+
+### 1. Basic Firewall Setup
+
 ```yaml
-- hosts: servers
+---
+- name: Configure NFTables Firewall
+  hosts: all
   become: true
   roles:
     - role: grzegorzfranus.nftables
+      vars:
+        nftables_service_enabled: true
+        nftables_configure_logrotate: true
+        nftables_input_default_policy: "drop"
+        nftables_forward_default_policy: "drop"
+        nftables_output_default_policy: "accept"
+        nftables_user_defined_input_enabled: true
+        nftables_user_defined_input_rules:
+          - protocol: "tcp"
+            port: "22"
+            action: "accept"
+            comment: "Allow SSH management"
 ```
 
-## Role Variables
+### 2. Run the playbook
+
+```bash
+ansible-playbook -i inventory firewall-setup.yml
+```
+
+## ⚙️ Configuration
+
+### Default Configuration
+
+The role comes with secure, production-ready defaults:
+
+```yaml
+nftables_role_action: "all"
+nftables_service_enabled: true
+nftables_configure_logrotate: true
+nftables_configure_security_rules: false
+nftables_reboot_required: false
+
+nftables_input_default_policy: "drop"
+nftables_forward_default_policy: "drop"
+nftables_output_default_policy: "drop"
+
+nftables_log_input_dropped: true
+nftables_log_forward_dropped: true
+nftables_log_output_dropped: true
+```
+
+## 📊 Variables
 
 ### 1. General Settings
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `nftables_role_action` | Define which parts of the role to execute (Options: 'all', 'requirements', 'install', 'configure', 'rules', 'acl', 'logrotate', 'upgrade') | `"all"` |
+| `nftables_role_action` | Define which parts of the role to execute (Options: `'all'`, `'requirements'`, `'install'`, `'configure'`, `'rules'`, `'acl'`, `'logrotate'`, `'upgrade'`) | `"all"` |
 | `nftables_service_enabled` | Enable/disable NFTables service on boot | `true` |
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
+| `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
 
 ### 2. Logging Configuration
 
@@ -80,9 +146,9 @@ This role requires root access, so either configure it in your inventory files, 
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `nftables_input_default_policy` | Default policy for input chain (Options: 'accept', 'drop', 'reject') | `"drop"` |
-| `nftables_forward_default_policy` | Default policy for forward chain (Options: 'accept', 'drop', 'reject') | `"drop"` |
-| `nftables_output_default_policy` | Default policy for output chain (Options: 'accept', 'drop', 'reject') | `"drop"` |
+| `nftables_input_default_policy` | Default policy for input chain (Options: `'accept'`, `'drop'`, `'reject'`) | `"drop"` |
+| `nftables_forward_default_policy` | Default policy for forward chain (Options: `'accept'`, `'drop'`, `'reject'`) | `"drop"` |
+| `nftables_output_default_policy` | Default policy for output chain (Options: `'accept'`, `'drop'`, `'reject'`) | `"drop"` |
 | `nftables_log_input_dropped` | Enable/disable logging for dropped input packets | `true` |
 | `nftables_log_forward_dropped` | Enable/disable logging for dropped forward packets | `true` |
 | `nftables_log_output_dropped` | Enable/disable logging for dropped output packets | `true` |
@@ -137,8 +203,8 @@ To disable this protection or customize the ranges, modify this variable in your
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_cluster_enabled` | Enable/disable cluster communication rules | `false` |
-| `nftables_cluster_nodes` | List of IP addresses for cluster nodes | See defaults/main.yml |
-| `nftables_cluster_rules` | Rules for communication between cluster nodes | See defaults/main.yml |
+| `nftables_cluster_nodes` | List of IP addresses for cluster nodes | `[]` |
+| `nftables_cluster_rules` | Rules for communication between cluster nodes | `[]` |
 
 ### 7. User-Defined Rules Settings
 
@@ -147,21 +213,21 @@ To disable this protection or customize the ranges, modify this variable in your
 | `nftables_user_defined_input_enabled` | Enable/disable user-defined input rules | `false` |
 | `nftables_user_defined_forward_enabled` | Enable/disable user-defined forward rules | `false` |
 | `nftables_user_defined_output_enabled` | Enable/disable user-defined output rules | `false` |
-| `nftables_user_defined_input_rules` | List of user-defined input rules | See defaults/main.yml |
-| `nftables_user_defined_forward_rules` | List of user-defined forward rules | See defaults/main.yml |
-| `nftables_user_defined_output_rules` | List of user-defined output rules | See defaults/main.yml |
+| `nftables_user_defined_input_rules` | List of user-defined input rules | `[]` |
+| `nftables_user_defined_forward_rules` | List of user-defined forward rules | `[]` |
+| `nftables_user_defined_output_rules` | List of user-defined output rules | `[]` |
 
 **User-defined rule fields:**
 - `source` (optional): Source IP/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
-- `protocol` (optional): Protocol (e.g. "tcp", "udp"). If omitted but `port` is provided, the role defaults to `tcp`.
+- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`). If omitted but `port` is provided, the role defaults to `tcp`.
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `in_interface` (optional, forward only): Input interface (string)
 - `out_interface` (optional, forward only): Output interface (string)
-- `state` (optional): Connection state to match (e.g. "new", "established,related") - defaults to "new" if not specified
-- `rate_limit` (optional): Rate limit in format "X/period" where period can be: second, minute, hour, day (e.g. "10/minute")
+- `state` (optional): Connection state to match (e.g. `"new"`, `"established,related"`) - defaults to `"new"` if not specified
+- `rate_limit` (optional): Rate limit in format `"X/period"` where period can be: second, minute, hour, day (e.g. `"10/minute"`)
 - `burst` (optional): Burst value for the rate limit (integer)
-- `action`: Action to take (e.g. "accept", "drop")
+- `action`: Action to take (e.g. `"accept"`, `"drop"`)
 - `log`: Enable/disable logging (boolean)
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `comment`: Description of the rule (string)
@@ -202,17 +268,17 @@ nftables_user_defined_input_rules:
 |----------|-------------|---------|
 | `nftables_nat_prerouting_enabled` | Enable/disable NAT prerouting rules | `false` |
 | `nftables_nat_postrouting_enabled` | Enable/disable NAT postrouting rules | `false` |
-| `nftables_nat_prerouting_rules` | List of DNAT (destination NAT) rules | See defaults/main.yml |
-| `nftables_nat_postrouting_rules` | List of SNAT (source NAT) and masquerading rules | See defaults/main.yml |
+| `nftables_nat_prerouting_rules` | List of DNAT (destination NAT) rules | `[]` |
+| `nftables_nat_postrouting_rules` | List of SNAT (source NAT) and masquerading rules | `[]` |
 
 **NAT rule fields:**
 - `in_interface` (optional): Input interface (string)
 - `out_interface` (optional): Output interface (string)
 - `source` (optional): Source IP/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
-- `protocol` (optional): Protocol (e.g. "tcp", "udp")
+- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
-- `nat_action`: NAT action ("dnat", "snat", "masquerade")
+- `nat_action`: NAT action (`"dnat"`, `"snat"`, `"masquerade"`)
 - `nat_to` (required for dnat/snat): Target address (e.g. `192.168.1.100:80` for dnat, `203.0.113.2` for snat)
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `log`: Enable/disable logging (boolean)
@@ -237,7 +303,6 @@ nftables_nat_prerouting_rules:
     counter: true
     log: false
     comment: "Forward port range to DMZ server"
-  # Example with multiple source IPs
   - in_interface: "eth0"
     source: ["203.0.113.10", "203.0.113.11", "203.0.113.12"]
     protocol: "tcp"
@@ -262,7 +327,6 @@ nftables_nat_postrouting_rules:
     counter: true
     log: false
     comment: "SNAT for DMZ subnet"
-  # Example with multiple source and destination networks
   - out_interface: "eth0"
     source: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
     destination: ["198.51.100.0/24", "203.0.113.0/24"]
@@ -273,43 +337,204 @@ nftables_nat_postrouting_rules:
     comment: "SNAT for multiple internal subnets to specific external networks"
 ```
 
-## Tags
+## 📌 Role Properties
 
-- `always` - Tasks that always run (variable loading and validation)
-- `setup` - Setup tasks including OS-specific variables, requirements, and installation
-- `init` - Initial setup tasks
-- `validate` - Variable validation tasks
-- `check` - Validation and verification tasks
-- `requirements` - System requirements verification
-- `reboot` - System reboot tasks (when required)
-- `install` - Package installation tasks
-- `configure` - Service configuration tasks
-- `rules` - Firewall rules configuration
-- `acl` - Access control list configuration
-- `logrotate` - Log rotation configuration tasks
-- `upgrade` - Package upgrade tasks (tagged with 'never' by default)
+| Property | Value | Description |
+|----------|-------|-------------|
+| **Idempotent** | ✅ Yes | Running the role multiple times with the same parameters produces the same state. |
+| **Atomic** | ❌ No | Rule files are pre-validated via `nft -c -f` before restart, but intermediate playbook failures may leave earlier tasks applied. |
+| **Check Mode** | ✅ Supported | Template rendering and configuration checks run in check mode. Mutating service actions are skipped. |
+| **Diff Mode** | ✅ Supported | Rule file template deployments show detailed diffs of changes. |
 
-## Example Playbook
+## 📤 Role Output
+
+This role does not set any public output facts.
+
+## 🔍 Verification
+
+After role execution, verify the firewall status and active rulesets on the target host:
+
+### Check Service Status
+
+```bash
+# Check if NFTables systemd service is active
+sudo systemctl status nftables
+```
+
+### Inspect Active Rulesets
+
+```bash
+# View complete active NFTables ruleset
+sudo nft list ruleset
+
+# View specific chains in inet filter table
+sudo nft list chain inet filter input
+sudo nft list chain inet filter forward
+sudo nft list chain inet filter output
+
+# View active NAT rules (if NAT is enabled)
+sudo nft list table ip nat
+```
+
+## 🛡️ Security Features
+
+- ✅ **Atomic Rule Pre-Validation**: Every rendered rule file is validated with `nft -c -f` before installation to prevent broken firewall configurations.
+- ✅ **Strict Default-Drop Policies**: Input, forward, and output chains default to `drop` policy to enforce least-privilege traffic flow.
+- ✅ **Stateful Connection Tracking**: Explicitly enforces established/related tracking to prevent unsolicited connection hijacking.
+- ✅ **Anti-Spoofing Bogon Filters**: Blocks unroutable and reserved private IP subnets from entering external interfaces.
+- ✅ **Rate-Limited Logging**: Rate-limits ICMP packets and dropped packet logging to prevent denial-of-service via log disk saturation.
+- ✅ **Conflict Daemon Mitigation**: Stops and disables legacy and competing firewall services (`firewalld`, `iptables`, `ufw`, `netfilter-persistent`).
+
+## 🧪 Check Mode Behavior
+
+- Configuration template rendering and file permission checks run normally in Check Mode.
+- Mutating package installation and systemd service changes are safely skipped.
+
+## 🌐 Network Resilience
+
+- Rule syntax is verified prior to service reload, ensuring existing kernel tables remain active if an invalid configuration is supplied.
+- Established connections are maintained across service reloads thanks to kernel netfilter state persistence.
+
+## 🔧 Troubleshooting
+
+### Validate Configuration Syntax
+
+```bash
+# Test complete configuration syntax
+sudo nft -c -f /etc/nftables.conf
+```
+
+### View Service Logs
+
+```bash
+# View systemd journal for NFTables service
+sudo journalctl -u nftables -f --no-pager
+```
+
+### View Firewall Drop Logs
+
+```bash
+# Inspect dedicated dropped packet logs (if rsyslog/logrotate configured)
+sudo tail -f /var/log/nftables/nftables.log
+```
+
+## 📁 File Structure
+
+```
+ansible-role-nftables/
+├── .ansible-lint               # Ansible-lint configuration (shared profile)
+├── .gitignore                  # Git ignore patterns
+├── .yamllint                   # Yamllint configuration
+├── .release-please-manifest.json # Release Please version manifest
+├── release-please-config.json  # Release Please changelog & release settings
+├── .github/
+│   └── workflows/              # GitHub Actions CI/CD workflows
+│       ├── ci.yml              # CI workflow with reusable ansible-ci
+│       └── release.yml         # Release Please & Galaxy publication
+├── defaults/
+│   └── main.yml                # Default configuration variables
+├── handlers/
+│   └── main.yml                # Service reload and restart handlers
+├── meta/
+│   └── main.yml                # Role metadata and Galaxy specifications
+├── molecule/                   # Molecule testing framework
+│   └── default/                # Default testing scenario
+│       ├── converge.yml
+│       ├── molecule.yml
+│       ├── prepare.yml
+│       └── verify.yml
+├── tasks/
+│   ├── main.yml                # Main task orchestration dispatcher
+│   ├── assert.yml              # Preflight parameter assertions
+│   ├── prerequisites.yml       # Conflict service cleanup & fact gathering
+│   ├── install.yml             # Package installation
+│   ├── configure.yml           # Base service & config directory setup
+│   ├── acl.yml                 # Rule template deployment & service verification
+│   ├── logrotate.yml           # Logrotate & rsyslog drop logging configuration
+│   ├── reboot.yml              # System reboot tasks (when required)
+│   └── upgrade.yml             # Package upgrade tasks
+├── templates/
+│   ├── nftables.conf.j2        # Main NFTables configuration loader
+│   ├── logrotate/
+│   │   └── nftables.j2         # Logrotate configuration template
+│   ├── rsyslog/
+│   │   └── nftables.conf.j2    # Rsyslog configuration template
+│   └── rules/
+│       ├── base.rules.j2       # 00-base rules template
+│       ├── firewall.rules.j2   # 10-firewall rules template
+│       ├── cluster.rules.j2    # 20-cluster rules template
+│       ├── user_defined.rules.j2 # 30-user-defined rules template
+│       └── nat.rules.j2        # 40-nat rules template
+└── vars/
+    ├── main.yml                # Global internal variables
+    ├── debian.yml              # Debian-specific variables
+    ├── ubuntu.yml              # Ubuntu-specific variables
+    └── redhat.yml              # RedHat/EL-specific variables
+```
+
+## 🏷️ Tags
+
+Use `--tags` to execute specific portions of the role:
+
+| Tag | Description |
+|-----|-------------|
+| `always` | Tasks that always run (variable loading and assertions) |
+| `setup` | Meta tag covering prerequisites, installation, and configuration |
+| `init` | Initial setup tasks |
+| `validate` | Variable validation and type assertion tasks |
+| `check` | System requirements and prerequisite verification tasks |
+| `requirements` | System requirements verification |
+| `reboot` | System reboot tasks (when required) |
+| `install` | Package installation tasks |
+| `configure` | Service configuration and directories setup tasks |
+| `rules` | Firewall rule template rendering tasks |
+| `acl` | Access control list deployment and verification |
+| `logrotate` | Log rotation and rsyslog configuration tasks |
+| `upgrade` | Package upgrade tasks (tagged `never` by default) |
+
+## CI/CD Pipeline
+
+This repository uses centralized, reusable GitHub Actions workflows from [github-workflows](https://github.com/grzegorzfranus/github-workflows) (`@main`) for quality assurance, security scanning, and release automation.
+
+### CI Pipeline (`ansible-ci.yml`)
+
+Runs on every Pull Request in a two-tier gate pattern:
+
+1. **Branch Name Lint** — enforces naming conventions (`feature/`, `bugfix/`, `fix/`, `hotfix/`, `release/`, `chore/`, `docs/`, `refactor/`, `test/`, `build/`, `ci/`, `perf/`, `revert/`)
+2. **PR Title Lint** — enforces [Conventional Commits](https://www.conventionalcommits.org/) format (`feat:`, `fix:`, `ci:`, etc.)
+3. **YAML Syntax Lint** — validates YAML formatting via `yamllint`
+4. **Ansible Lint** — checks Ansible best practices and role standards (`profile: shared`)
+5. **Galaxy Metadata Validation** — verifies `meta/main.yml` schema and requirements (`ansible-meta-validate.yml`)
+6. **Security Scanning** — TruffleHog secret detection and Trivy IaC scanning (`ansible-security.yml`)
+7. **Molecule Integration Tests** — executes Molecule test matrix across supported distros (`ansible-molecule.yml`)
+8. **Merge Check Gate** — single authoritative status check aggregating all results for branch protection
+
+### Release & Publish Pipeline (`ansible-publish.yml`)
+
+Automated via [Release Please](https://github.com/googleapis/release-please):
+
+1. **Push to `main`** → Release Please creates or updates a Release PR with automated changelog generation
+2. **Release PR Validation** → validates YAML syntax and actions schema before setting `Merge Check Gate` status
+3. **Merge Release PR** → creates Git version tag and GitHub Release automatically
+4. **Ansible Galaxy Publish** → publishes tagged release to Ansible Galaxy via `ansible-publish.yml`
+
+## Example Playbooks
 
 ### Basic Firewall Setup
+
 ```yaml
 ---
-- name: Configure NFTables Firewall
+- name: Configure Basic NFTables Firewall
   hosts: all
   become: true
   roles:
     - role: grzegorzfranus.nftables
       vars:
-        # Basic Configuration
         nftables_service_enabled: true
         nftables_configure_logrotate: true
-        
-        # Chain Policies
         nftables_input_default_policy: "drop"
         nftables_forward_default_policy: "drop"
         nftables_output_default_policy: "drop"
-        
-        # ICMP/Ping Settings
         nftables_ping_input:
           enabled: true
           rate_limit: "3/second"
@@ -318,7 +543,8 @@ nftables_nat_postrouting_rules:
           comment: "Allow controlled ICMP input"
 ```
 
-### Advanced Configuration with NAT and User Rules
+### Advanced Gateway Configuration with NAT and User Rules
+
 ```yaml
 ---
 - name: Configure NFTables with Advanced Features
@@ -330,7 +556,7 @@ nftables_nat_postrouting_rules:
         # Enable NAT for routing
         nftables_nat_prerouting_enabled: true
         nftables_nat_postrouting_enabled: true
-        
+
         # Port forwarding rules
         nftables_nat_prerouting_rules:
           - in_interface: "eth0"
@@ -347,7 +573,7 @@ nftables_nat_postrouting_rules:
             nat_to: "192.168.1.100:443"
             log: false
             comment: "Forward HTTPS to internal web server"
-        
+
         # Masquerade internal network for internet access
         nftables_nat_postrouting_rules:
           - out_interface: "eth0"
@@ -355,11 +581,11 @@ nftables_nat_postrouting_rules:
             nat_action: "masquerade"
             log: false
             comment: "NAT for LAN clients"
-        
+
         # Enable user-defined rules
         nftables_user_defined_input_enabled: true
         nftables_user_defined_output_enabled: true
-        
+
         # Custom input rules
         nftables_user_defined_input_rules:
           - protocol: "tcp"
@@ -376,7 +602,7 @@ nftables_nat_postrouting_rules:
             action: "accept"
             log: false
             comment: "Allow DNS queries"
-        
+
         # Custom output rules
         nftables_user_defined_output_rules:
           - protocol: "udp"
@@ -391,7 +617,7 @@ nftables_nat_postrouting_rules:
             action: "accept"
             log: false
             comment: "Allow HTTP and HTTPS traffic"
-        
+
         # Customize blocked address ranges
         nftables_blocked_reserved_ranges:
           - "0.0.0.0/8"        # "This" Network
@@ -399,59 +625,65 @@ nftables_nat_postrouting_rules:
           - "169.254.0.0/16"   # Link Local
           - "192.0.0.0/24"     # IETF Protocol Assignments
           - "224.0.0.0/3"      # Multicast & Reserved
-          # Note: 10.0.0.0/8 removed to allow local private network
 ```
 
-### Cluster Configuration
+### Clustered Service Node Configuration
+
 ```yaml
 ---
-- name: Configure NFTables for Cluster
+- name: Configure NFTables for Clustered Nodes
   hosts: cluster_nodes
   become: true
   roles:
     - role: grzegorzfranus.nftables
       vars:
-        # Enable cluster communication
         nftables_cluster_enabled: true
-        
-        # Define cluster nodes
         nftables_cluster_nodes:
           - "192.168.10.10"
           - "192.168.10.11"
           - "192.168.10.12"
-        
-        # Define cluster communication rules
         nftables_cluster_rules:
           - port: 5432
-            protocol: tcp
+            protocol: "tcp"
             log: true
             comment: "PostgreSQL cluster traffic"
           - port: 6379
-            protocol: tcp
+            protocol: "tcp"
             log: true
             comment: "Redis replication"
           - port: 8301
-            protocol: udp
+            protocol: "udp"
             log: false
             comment: "Consul gossip protocol"
 ```
 
-## License
-
-Apache-2.0
-
-## Author Information
-
-This role was created by [Grzegorz Franus](https://github.com/grzegorzfranus).
-
-## Contributing
+## 🤝 Contributing
 
 Contributions, bug reports, and feature requests are welcome!
 
-- Fork the repository and create your branch from `main`.
-- Make your changes with clear, descriptive commit messages.
-- Ensure your code passes all Molecule and lint tests.
-- Submit a pull request describing your changes and the motivation.
-- For major changes, please open an issue first to discuss what you would like to change.
+- Fork the repository and create your branch from `main`
+- Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
+  - `feat:` — new features
+  - `fix:` — bug fixes
+  - `refactor:` — code refactoring
+  - `docs:` — documentation changes
+  - `ci:` — CI/CD pipeline updates
+  - `build:` — dependency and build configuration updates
+  - `chore:` — maintenance tasks
+  - `test:` — test additions or corrections
+  - `perf:` — performance improvements
+  - `revert:` — code reverts
+  - `style:` — code formatting and style
+- Use branch naming convention: `feature/`, `bugfix/`, `fix/`, `hotfix/`, `release/`, `chore/`, `docs/`, `refactor/`, `test/`, `build/`, `ci/`, `perf/`, `revert/`
+- Ensure your code passes all CI checks (YAML lint, Ansible lint, Molecule tests)
+- Centralized workflows from [github-workflows](https://github.com/grzegorzfranus/github-workflows) are used to run CI/CD pipelines
+- Submit a pull request describing your changes
+- For major changes, please open an issue first to discuss what you would like to change
 
-If you have questions or suggestions, feel free to open an issue or contact the author via GitHub.
+## 📝 License
+
+This project is licensed under the Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Author Information
+
+This role was created by [Grzegorz Franus](https://github.com/grzegorzfranus).
