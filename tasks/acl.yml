@@ -177,14 +177,20 @@
       ansible.builtin.pause:
         seconds: 5
 
-    - name: NFTables | acl | Gather service facts
-      ansible.builtin.service_facts:
+    # Justification: 'nftables' is a systemd oneshot service (RemainAfterExit=yes).
+    # ansible.builtin.systemd only manages state transitions and cannot query 'is-active',
+    # while service_facts reports oneshot units as 'stopped'. 'systemctl is-active' is required.
+    - name: NFTables | acl | Verify nftables service status  # noqa: command-instead-of-module
+      become: true
+      ansible.builtin.command: >
+        systemctl is-active {{ nftables_service_name }}
+      failed_when: false
+      changed_when: false
+      register: _nftables_service_state_
 
     - name: NFTables | acl | Fail if nftables service is not running
       ansible.builtin.fail:
         msg: "nftables service is not running!"
       when: >
-        (ansible_facts.services[nftables_service_name ~ '.service'] is defined and
-         ansible_facts.services[nftables_service_name ~ '.service'].state != 'running') or
-        (ansible_facts.services[nftables_service_name] is defined and
-         ansible_facts.services[nftables_service_name].state != 'running')
+        _nftables_service_state_.stdout == "inactive" or
+        _nftables_service_state_.stdout == "failed"
