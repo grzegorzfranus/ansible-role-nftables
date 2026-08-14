@@ -154,7 +154,19 @@
 # -----------------------------------------------------------------------------
 # 7. Service Verification
 # -----------------------------------------------------------------------------
-- block:
+- name: NFTables | acl | Restart and verify nftables service
+  when: >
+    _nftables_default_rules_removed_.changed | default(false) or
+    _nftables_base_rules_.changed | default(false) or
+    _nftables_security_rules_.changed | default(false) or
+    _nftables_security_rules_removed_.changed | default(false) or
+    _nftables_cluster_rules_.changed | default(false) or
+    _nftables_cluster_rules_removed_.changed | default(false) or
+    _nftables_user_defined_rules_.changed | default(false) or
+    _nftables_user_defined_rules_removed_.changed | default(false) or
+    _nftables_nat_rules_.changed | default(false) or
+    _nftables_nat_rules_removed_.changed | default(false)
+  block:
     - name: NFTables | acl | Force restart nftables service
       become: true
       ansible.builtin.service:
@@ -165,7 +177,10 @@
       ansible.builtin.pause:
         seconds: 5
 
-    - name: NFTables | acl | Verify nftables service status
+    # Justification: 'nftables' is a systemd oneshot service (RemainAfterExit=yes).
+    # ansible.builtin.systemd only manages state transitions and cannot query 'is-active',
+    # while service_facts reports oneshot units as 'stopped'. 'systemctl is-active' is required.
+    - name: NFTables | acl | Verify nftables service status  # noqa: command-instead-of-module
       become: true
       ansible.builtin.command: >
         systemctl is-active {{ nftables_service_name }}
@@ -179,15 +194,3 @@
       when: >
         _nftables_service_state_.stdout == "inactive" or
         _nftables_service_state_.stdout == "failed"
-  # Restart service if any of the rules files have changed
-  when: >
-    _nftables_default_rules_removed_.changed | default(false) or
-    _nftables_base_rules_.changed | default(false) or
-    _nftables_security_rules_.changed | default(false) or
-    _nftables_security_rules_removed_.changed | default(false) or
-    _nftables_cluster_rules_.changed | default(false) or
-    _nftables_cluster_rules_removed_.changed | default(false) or
-    _nftables_user_defined_rules_.changed | default(false) or
-    _nftables_user_defined_rules_removed_.changed | default(false) or
-    _nftables_nat_rules_.changed | default(false) or
-    _nftables_nat_rules_removed_.changed | default(false)
