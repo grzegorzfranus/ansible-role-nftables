@@ -152,9 +152,23 @@
       when: ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04'
       failed_when: "'docker0' not in _docker_forward_check_.stdout"
 
+    - name: Verify | Check for interface matching in user_defined_input chain
+      ansible.builtin.command:
+        cmd: nft list chain inet filter user_defined_input
+      register: _user_input_chain_
+      changed_when: false
+      failed_when: "'iifname \"lo\"' not in _user_input_chain_.stdout"
+
+    - name: Verify | Check for interface matching in user_defined_output chain
+      ansible.builtin.command:
+        cmd: nft list chain inet filter user_defined_output
+      register: _user_output_chain_
+      changed_when: false
+      failed_when: "'oifname \"eth0\"' not in _user_output_chain_.stdout"
 
     # -----------------------------------------------------------------------------
     # 6. Logging Configuration Verification
+
     # -----------------------------------------------------------------------------
     - name: Verify | Check if log directory exists
       ansible.builtin.stat:

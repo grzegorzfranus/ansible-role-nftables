@@ -260,12 +260,12 @@ To disable this protection or customize the ranges, modify this variable in your
 | `nftables_user_defined_output_rules` | List of user-defined output rules | `[]` |
 
 **User-defined rule fields:**
+- `in_interface` (optional): Input interface matching (`iifname`, supported in `input` and `forward` chains) (string)
+- `out_interface` (optional): Output interface matching (`oifname`, supported in `output` and `forward` chains) (string)
 - `source` (optional): Source IP/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
 - `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`). If omitted but `port` is provided, the role defaults to `tcp`.
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
-- `in_interface` (optional, forward only): Input interface (string)
-- `out_interface` (optional, forward only): Output interface (string)
 - `state` (optional): Connection state to match (e.g. `"new"`, `"established,related"`) - defaults to `"new"` if not specified
 - `rate_limit` (optional): Rate limit in format `"X/period"` where period can be: second, minute, hour, day (e.g. `"10/minute"`)
 - `burst` (optional): Burst value for the rate limit (integer)
@@ -274,10 +274,22 @@ To disable this protection or customize the ranges, modify this variable in your
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `comment`: Description of the rule (string)
 
+**Example: Restrict SSH to WireGuard VPN interface (`in_interface`):**
+```yaml
+nftables_user_defined_input_rules:
+  - in_interface: "wg0"
+    protocol: "tcp"
+    port: "22"
+    action: "accept"
+    counter: true
+    comment: "Allow SSH management exclusively over WireGuard VPN"
+```
+
 **Example with single IP addresses:**
 ```yaml
 nftables_user_defined_output_rules:
-  - source: "10.0.0.1"
+  - out_interface: "eth0"
+    source: "10.0.0.1"
     destination: "192.168.1.100"
     protocol: "tcp"
     port: "2221,2222"
@@ -303,6 +315,7 @@ nftables_user_defined_input_rules:
     counter: true
     comment: "Allow SSH from multiple source IPs to multiple destination IPs"
 ```
+
 
 ### 8. NAT Rules Settings
 

@@ -160,7 +160,8 @@ nftables_user_defined_output_enabled: false
 # User-defined input rules
 nftables_user_defined_input_rules:
   # Example: All options used
-  - source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
+  - in_interface: "wg0"  # Optional input interface matching
+    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
     destination: ["192.168.1.100", "192.168.1.101"]  # Multiple destination IPs supported
     protocol: "tcp"
     port: 12345
@@ -217,7 +218,8 @@ nftables_user_defined_forward_rules:
 # User-defined output rules
 nftables_user_defined_output_rules:
   # Example: All options used
-  - source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
+  - out_interface: "eth0"  # Optional output interface matching
+    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
     destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
     protocol: "tcp"
     port: "2221,2222"
@@ -228,6 +230,7 @@ nftables_user_defined_output_rules:
     log: true
     counter: true
     comment: "Full example: output rule with all options"
+
   # Example: Allow DNS queries
   - protocol: "udp"
     port: 53

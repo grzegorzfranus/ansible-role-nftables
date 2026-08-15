@@ -326,6 +326,31 @@
     fail_msg: "❌ User-defined rules 'counter' field must be boolean when provided"
     success_msg: "✅ User-defined rules 'counter' field types are valid"
 
+- name: NFTables | assert | Validate user-defined rules interface fields
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_user_defined_input_rules | selectattr('in_interface', 'defined') | list) +
+          (nftables_user_defined_forward_rules | selectattr('in_interface', 'defined') | list)
+        ) | map(attribute='in_interface') | map('type_debug') | select('equalto', 'str') | list | length ==
+        (
+          (nftables_user_defined_input_rules | selectattr('in_interface', 'defined') | list) +
+          (nftables_user_defined_forward_rules | selectattr('in_interface', 'defined') | list)
+        ) | length
+      - >
+        (
+          (nftables_user_defined_forward_rules | selectattr('out_interface', 'defined') | list) +
+          (nftables_user_defined_output_rules | selectattr('out_interface', 'defined') | list)
+        ) | map(attribute='out_interface') | map('type_debug') | select('equalto', 'str') | list | length ==
+        (
+          (nftables_user_defined_forward_rules | selectattr('out_interface', 'defined') | list) +
+          (nftables_user_defined_output_rules | selectattr('out_interface', 'defined') | list)
+        ) | length
+    fail_msg: "❌ User-defined rules 'in_interface' and 'out_interface' must be strings when provided"
+    success_msg: "✅ User-defined rules interface fields are valid"
+
+
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
 # -----------------------------------------------------------------------------
