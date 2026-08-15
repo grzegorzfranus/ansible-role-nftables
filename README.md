@@ -102,7 +102,6 @@ ansible-playbook -i inventory firewall-setup.yml
 The role comes with secure, production-ready defaults:
 
 ```yaml
-nftables_role_action: "all"
 nftables_service_enabled: true
 nftables_configure_logrotate: true
 nftables_configure_security_rules: false
@@ -162,7 +161,6 @@ nftables_user_defined_forward_rules:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `nftables_role_action` | Define which parts of the role to execute (Options: `'all'`, `'requirements'`, `'install'`, `'configure'`, `'rules'`, `'acl'`, `'logrotate'`, `'upgrade'`) | `"all"` |
 | `nftables_service_enabled` | Enable/disable NFTables service on boot | `true` |
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
@@ -537,18 +535,31 @@ Use `--tags` to execute specific portions of the role:
 | Tag | Description |
 |-----|-------------|
 | `always` | Tasks that always run (variable loading and assertions) |
-| `setup` | Meta tag covering prerequisites, installation, and configuration |
-| `init` | Initial setup tasks |
-| `validate` | Variable validation and type assertion tasks |
-| `check` | System requirements and prerequisite verification tasks |
-| `requirements` | System requirements verification |
-| `reboot` | System reboot tasks (when required) |
-| `install` | Package installation tasks |
-| `configure` | Service configuration and directories setup tasks |
-| `rules` | Firewall rule template rendering tasks |
-| `acl` | Access control list deployment and verification |
-| `logrotate` | Log rotation and rsyslog configuration tasks |
-| `upgrade` | Package upgrade tasks (tagged `never` by default) |
+| `nftables_setup` | Meta tag covering prerequisites, installation, and configuration |
+| `nftables_requirements` | System prerequisites and kernel module verification |
+| `nftables_reboot` | System reboot tasks (when required) |
+| `nftables_install` | Package installation tasks |
+| `nftables_configure` | Service configuration, directory structure, ACLs, and logrotate |
+| `nftables_rules` | Firewall rule template rendering and deployment |
+| `nftables_logrotate` | Log rotation and rsyslog configuration |
+| `nftables_upgrade` | Package upgrade tasks (tagged `never` by default) |
+
+## 🔄 Migration from 1.x
+
+In version 2.0.0, execution flow gating via the `nftables_role_action` variable has been removed and replaced with native Ansible tags prefixed with `nftables_`. This ensures proper tag propagation and standard Ansible playbook execution semantics.
+
+### Mapping `nftables_role_action` to Tags
+
+| Version 1.x `nftables_role_action` | Version 2.0.0 Tag Equivalent |
+|---|---|
+| `all` | *(default execution without `--tags`)* |
+| `requirements` | `--tags nftables_requirements` |
+| `install` | `--tags nftables_install` |
+| `configure` | `--tags nftables_configure` |
+| `rules` / `acl` | `--tags nftables_rules` |
+| `logrotate` | `--tags nftables_logrotate` |
+| `reboot` | `--tags nftables_reboot` |
+| `upgrade` | `--tags nftables_upgrade` |
 
 ## CI/CD Pipeline
 
