@@ -27,7 +27,7 @@ flowchart TD
     A["00-base.rules<br>Base tables (inet filter), chains (input, forward, output),<br>connection tracking, loopback accept, drop logging"] --> B["10-firewall.rules<br>ICMP/Ping rate-limited policies &<br>reserved subnet anti-spoofing filters"]
     B --> C["20-cluster.rules<br>Trusted node-to-node communication<br>for multi-host cluster environments"]
     C --> D["30-user-defined.rules<br>Custom user-defined rules for input,<br>forwarding, and outbound traffic"]
-    D --> E["40-nat.rules<br>NAT tables (ip nat) with DNAT prerouting<br>and SNAT / Masquerade postrouting"]
+    D --> E["40-nat.rules<br>NAT tables (ip nat, or inet nftables_nat in<br>docker-aware mode) with DNAT prerouting<br>and SNAT / Masquerade postrouting"]
 ```
 
 ### Modular Rule Evaluation Sequence
@@ -36,7 +36,7 @@ flowchart TD
 2. **`10-firewall.rules`**: Applies ICMP/ping rate limiting and blocks reserved/bogon IPv4 subnets from entering external interfaces.
 3. **`20-cluster.rules`**: Permits bidirectional traffic among explicitly configured cluster node IPs on defined service ports.
 4. **`30-user-defined.rules`**: Evaluates custom firewall rules defined by administrators for input, forward, and output chains.
-5. **`40-nat.rules`**: Defines the `ip nat` table for destination NAT (port forwarding) and source NAT / masquerading.
+5. **`40-nat.rules`**: Defines the NAT table (`ip nat` by default, or `inet nftables_nat` when [Docker-Aware Mode](#docker-aware-mode) is enabled) for destination NAT (port forwarding) and source NAT / masquerading.
 
 ## 📋 Requirements
 
@@ -427,8 +427,11 @@ sudo nft list chain inet filter input
 sudo nft list chain inet filter forward
 sudo nft list chain inet filter output
 
-# View active NAT rules (if NAT is enabled)
+# View active NAT rules in default mode (if NAT is enabled)
 sudo nft list table ip nat
+
+# View active NAT rules in docker-aware mode (if NAT is enabled)
+sudo nft list table inet nftables_nat
 ```
 
 ## 🛡️ Security Features
