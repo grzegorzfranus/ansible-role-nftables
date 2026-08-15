@@ -326,6 +326,35 @@
     fail_msg: "❌ User-defined rules 'counter' field must be boolean when provided"
     success_msg: "✅ User-defined rules 'counter' field types are valid"
 
+- name: NFTables | assert | Validate user-defined rules interface fields
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_user_defined_input_rules | selectattr('in_interface', 'defined') | list) +
+          (nftables_user_defined_forward_rules | selectattr('in_interface', 'defined') | list)
+        ) | map(attribute='in_interface') | map('type_debug') | select('equalto', 'str') | list | length ==
+        (
+          (nftables_user_defined_input_rules | selectattr('in_interface', 'defined') | list) +
+          (nftables_user_defined_forward_rules | selectattr('in_interface', 'defined') | list)
+        ) | length
+      - >
+        (
+          (nftables_user_defined_forward_rules | selectattr('out_interface', 'defined') | list) +
+          (nftables_user_defined_output_rules | selectattr('out_interface', 'defined') | list)
+        ) | map(attribute='out_interface') | map('type_debug') | select('equalto', 'str') | list | length ==
+        (
+          (nftables_user_defined_forward_rules | selectattr('out_interface', 'defined') | list) +
+          (nftables_user_defined_output_rules | selectattr('out_interface', 'defined') | list)
+        ) | length
+      - (nftables_user_defined_input_rules | selectattr('out_interface', 'defined') | list | length) == 0
+      - (nftables_user_defined_output_rules | selectattr('in_interface', 'defined') | list | length) == 0
+    fail_msg: >-
+      ❌ Invalid user-defined rules interface configuration: 'in_interface' and 'out_interface' must be strings;
+      'in_interface' is only supported in input and forward rules (nftables_user_defined_input_rules, nftables_user_defined_forward_rules);
+      'out_interface' is only supported in forward and output rules (nftables_user_defined_forward_rules, nftables_user_defined_output_rules)
+    success_msg: "✅ User-defined rules interface fields are valid"
+
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
 # -----------------------------------------------------------------------------
