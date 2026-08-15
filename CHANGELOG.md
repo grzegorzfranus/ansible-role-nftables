@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.7.1...v1.7.2) (2026-08-15)
+
+
+### Bug Fixes
+
+* correct NAT rule rendering for logging and inet tables ([#12](https://github.com/grzegorzfranus/ansible-role-nftables/issues/12)) ([514608e](https://github.com/grzegorzfranus/ansible-role-nftables/commit/514608e124edea0fa91b8f6dc5381e0c81fe7b3f))
+
 ## [1.7.1](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.7.0...v1.7.1) (2026-08-15)
 
 
