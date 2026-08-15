@@ -260,8 +260,8 @@ To disable this protection or customize the ranges, modify this variable in your
 | `nftables_user_defined_output_rules` | List of user-defined output rules | `[]` |
 
 **User-defined rule fields:**
-- `in_interface` (optional): Input interface matching (`iifname`, supported in `input` and `forward` chains) (string)
-- `out_interface` (optional): Output interface matching (`oifname`, supported in `output` and `forward` chains) (string)
+- `in_interface` (optional): Input interface matching (`iifname`). Valid for `input` and `forward` rules only; specifying on `output` rules will fail validation (string)
+- `out_interface` (optional): Output interface matching (`oifname`). Valid for `forward` and `output` rules only; specifying on `input` rules will fail validation (string)
 - `source` (optional): Source IP/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
 - `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`). If omitted but `port` is provided, the role defaults to `tcp`.
@@ -316,7 +316,6 @@ nftables_user_defined_input_rules:
     comment: "Allow SSH from multiple source IPs to multiple destination IPs"
 ```
 
-
 ### 8. NAT Rules Settings
 
 | Variable | Description | Default |
@@ -367,6 +366,7 @@ nftables_nat_prerouting_rules:
     counter: true
     log: true
     comment: "Forward SSH from specific external IPs to internal server"
+
 
 nftables_nat_postrouting_rules:
   - out_interface: "eth0"

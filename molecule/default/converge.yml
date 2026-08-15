@@ -99,12 +99,10 @@
         log: false
         comment: "Allow HTTP/HTTPS outbound for testing"
 
-
     nftables_reboot_required: false
     nftables_docker_aware: "{{ (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04') | bool }}"
 
   tasks:
     - name: Converge | Include NFTables role
-
       ansible.builtin.include_role:
         name: "{{ playbook_dir }}/../.."

@@ -41,7 +41,6 @@ nftables_docker_aware: false
 nftables_docker_aware_bridge_interfaces:
   - "docker0"
 
-
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------
@@ -111,18 +110,18 @@ nftables_ping_output:
 # -----------------------------------------------------------------------------
 # Reserved address spaces to block (anti-spoofing protection)
 nftables_blocked_reserved_ranges:
-  - "0.0.0.0/8"        # "This" Network
-  - "10.0.0.0/8"       # Private-Use Networks
-  - "127.0.0.0/8"      # Loopback
-  - "169.254.0.0/16"   # Link Local
-  - "172.16.0.0/12"    # Private-Use Networks
-  - "192.0.0.0/24"     # IETF Protocol Assignments
-  - "192.0.2.0/24"     # Documentation (TEST-NET-1)
-  - "192.168.0.0/16"   # Private-Use Networks
-  - "198.18.0.0/15"    # Network Interconnect Device Benchmark Testing
-  - "198.51.100.0/24"  # Documentation (TEST-NET-2)
-  - "203.0.113.0/24"   # Reserved for TEST-NET-3
-  - "224.0.0.0/3"      # Multicast & Reserved
+  - "0.0.0.0/8" # "This" Network
+  - "10.0.0.0/8" # Private-Use Networks
+  - "127.0.0.0/8" # Loopback
+  - "169.254.0.0/16" # Link Local
+  - "172.16.0.0/12" # Private-Use Networks
+  - "192.0.0.0/24" # IETF Protocol Assignments
+  - "192.0.2.0/24" # Documentation (TEST-NET-1)
+  - "192.168.0.0/16" # Private-Use Networks
+  - "198.18.0.0/15" # Network Interconnect Device Benchmark Testing
+  - "198.51.100.0/24" # Documentation (TEST-NET-2)
+  - "203.0.113.0/24" # Reserved for TEST-NET-3
+  - "224.0.0.0/3" # Multicast & Reserved
 
 # -----------------------------------------------------------------------------
 # 6. Cluster Communication Settings
@@ -160,9 +159,9 @@ nftables_user_defined_output_enabled: false
 # User-defined input rules
 nftables_user_defined_input_rules:
   # Example: All options used
-  - in_interface: "wg0"  # Optional input interface matching
-    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
-    destination: ["192.168.1.100", "192.168.1.101"]  # Multiple destination IPs supported
+  - in_interface: "wg0" # Optional input interface matching
+    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"] # Multiple source IPs supported
+    destination: ["192.168.1.100", "192.168.1.101"] # Multiple destination IPs supported
     protocol: "tcp"
     port: 12345
     state: "new,established,related"
@@ -195,8 +194,8 @@ nftables_user_defined_forward_rules:
   # Example: All options used
   - in_interface: "eth0"
     out_interface: "eth1"
-    source: ["10.0.0.1", "10.0.0.2"]  # Multiple source IPs supported
-    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
+    source: ["10.0.0.1", "10.0.0.2"] # Multiple source IPs supported
+    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"] # Multiple destination IPs supported
     protocol: "udp"
     port: 54321
     state: "new,established"
@@ -218,9 +217,9 @@ nftables_user_defined_forward_rules:
 # User-defined output rules
 nftables_user_defined_output_rules:
   # Example: All options used
-  - out_interface: "eth0"  # Optional output interface matching
-    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
-    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
+  - out_interface: "eth0" # Optional output interface matching
+    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"] # Multiple source IPs supported
+    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"] # Multiple destination IPs supported
     protocol: "tcp"
     port: "2221,2222"
     state: "new,established"
@@ -230,7 +229,6 @@ nftables_user_defined_output_rules:
     log: true
     counter: true
     comment: "Full example: output rule with all options"
-
   # Example: Allow DNS queries
   - protocol: "udp"
     port: 53

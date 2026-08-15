@@ -168,7 +168,6 @@
 
     # -----------------------------------------------------------------------------
     # 6. Logging Configuration Verification
-
     # -----------------------------------------------------------------------------
     - name: Verify | Check if log directory exists
       ansible.builtin.stat:
