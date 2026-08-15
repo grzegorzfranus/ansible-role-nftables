@@ -21,9 +21,6 @@
 # -----------------------------------------------------------------------------
 # Role execution control and basic service configuration
 
-# Define which parts of the role to execute (Options: 'all', 'requirements', 'install', 'configure', 'rules', 'acl', 'logrotate', 'upgrade')
-nftables_role_action: "all"
-
 # Enable/disable NFTables service on boot
 nftables_service_enabled: true
 

@@ -18,15 +18,6 @@
 # -----------------------------------------------------------------------------
 # 1. General Settings
 # -----------------------------------------------------------------------------
-- name: NFTables | assert | Validate role action parameter
-  ansible.builtin.assert:
-    that:
-      - nftables_role_action is defined
-      - nftables_role_action is string
-      - nftables_role_action in [ "all", "requirements", "install", "configure", "rules", "acl", "logrotate", "upgrade" ]
-    fail_msg: "❌ Invalid role action '{{ nftables_role_action | default('undefined') }}'. Must be one of: all, requirements, install, configure, rules, acl, logrotate, upgrade"
-    success_msg: "✅ Role action parameter is valid: {{ nftables_role_action }}"
-
 - name: NFTables | assert | Validate service enabled parameter
   ansible.builtin.assert:
     that:
