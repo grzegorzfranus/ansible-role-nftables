@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.7.2...v2.0.0) (2026-08-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **tasks:** drive execution with prefixed tags instead of nftables_role_action ([#14](https://github.com/grzegorzfranus/ansible-role-nftables/issues/14)) (#15)
+
+### Code Refactoring
+
+* **tasks:** drive execution with prefixed tags instead of nftables_role_action ([#14](https://github.com/grzegorzfranus/ansible-role-nftables/issues/14)) ([#15](https://github.com/grzegorzfranus/ansible-role-nftables/issues/15)) ([1ca34d5](https://github.com/grzegorzfranus/ansible-role-nftables/commit/1ca34d54880ce286dba2b3818823adc502663769))
+
 ## [1.7.2](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.7.1...v1.7.2) (2026-08-15)
 
 
