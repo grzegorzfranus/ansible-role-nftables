@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.5.2...v1.6.0) (2026-08-15)
+
+
+### Features
+
+* add docker-aware firewall mode ([#5](https://github.com/grzegorzfranus/ansible-role-nftables/issues/5)) ([3ecd3a5](https://github.com/grzegorzfranus/ansible-role-nftables/commit/3ecd3a56362e05e9324a8cf2e1580066e78703e1))
+
 ## [1.5.2](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v1.5.1...v1.5.2) (2026-08-14)
 
 
