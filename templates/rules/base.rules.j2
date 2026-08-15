@@ -12,7 +12,12 @@
 # - Connection tracking
 # =============================================================================
 
+{% if nftables_docker_aware | default(false) %}
+table inet filter
+delete table inet filter
+{% else %}
 flush ruleset
+{% endif %}
 
 # -----------------------------------------------------------------------------
 # Define Base Filter Table
@@ -68,6 +73,13 @@ table inet filter {
 
         # Allow established/related connections
         jump existing
+
+        # Allow container egress and inter-container traffic in docker-aware mode
+        {% if nftables_docker_aware | default(false) %}
+        {% for bridge_if in nftables_docker_aware_bridge_interfaces | default(['docker0']) %}
+        iifname "{{ bridge_if }}" accept comment "Allow container egress and inter-container traffic"
+        {% endfor %}
+        {% endif %}
 
         # Jump to security protection chain if enabled
         {% if nftables_configure_security_rules | default(false) %}

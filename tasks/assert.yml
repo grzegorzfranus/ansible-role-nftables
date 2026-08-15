@@ -51,6 +51,24 @@
     fail_msg: "❌ Invalid security rules configuration flag '{{ nftables_configure_security_rules | default('undefined') }}'. Must be boolean (true/false)"
     success_msg: "✅ Security rules configuration flag is valid: {{ nftables_configure_security_rules }}"
 
+- name: NFTables | assert | Validate docker-aware configuration flag
+  ansible.builtin.assert:
+    that:
+      - nftables_docker_aware is defined
+      - nftables_docker_aware is boolean
+    fail_msg: "❌ Invalid docker-aware mode flag '{{ nftables_docker_aware | default('undefined') }}'. Must be boolean (true/false)"
+    success_msg: "✅ Docker-aware mode flag is valid: {{ nftables_docker_aware }}"
+
+- name: NFTables | assert | Validate docker-aware bridge interfaces
+  ansible.builtin.assert:
+    that:
+      - nftables_docker_aware_bridge_interfaces is defined
+      - nftables_docker_aware_bridge_interfaces is sequence
+      - (nftables_docker_aware_bridge_interfaces | map('type_debug') | select('equalto', 'str') | list | length) == (nftables_docker_aware_bridge_interfaces | length)
+    fail_msg: "❌ Invalid docker-aware bridge interfaces. Must be a list of interface name strings"
+    success_msg: "✅ Docker-aware bridge interfaces list is valid"
+
+
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------

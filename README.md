@@ -106,6 +106,9 @@ nftables_role_action: "all"
 nftables_service_enabled: true
 nftables_configure_logrotate: true
 nftables_configure_security_rules: false
+nftables_docker_aware: false
+nftables_docker_aware_bridge_interfaces:
+  - "docker0"
 nftables_reboot_required: false
 
 nftables_input_default_policy: "drop"
@@ -117,6 +120,42 @@ nftables_log_forward_dropped: true
 nftables_log_output_dropped: true
 ```
 
+### Docker-Aware Mode
+
+When running on a host with Docker installed, standard firewall reloads can break container networking because `flush ruleset` wipes Docker's iptables-nft translation rules (in kernel tables `ip filter` and `ip nat`).
+
+To resolve this, enable Docker-aware mode:
+
+```yaml
+nftables_docker_aware: true
+nftables_docker_aware_bridge_interfaces:
+  - "docker0"
+```
+
+#### What Docker-Aware Mode Changes
+
+1. **Scoped Table Flush**: Replaces global `flush ruleset` with atomic table flushing (`table inet filter` declare/delete/define), ensuring Docker's `ip filter` and `ip nat` tables are untouched during service reloads.
+2. **Dedicated NAT Table**: Relocates the role's NAT rules from `table ip nat` to a dedicated `table inet nftables_nat`. This prevents collision with Docker's native NAT chains (`DOCKER`, `POSTROUTING`).
+3. **Container Egress Forwarding**: Automatically allows outbound container traffic from specified bridge interfaces (`iifname "docker0" accept`) in the `forward` chain. Return traffic is automatically permitted via existing connection tracking (`ct state established,related`).
+
+#### Published Ports Consequence (Inbound Container Access)
+
+Because the forward chain policy defaults to `drop`, **inbound traffic to published container ports is not automatically accepted**. Inbound connections forwarded to containers (post-DNAT) must be explicitly allowed using `nftables_user_defined_forward_rules`:
+
+```yaml
+nftables_user_defined_forward_enabled: true
+nftables_user_defined_forward_rules:
+  - protocol: "tcp"
+    port: "80,443"
+    action: "accept"
+    comment: "Allow inbound HTTP/HTTPS to published containers"
+```
+
+#### Migration Notes
+
+- **Legacy → Docker-Aware**: When switching from legacy to Docker-aware mode, the final legacy run already flushed existing tables. After setting `nftables_docker_aware: true` and applying the role, restart the Docker daemon once (`sudo systemctl restart docker`) to recreate Docker's iptables rules if needed.
+- **Docker-Aware → Legacy**: Switching back to legacy mode will issue a `flush ruleset` on next run, removing Docker's rules until the Docker daemon is restarted.
+
 ## 📊 Variables
 
 ### 1. General Settings
@@ -127,7 +166,10 @@ nftables_log_output_dropped: true
 | `nftables_service_enabled` | Enable/disable NFTables service on boot | `true` |
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
+| `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
+| `nftables_docker_aware_bridge_interfaces` | List of bridge interfaces allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
 | `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
+
 
 ### 2. Logging Configuration
 
@@ -655,9 +697,45 @@ Automated via [Release Please](https://github.com/googleapis/release-please):
             protocol: "udp"
             log: false
             comment: "Consul gossip protocol"
+
+### Docker Host with Published Services and Outbound Egress
+
+```yaml
+---
+- name: Configure NFTables on Docker Host
+  hosts: docker_hosts
+  become: true
+  roles:
+    - role: grzegorzfranus.nftables
+      vars:
+        nftables_docker_aware: true
+        nftables_docker_aware_bridge_interfaces:
+          - "docker0"
+
+        # Base policies
+        nftables_input_default_policy: "drop"
+        nftables_forward_default_policy: "drop"
+        nftables_output_default_policy: "accept"
+
+        # Allow SSH management
+        nftables_user_defined_input_enabled: true
+        nftables_user_defined_input_rules:
+          - protocol: "tcp"
+            port: "22"
+            action: "accept"
+            comment: "Allow SSH management"
+
+        # Allow inbound traffic to published container services
+        nftables_user_defined_forward_enabled: true
+        nftables_user_defined_forward_rules:
+          - protocol: "tcp"
+            port: "80,443"
+            action: "accept"
+            comment: "Allow published web container ports"
 ```
 
 ## 🤝 Contributing
+
 
 Contributions, bug reports, and feature requests are welcome!
 

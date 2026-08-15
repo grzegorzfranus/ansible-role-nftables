@@ -144,6 +144,15 @@
       changed_when: false
       ignore_errors: true
 
+    - name: Verify | Check for docker0 bridge forward rule (on docker-aware test node)
+      ansible.builtin.command:
+        cmd: nft list chain inet filter forward
+      register: _docker_forward_check_
+      changed_when: false
+      when: ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04'
+      failed_when: "'docker0' not in _docker_forward_check_.stdout"
+
+
     # -----------------------------------------------------------------------------
     # 6. Logging Configuration Verification
     # -----------------------------------------------------------------------------

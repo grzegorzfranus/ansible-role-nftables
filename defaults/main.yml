@@ -33,6 +33,15 @@ nftables_configure_logrotate: true
 # Additional rule set configurations
 nftables_configure_security_rules: false
 
+# Enable Docker-aware firewall mode to prevent flushing Docker iptables-nft tables
+# and isolate role NAT chains in a dedicated 'inet nftables_nat' table
+nftables_docker_aware: false
+
+# Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode
+nftables_docker_aware_bridge_interfaces:
+  - "docker0"
+
+
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------

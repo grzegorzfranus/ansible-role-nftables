@@ -137,6 +137,31 @@
     not nftables_nat_prerouting_enabled | default(false) and
     not nftables_nat_postrouting_enabled | default(false)
 
+- name: NFTables | acl | Check if inet nftables_nat table exists
+  become: true
+  ansible.builtin.command: >
+    nft list table inet nftables_nat
+  register: _nftables_nat_table_check_
+  failed_when: false
+  changed_when: false
+  when: >
+    (nftables_docker_aware | default(false)) and
+    not nftables_nat_prerouting_enabled | default(false) and
+    not nftables_nat_postrouting_enabled | default(false)
+
+- name: NFTables | acl | Remove stale inet nftables_nat table
+  become: true
+  ansible.builtin.command: >
+    nft delete table inet nftables_nat
+  register: _nftables_nat_table_removed_
+  failed_when: false
+  changed_when: _nftables_nat_table_check_.rc | default(1) == 0
+  when: >
+    (nftables_docker_aware | default(false)) and
+    not nftables_nat_prerouting_enabled | default(false) and
+    not nftables_nat_postrouting_enabled | default(false) and
+    _nftables_nat_table_check_.rc | default(1) == 0
+
 # -----------------------------------------------------------------------------
 # 6. Base Structure
 # -----------------------------------------------------------------------------
@@ -165,7 +190,9 @@
     _nftables_user_defined_rules_.changed | default(false) or
     _nftables_user_defined_rules_removed_.changed | default(false) or
     _nftables_nat_rules_.changed | default(false) or
-    _nftables_nat_rules_removed_.changed | default(false)
+    _nftables_nat_rules_removed_.changed | default(false) or
+    _nftables_nat_table_removed_.changed | default(false)
+
   block:
     - name: NFTables | acl | Force restart nftables service
       become: true

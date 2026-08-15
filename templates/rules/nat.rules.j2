@@ -12,7 +12,14 @@
 # -----------------------------------------------------------------------------
 # Define NAT Table and Chains
 # -----------------------------------------------------------------------------
+{% if nftables_docker_aware | default(false) %}
+table inet nftables_nat
+delete table inet nftables_nat
+table inet nftables_nat {
+{% else %}
 table ip nat {
+{% endif %}
+
     {% if nftables_nat_prerouting_enabled | default(false) %}
     # Define chain for DNAT operations (destination NAT, port forwarding)
     chain prerouting {
