@@ -99,6 +99,37 @@
         log: false
         comment: "Allow HTTP/HTTPS outbound for testing"
 
+    # Test NAT rules
+    nftables_nat_prerouting_enabled: true
+    nftables_nat_postrouting_enabled: true
+
+    # Test prerouting rules
+    nftables_nat_prerouting_rules:
+      - in_interface: "eth0"
+        protocol: "tcp"
+        port: "80"
+        nat_action: "dnat"
+        nat_to: "192.168.1.100:80"
+        counter: true
+        log: true
+        comment: "Forward HTTP to internal web server"
+
+    # Test postrouting rules
+    nftables_nat_postrouting_rules:
+      - out_interface: "eth0"
+        source: "192.168.1.0/24"
+        nat_action: "masquerade"
+        counter: true
+        log: false
+        comment: "NAT for LAN clients"
+      - out_interface: "eth0"
+        source: "192.168.2.0/24"
+        nat_action: "snat"
+        nat_to: "203.0.113.2"
+        counter: true
+        log: true
+        comment: "SNAT for DMZ subnet"
+
     nftables_reboot_required: false
     nftables_docker_aware: "{{ (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04') | bool }}"
 
