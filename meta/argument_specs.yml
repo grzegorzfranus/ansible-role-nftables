@@ -252,9 +252,9 @@ argument_specs:
         type: list
         elements: str
         default:
-          - "192.168.1.10"
-          - "192.168.1.11"
-          - "192.168.1.12"
+          - "192.0.2.10"
+          - "192.0.2.11"
+          - "192.0.2.12"
 
       nftables_cluster_rules:
         description: "List of firewall rules applied for cluster nodes communication."
