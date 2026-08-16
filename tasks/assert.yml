@@ -252,7 +252,7 @@
           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list)
-        ) | select() | list | length or true
+        ) | select() | list | length
       # Validate that source fields are either strings or lists
       - >
         (
@@ -264,7 +264,7 @@
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | list) +
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | list) +
           (nftables_user_defined_output_rules | selectattr('source', 'defined') | list)
-        ) | select() | length or true
+        ) | select() | length
       # Validate that destination fields are either strings or lists
       - >
         (
@@ -276,7 +276,7 @@
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | list) +
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | list) +
           (nftables_user_defined_output_rules | selectattr('destination', 'defined') | list)
-        ) | select() | length or true
+        ) | select() | length
       # Check that list items are strings (if any source is a list)
       - >
         (
@@ -288,7 +288,7 @@
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_user_defined_output_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
-        ) | select() | flatten | select() | list | length or true
+        ) | select() | flatten | select() | list | length
       # Check that list items are strings (if any destination is a list)
       - >
         (
@@ -300,7 +300,7 @@
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_user_defined_output_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
-        ) | select() | flatten | select() | list | length or true
+        ) | select() | flatten | select() | list | length
     fail_msg: "❌ User-defined rules validation failed: port must be numeric/range/list; source/destination must be strings or lists of strings"
     success_msg: "✅ User-defined rules structure looks valid"
 
@@ -370,14 +370,14 @@
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | map('type_debug') | map('regex_search', '^dict$') | select('string') | list | length == (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules) | list | length or true
+        ) | map('type_debug') | map('regex_search', '^dict$') | select('string') | list | length == (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules) | list | length
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
         ) | selectattr('port', 'defined') | map(attribute='port') | select() | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | select('string') | list | length ==
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('port', 'defined') | select() | list | length or true
+        ) | selectattr('port', 'defined') | select() | list | length
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
@@ -388,7 +388,7 @@
         ) | selectattr('counter', 'defined') | map(attribute='counter') | select() | map('type_debug') | select('string') | map('regex_search', '^bool$') | select('string') | list | length ==
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('counter', 'defined') | select() | list | length or true
+        ) | selectattr('counter', 'defined') | select() | list | length
       # Validate that source fields are either strings or lists
       - >
         (
@@ -398,7 +398,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | list)
-        ) | select() | length or true
+        ) | select() | length
       # Validate that destination fields are either strings or lists
       - >
         (
@@ -408,7 +408,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | list)
-        ) | select() | length or true
+        ) | select() | length
       # Check that list items are strings (if any source is a list)
       - >
         (
@@ -418,7 +418,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
-        ) | select() | flatten | select() | list | length or true
+        ) | select() | flatten | select() | list | length
       # Check that list items are strings (if any destination is a list)
       - >
         (
@@ -428,7 +428,7 @@
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
-        ) | select() | flatten | select() | list | length or true
+        ) | select() | flatten | select() | list | length
     fail_msg: >-
       ❌ NAT rules validation failed: each rule must be a dict; ports numeric/range/list; nat_action in [dnat, snat, masquerade];
       source and destination must be strings or lists of strings (all list items must be strings)
