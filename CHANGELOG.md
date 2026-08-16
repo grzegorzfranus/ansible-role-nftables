@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.10](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.1.9...v2.1.10) (2026-08-16)
+
+
+### Bug Fixes
+
+* **assert:** validate rule fields, redirect targets and document reboot variables ([#53](https://github.com/grzegorzfranus/ansible-role-nftables/issues/53)) ([#54](https://github.com/grzegorzfranus/ansible-role-nftables/issues/54)) ([863d22e](https://github.com/grzegorzfranus/ansible-role-nftables/commit/863d22ede8af47af0bcc03be61c59dc4de303e32))
+
 ## [2.1.9](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.1.8...v2.1.9) (2026-08-16)
 
 
