@@ -61,9 +61,6 @@
 
     # Security Rules Configuration
     nftables_configure_security_rules: true
-    nftables_blocked_reserved_ranges:
-      - "198.51.100.0/24"
-      - "203.0.113.0/24"
 
     # Cluster Configuration
     nftables_cluster_enabled: true

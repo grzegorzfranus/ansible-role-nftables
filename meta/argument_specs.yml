@@ -49,6 +49,46 @@ argument_specs:
         type: bool
         default: false
 
+      nftables_reboot_message:
+        description: "Message displayed to users before system reboot."
+        type: str
+        default: "Reboot initialized by Ansible"
+
+      nftables_reboot_wait:
+        description: "Enable or disable waiting for the system to come back online after reboot."
+        type: bool
+        default: true
+
+      nftables_reboot_wait_timeout:
+        description: "Maximum time (in seconds) to wait for the machine to complete reboot."
+        type: int
+        default: 300
+
+      nftables_reboot_connect_timeout:
+        description: "Connection timeout (in seconds) when waiting for reboot to complete."
+        type: int
+        default: 60
+
+      nftables_reboot_wait_ctimeout:
+        description: "Sleep interval (in seconds) between connection attempts after reboot."
+        type: int
+        default: 5
+
+      nftables_reboot_wait_delay:
+        description: "Delay (in seconds) before starting connection polling after reboot."
+        type: int
+        default: 10
+
+      nftables_reboot_interval:
+        description: "Enable or disable a post-reboot delay interval."
+        type: bool
+        default: true
+
+      nftables_reboot_interval_seconds:
+        description: "Duration (in seconds) of post-reboot delay interval."
+        type: int
+        default: 10
+
       # -------------------------------------------------------------------------
       # 2. Logging Configuration
       # -------------------------------------------------------------------------

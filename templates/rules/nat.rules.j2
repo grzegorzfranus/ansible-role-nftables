@@ -52,8 +52,8 @@ table ip nat {
         {%- endif %}
         {%- if rule.nat_action == 'dnat' and rule.nat_to is defined %}
             {%- set nat = 'dnat ip to ' ~ rule.nat_to %}
-        {%- elif rule.nat_action == 'redirect' and (rule.redirect_port is defined or rule.port is defined or rule.nat_to is defined) %}
-            {%- set redirect_target = rule.redirect_port | default(rule.port | default(rule.nat_to)) %}
+        {%- elif rule.nat_action == 'redirect' and (rule.redirect_port is defined or rule.nat_to is defined) %}
+            {%- set redirect_target = rule.redirect_port | default(rule.nat_to) %}
             {%- set nat = 'redirect to :' ~ redirect_target %}
         {%- else %}
             {%- set nat = '' %}

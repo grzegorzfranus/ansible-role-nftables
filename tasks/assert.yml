@@ -57,18 +57,45 @@
     that:
       - nftables_docker_aware_bridge_interfaces is defined
       - nftables_docker_aware_bridge_interfaces is sequence
-      - (nftables_docker_aware_bridge_interfaces | map('type_debug') | select('equalto', 'str') | list | length) == (nftables_docker_aware_bridge_interfaces | length)
+      - >
+        (
+          nftables_docker_aware_bridge_interfaces
+          | map('type_debug')
+          | select('equalto', 'str')
+          | list
+          | length
+        ) == (nftables_docker_aware_bridge_interfaces | length)
     fail_msg: "❌ Invalid docker-aware bridge interfaces. Must be a list of interface name strings"
     success_msg: "✅ Docker-aware bridge interfaces list is valid"
 
-- name: NFTables | assert | Validate reboot required parameter
+- name: NFTables | assert | Validate reboot parameters
   ansible.builtin.assert:
     that:
       - nftables_reboot_required is defined
       - nftables_reboot_required is boolean
-    fail_msg: "❌ Invalid reboot required flag '{{ nftables_reboot_required | default('undefined') }}'. Must be boolean (true/false)"
-    success_msg: "✅ Reboot required flag is valid: {{ nftables_reboot_required }}"
-
+      - nftables_reboot_message is defined
+      - nftables_reboot_message is string
+      - nftables_reboot_wait is defined
+      - nftables_reboot_wait is boolean
+      - nftables_reboot_wait_timeout is defined
+      - nftables_reboot_wait_timeout is integer
+      - nftables_reboot_wait_timeout >= 1
+      - nftables_reboot_connect_timeout is defined
+      - nftables_reboot_connect_timeout is integer
+      - nftables_reboot_connect_timeout >= 1
+      - nftables_reboot_wait_ctimeout is defined
+      - nftables_reboot_wait_ctimeout is integer
+      - nftables_reboot_wait_ctimeout >= 1
+      - nftables_reboot_wait_delay is defined
+      - nftables_reboot_wait_delay is integer
+      - nftables_reboot_wait_delay >= 0
+      - nftables_reboot_interval is defined
+      - nftables_reboot_interval is boolean
+      - nftables_reboot_interval_seconds is defined
+      - nftables_reboot_interval_seconds is integer
+      - nftables_reboot_interval_seconds >= 0
+    fail_msg: "❌ Invalid reboot configuration parameters"
+    success_msg: "✅ Reboot configuration parameters are valid"
 
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
@@ -136,17 +163,25 @@
       - nftables_log_output_dropped is boolean
       - nftables_log_input_dropped_rate_limit is defined
       - nftables_log_input_dropped_rate_limit is string
+      - nftables_log_input_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_input_dropped_burst is defined
       - nftables_log_input_dropped_burst is integer
+      - nftables_log_input_dropped_burst >= 1
       - nftables_log_forward_dropped_rate_limit is defined
       - nftables_log_forward_dropped_rate_limit is string
+      - nftables_log_forward_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_forward_dropped_burst is defined
       - nftables_log_forward_dropped_burst is integer
+      - nftables_log_forward_dropped_burst >= 1
       - nftables_log_output_dropped_rate_limit is defined
       - nftables_log_output_dropped_rate_limit is string
+      - nftables_log_output_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_output_dropped_burst is defined
       - nftables_log_output_dropped_burst is integer
-    fail_msg: "❌ Dropped packet logging options contain invalid values"
+      - nftables_log_output_dropped_burst >= 1
+    fail_msg: >-
+      ❌ Dropped packet logging options contain invalid values
+      (rate limits must match format 'X/period' where period is second, minute, hour, day)
     success_msg: "✅ Dropped packet logging options are valid"
 
 # -----------------------------------------------------------------------------
@@ -161,13 +196,15 @@
       - nftables_ping_input.enabled is boolean
       - nftables_ping_input.rate_limit is defined
       - nftables_ping_input.rate_limit is string
+      - nftables_ping_input.rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_ping_input.burst is defined
       - nftables_ping_input.burst is integer
+      - nftables_ping_input.burst >= 1
       - nftables_ping_input.log is defined
       - nftables_ping_input.log is boolean
       - nftables_ping_input.comment is defined
       - nftables_ping_input.comment is string
-    fail_msg: "❌ Invalid input ICMP/ping settings"
+    fail_msg: "❌ Invalid input ICMP/ping settings (rate limit must match format 'X/period')"
     success_msg: "✅ Input ICMP/ping settings are valid"
 
 - name: NFTables | assert | Validate output ICMP/ping settings
@@ -179,13 +216,15 @@
       - nftables_ping_output.enabled is boolean
       - nftables_ping_output.rate_limit is defined
       - nftables_ping_output.rate_limit is string
+      - nftables_ping_output.rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_ping_output.burst is defined
       - nftables_ping_output.burst is integer
+      - nftables_ping_output.burst >= 1
       - nftables_ping_output.log is defined
       - nftables_ping_output.log is boolean
       - nftables_ping_output.comment is defined
       - nftables_ping_output.comment is string
-    fail_msg: "❌ Invalid output ICMP/ping settings"
+    fail_msg: "❌ Invalid output ICMP/ping settings (rate limit must match format 'X/period')"
     success_msg: "✅ Output ICMP/ping settings are valid"
 
 # -----------------------------------------------------------------------------
@@ -196,7 +235,15 @@
     that:
       - nftables_blocked_reserved_ranges is defined
       - nftables_blocked_reserved_ranges is sequence
-    fail_msg: "❌ Invalid blocked reserved ranges. Must be a list of CIDRs"
+      - >
+        (
+          nftables_blocked_reserved_ranges
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$')
+          | select('string')
+          | list | length
+        ) == (nftables_blocked_reserved_ranges | length)
+    fail_msg: "❌ Invalid blocked reserved ranges. Must be a list of valid IPv4 CIDR strings"
     success_msg: "✅ Blocked reserved ranges list is valid"
 
 # -----------------------------------------------------------------------------
@@ -215,7 +262,18 @@
     that:
       - nftables_cluster_nodes is defined
       - nftables_cluster_nodes is sequence
-    fail_msg: "❌ Invalid cluster nodes list. Must be a list"
+      - not (nftables_cluster_enabled | bool) or (nftables_cluster_nodes | length > 0)
+      - >
+        (
+          nftables_cluster_nodes
+          | map('string')
+          | map('regex_search', '^(([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?|[a-fA-F0-9:]+(/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?)$')
+          | select('string')
+          | list | length
+        ) == (nftables_cluster_nodes | length)
+    fail_msg: >-
+      ❌ Invalid cluster nodes list: when cluster is enabled, nodes list must not be empty;
+      all elements must be valid IP addresses or CIDRs
     success_msg: "✅ Cluster nodes list is valid"
 
 - name: NFTables | assert | Validate cluster communication rules
@@ -223,8 +281,38 @@
     that:
       - nftables_cluster_rules is defined
       - nftables_cluster_rules is sequence
+      - not (nftables_cluster_enabled | bool) or (nftables_cluster_rules | length > 0)
+      - (nftables_cluster_rules | map('type_debug') | select('equalto', 'dict') | list | length) == (nftables_cluster_rules | length)
       - (nftables_cluster_rules | map(attribute='port') | list | reject('number') | list | length) == 0
-    fail_msg: "❌ Invalid cluster communication rules. Each rule must have a numeric 'port'"
+      - >
+        (
+          nftables_cluster_rules
+          | selectattr('protocol', 'defined')
+          | map(attribute='protocol')
+          | select()
+          | list
+          | difference(['tcp', 'udp'])
+          | length == 0
+        )
+      - >
+        (
+          nftables_cluster_rules
+          | selectattr('rate_limit', 'defined')
+          | map(attribute='rate_limit')
+          | select()
+          | map('string')
+          | map('regex_search', '^\d+/(second|minute|hour|day)$')
+          | select('string')
+          | list | length
+        ) == (
+          nftables_cluster_rules
+          | selectattr('rate_limit', 'defined')
+          | select()
+          | list | length
+        )
+    fail_msg: >-
+      ❌ Invalid cluster communication rules: when cluster is enabled, rules list must not be empty;
+      each rule must be a dict with numeric 'port'; protocol must be 'tcp' or 'udp'; rate_limit must match format 'X/period'
     success_msg: "✅ Cluster communication rules structure is valid"
 
 - name: NFTables | assert | Validate cluster rules burst requires rate_limit
@@ -252,7 +340,7 @@
     fail_msg: "❌ User-defined rules enabled flags must be boolean values"
     success_msg: "✅ User-defined rules enabled flags are valid"
 
-- name: NFTables | assert | Validate user-defined rules lists
+- name: NFTables | assert | Validate user-defined rules list structure
   ansible.builtin.assert:
     that:
       - nftables_user_defined_input_rules is defined
@@ -261,19 +349,60 @@
       - nftables_user_defined_forward_rules is sequence
       - nftables_user_defined_output_rules is defined
       - nftables_user_defined_output_rules is sequence
-      # Validate port field for all user-defined rules (input, forward, output)
+      - >
+        (
+          nftables_user_defined_input_rules +
+          nftables_user_defined_forward_rules +
+          nftables_user_defined_output_rules
+        ) | map('type_debug') | select('equalto', 'dict') | list | length ==
+        (
+          nftables_user_defined_input_rules +
+          nftables_user_defined_forward_rules +
+          nftables_user_defined_output_rules
+        ) | length
+    fail_msg: "❌ User-defined rules must be sequences of dictionary rule definitions"
+    success_msg: "✅ User-defined rules list structures are valid"
+
+- name: NFTables | assert | Validate user-defined rules action field
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (
+            nftables_user_defined_input_rules +
+            nftables_user_defined_forward_rules +
+            nftables_user_defined_output_rules
+          )
+          | selectattr('action', 'defined')
+          | map(attribute='action')
+          | select()
+          | list
+          | difference(['accept', 'drop', 'reject', 'return'])
+          | length == 0
+        )
+    fail_msg: "❌ User-defined rules 'action' must be one of: accept, drop, reject, return"
+    success_msg: "✅ User-defined rules action fields are valid"
+
+- name: NFTables | assert | Validate user-defined rules port field
+  ansible.builtin.assert:
+    that:
       - >
         (
           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list)
-        ) | select() | map('regex_search', '^(\d{1,5}(-\d{1,5})?|\d{1,5}(,\d{1,5})*)$') | select('string') | list | length ==
+        ) | select() | map('string') | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | select('string') | list | length ==
         (
           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
           (nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list)
         ) | select() | list | length
-      # Validate that source fields are either strings or lists
+    fail_msg: "❌ User-defined rules 'port' must be a numeric port, range (e.g. 1000-2000), or comma-separated list (e.g. 80,443)"
+    success_msg: "✅ User-defined rules port fields are valid"
+
+- name: NFTables | assert | Validate user-defined rules source and destination fields
+  ansible.builtin.assert:
+    that:
       - >
         (
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | list) +
@@ -285,7 +414,6 @@
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | list) +
           (nftables_user_defined_output_rules | selectattr('source', 'defined') | list)
         ) | select() | length
-      # Validate that destination fields are either strings or lists
       - >
         (
           (nftables_user_defined_input_rules | selectattr('destination', 'defined') | list) +
@@ -297,7 +425,6 @@
           (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | list) +
           (nftables_user_defined_output_rules | selectattr('destination', 'defined') | list)
         ) | select() | length
-      # Check that list items are strings (if any source is a list)
       - >
         (
           (nftables_user_defined_input_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
@@ -309,20 +436,107 @@
           (nftables_user_defined_forward_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_user_defined_output_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
         ) | select() | flatten | select() | list | length
-      # Check that list items are strings (if any destination is a list)
       - >
         (
-          (nftables_user_defined_input_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
-          (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
-          (nftables_user_defined_output_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
+          (
+            nftables_user_defined_input_rules
+            | selectattr('destination', 'defined')
+            | selectattr('destination', 'sequence')
+            | map(attribute='destination')
+            | list
+          ) +
+          (
+            nftables_user_defined_forward_rules
+            | selectattr('destination', 'defined')
+            | selectattr('destination', 'sequence')
+            | map(attribute='destination')
+            | list
+          ) +
+          (
+            nftables_user_defined_output_rules
+            | selectattr('destination', 'defined')
+            | selectattr('destination', 'sequence')
+            | map(attribute='destination')
+            | list
+          )
         ) | select() | flatten | map('type_debug') | select('string') | map('regex_search', '^str$') | select('string') | list | length ==
         (
-          (nftables_user_defined_input_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
-          (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
-          (nftables_user_defined_output_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
+          (
+            nftables_user_defined_input_rules
+            | selectattr('destination', 'defined')
+            | selectattr('destination', 'sequence')
+            | map(attribute='destination')
+            | list
+          ) +
+          (
+            nftables_user_defined_forward_rules
+            | selectattr('destination', 'defined')
+            | selectattr('destination', 'sequence')
+            | map(attribute='destination')
+            | list
+          ) +
+          (
+            nftables_user_defined_output_rules
+            | selectattr('destination', 'defined')
+            | selectattr('destination', 'sequence')
+            | map(attribute='destination')
+            | list
+          )
         ) | select() | flatten | select() | list | length
-    fail_msg: "❌ User-defined rules validation failed: port must be numeric/range/list; source/destination must be strings or lists of strings"
-    success_msg: "✅ User-defined rules structure looks valid"
+    fail_msg: "❌ User-defined rules 'source' and 'destination' must be strings or lists of strings"
+    success_msg: "✅ User-defined rules source and destination fields are valid"
+
+- name: NFTables | assert | Validate user-defined rules state field
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (
+            nftables_user_defined_input_rules +
+            nftables_user_defined_forward_rules +
+            nftables_user_defined_output_rules
+          )
+          | selectattr('state', 'defined')
+          | map(attribute='state')
+          | map('string')
+          | map('split', ',')
+          | flatten
+          | map('trim')
+          | difference(['new', 'established', 'related', 'invalid', 'untracked'])
+          | length == 0
+        )
+    fail_msg: "❌ User-defined rules 'state' field contains invalid values. Allowed states: new, established, related, invalid, untracked"
+    success_msg: "✅ User-defined rules state fields are valid"
+
+- name: NFTables | assert | Validate user-defined rules rate_limit field
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (
+            nftables_user_defined_input_rules +
+            nftables_user_defined_forward_rules +
+            nftables_user_defined_output_rules
+          )
+          | selectattr('rate_limit', 'defined')
+          | map(attribute='rate_limit')
+          | select()
+          | map('string')
+          | map('regex_search', '^\d+/(second|minute|hour|day)$')
+          | select('string')
+          | list | length
+        ) == (
+          (
+            nftables_user_defined_input_rules +
+            nftables_user_defined_forward_rules +
+            nftables_user_defined_output_rules
+          )
+          | selectattr('rate_limit', 'defined')
+          | select()
+          | list | length
+        )
+    fail_msg: "❌ User-defined rules 'rate_limit' must match format 'X/period' (second, minute, hour, day)"
+    success_msg: "✅ User-defined rules rate_limit fields are valid"
 
 - name: NFTables | assert | Validate user-defined rules counter field
   ansible.builtin.assert:
@@ -391,41 +605,176 @@
     fail_msg: "❌ NAT enabled flags must be boolean values"
     success_msg: "✅ NAT enabled flags are valid"
 
-- name: NFTables | assert | Validate NAT rules lists
+- name: NFTables | assert | Validate NAT rules list structure
   ansible.builtin.assert:
     that:
       - nftables_nat_prerouting_rules is defined
       - nftables_nat_prerouting_rules is sequence
       - nftables_nat_postrouting_rules is defined
       - nftables_nat_postrouting_rules is sequence
-      # Validate nat_action and port for all NAT rules
+      - not (nftables_nat_prerouting_enabled | bool) or (nftables_nat_prerouting_rules | length > 0)
+      - not (nftables_nat_postrouting_enabled | bool) or (nftables_nat_postrouting_rules | length > 0)
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | map('type_debug') | map('regex_search', '^dict$') | select('string') | list | length == (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules) | list | length
-      - >
+        ) | map('type_debug') | select('equalto', 'dict') | list | length ==
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('port', 'defined') | map(attribute='port') | select() | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | select('string') | list | length ==
-        (
-          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('port', 'defined') | select() | list | length
+        ) | length
+    fail_msg: >-
+      ❌ NAT rules must be sequences of dictionary rule definitions;
+      when prerouting or postrouting NAT is enabled, the corresponding rules list must not be empty
+    success_msg: "✅ NAT rules list structures are valid"
+
+- name: NFTables | assert | Validate NAT prerouting rule actions
+  ansible.builtin.assert:
+    that:
       - >
         (
-          nftables_nat_prerouting_rules | selectattr('nat_action', 'defined') | map(attribute='nat_action') | select() | list | difference(['dnat', 'redirect']) | length == 0
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | map(attribute='nat_action')
+          | select()
+          | list
+          | difference(['dnat', 'redirect'])
+          | length == 0
+        )
+    fail_msg: "❌ NAT prerouting rules 'nat_action' must be one of: dnat, redirect"
+    success_msg: "✅ NAT prerouting rule actions are valid"
+
+- name: NFTables | assert | Validate NAT postrouting rule actions
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_nat_postrouting_rules
+          | selectattr('nat_action', 'defined')
+          | map(attribute='nat_action')
+          | select()
+          | list
+          | difference(['snat', 'masquerade'])
+          | length == 0
+        )
+    fail_msg: "❌ NAT postrouting rules 'nat_action' must be one of: snat, masquerade"
+    success_msg: "✅ NAT postrouting rule actions are valid"
+
+- name: NFTables | assert | Validate NAT dnat and snat rules nat_to field
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'dnat')
+          | list
+        ) | rejectattr('nat_to', 'defined') | list | length == 0
+      - >
+        (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'dnat')
+          | selectattr('nat_to', 'defined')
+          | map(attribute='nat_to')
+          | map('string')
+          | map('trim')
+          | select('equalto', '')
+          | list | length == 0
         )
       - >
         (
-          nftables_nat_postrouting_rules | selectattr('nat_action', 'defined') | map(attribute='nat_action') | select() | list | difference(['snat', 'masquerade']) | length == 0
+          nftables_nat_postrouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'snat')
+          | list
+        ) | rejectattr('nat_to', 'defined') | list | length == 0
+      - >
+        (
+          nftables_nat_postrouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'snat')
+          | selectattr('nat_to', 'defined')
+          | map(attribute='nat_to')
+          | map('string')
+          | map('trim')
+          | select('equalto', '')
+          | list | length == 0
+        )
+    fail_msg: "❌ NAT 'dnat' and 'snat' rules require a non-empty 'nat_to' target address specification"
+    success_msg: "✅ NAT dnat and snat target addresses are valid"
+
+- name: NFTables | assert | Validate NAT redirect rules target port
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'redirect')
+          | list
+        ) | rejectattr('redirect_port', 'defined') | rejectattr('nat_to', 'defined') | list | length == 0
+      - >
+        (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'redirect')
+          | map(attribute='redirect_port', default=none)
+          | select()
+          | map('string')
+          | map('regex_search', '^[0-9]{1,5}$')
+          | select('string')
+          | list | length
+        ) == (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'redirect')
+          | map(attribute='redirect_port', default=none)
+          | select()
+          | list | length
         )
       - >
         (
-          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('counter', 'defined') | map(attribute='counter') | select() | map('type_debug') | select('string') | map('regex_search', '^bool$') | select('string') | list | length ==
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'redirect')
+          | rejectattr('redirect_port', 'defined')
+          | map(attribute='nat_to', default=none)
+          | select()
+          | map('string')
+          | map('regex_search', '^[0-9]{1,5}$')
+          | select('string')
+          | list | length
+        ) == (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'redirect')
+          | rejectattr('redirect_port', 'defined')
+          | map(attribute='nat_to', default=none)
+          | select()
+          | list | length
+        )
+    fail_msg: >-
+      ❌ NAT 'redirect' rules require a single target port ('redirect_port' or 'nat_to' matching '^[0-9]{1,5}$');
+      multi-port lists and ranges are not supported
+    success_msg: "✅ NAT redirect target ports are valid"
+
+- name: NFTables | assert | Validate NAT rules port field
+  ansible.builtin.assert:
+    that:
+      - >
         (
-          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('counter', 'defined') | select() | list | length
-      # Validate that source fields are either strings or lists
+          (nftables_nat_prerouting_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+          (nftables_nat_postrouting_rules | selectattr('port', 'defined') | map(attribute='port') | list)
+        ) | select() | map('string') | map('regex_search', '^([0-9]{1,5}(-[0-9]{1,5})?|[0-9]{1,5}(,[0-9]{1,5})*)$') | select('string') | list | length ==
+        (
+          (nftables_nat_prerouting_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+          (nftables_nat_postrouting_rules | selectattr('port', 'defined') | map(attribute='port') | list)
+        ) | select() | list | length
+    fail_msg: "❌ NAT rules 'port' must be numeric, a port range (e.g. 1000-2000), or a comma-separated list (e.g. 80,443)"
+    success_msg: "✅ NAT rules port fields are valid"
+
+- name: NFTables | assert | Validate NAT rules source and destination fields
+  ansible.builtin.assert:
+    that:
       - >
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | list) +
@@ -435,7 +784,6 @@
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | list)
         ) | select() | length
-      # Validate that destination fields are either strings or lists
       - >
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | list) +
@@ -445,7 +793,6 @@
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | list)
         ) | select() | length
-      # Check that list items are strings (if any source is a list)
       - >
         (
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
@@ -455,7 +802,6 @@
           (nftables_nat_prerouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list) +
           (nftables_nat_postrouting_rules | selectattr('source', 'defined') | selectattr('source', 'sequence') | map(attribute='source') | list)
         ) | select() | flatten | select() | list | length
-      # Check that list items are strings (if any destination is a list)
       - >
         (
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
@@ -465,7 +811,37 @@
           (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list) +
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
         ) | select() | flatten | select() | list | length
-    fail_msg: >-
-      ❌ NAT rules validation failed: each rule must be a dict; prerouting nat_action in [dnat, redirect], postrouting nat_action in [snat, masquerade];
-      ports numeric/range/list; source and destination must be strings or lists of strings (all list items must be strings)
-    success_msg: "✅ NAT rules structure looks valid"
+    fail_msg: "❌ NAT rules 'source' and 'destination' fields must be strings or lists of strings"
+    success_msg: "✅ NAT rules source and destination fields are valid"
+
+- name: NFTables | assert | Validate NAT rules counter and log fields
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules)
+          | selectattr('counter', 'defined')
+          | map(attribute='counter')
+          | map('type_debug')
+          | select('equalto', 'bool')
+          | list | length
+        ) == (
+          (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules)
+          | selectattr('counter', 'defined')
+          | list | length
+        )
+      - >
+        (
+          (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules)
+          | selectattr('log', 'defined')
+          | map(attribute='log')
+          | map('type_debug')
+          | select('equalto', 'bool')
+          | list | length
+        ) == (
+          (nftables_nat_prerouting_rules + nftables_nat_postrouting_rules)
+          | selectattr('log', 'defined')
+          | list | length
+        )
+    fail_msg: "❌ NAT rules 'counter' and 'log' fields must be boolean values"
+    success_msg: "✅ NAT rules counter and log fields are valid"

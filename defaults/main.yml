@@ -41,6 +41,30 @@ nftables_docker_aware_bridge_interfaces:
 # Flag indicating whether a system reboot is required during execution
 nftables_reboot_required: false
 
+# Message displayed to users before system reboot
+nftables_reboot_message: "Reboot initialized by Ansible"
+
+# Enable/disable waiting for the system to come back online after reboot
+nftables_reboot_wait: true
+
+# Maximum time (in seconds) to wait for the machine to complete reboot
+nftables_reboot_wait_timeout: 300
+
+# Connection timeout (in seconds) when waiting for reboot to complete
+nftables_reboot_connect_timeout: 60
+
+# Sleep interval (in seconds) between connection attempts after reboot
+nftables_reboot_wait_ctimeout: 5
+
+# Delay (in seconds) before starting connection polling after reboot
+nftables_reboot_wait_delay: 10
+
+# Enable/disable a post-reboot delay interval
+nftables_reboot_interval: true
+
+# Duration (in seconds) of post-reboot delay interval
+nftables_reboot_interval_seconds: 10
+
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------

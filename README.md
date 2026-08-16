@@ -167,6 +167,14 @@ nftables_user_defined_forward_rules:
 | `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
 | `nftables_docker_aware_bridge_interfaces` | List of bridge interfaces allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
 | `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
+| `nftables_reboot_message` | Message displayed before system reboot | `"Reboot initialized by Ansible"` |
+| `nftables_reboot_wait` | Enable/disable waiting for system after reboot | `true` |
+| `nftables_reboot_wait_timeout` | Maximum timeout (seconds) to wait for reboot | `300` |
+| `nftables_reboot_connect_timeout` | Connection timeout (seconds) when waiting for reboot | `60` |
+| `nftables_reboot_wait_ctimeout` | Sleep interval (seconds) between connection attempts | `5` |
+| `nftables_reboot_wait_delay` | Delay (seconds) before connection polling begins | `10` |
+| `nftables_reboot_interval` | Enable/disable post-reboot delay interval | `true` |
+| `nftables_reboot_interval_seconds` | Duration (seconds) of post-reboot delay interval | `10` |
 
 
 ### 2. Logging Configuration
@@ -343,7 +351,8 @@ nftables_user_defined_input_rules:
 - `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
 - `nat_action`: NAT action (`"dnat"`, `"redirect"` for prerouting; `"snat"`, `"masquerade"` for postrouting)
-- `nat_to` (required for dnat/snat, optional for redirect): Target address (e.g. `192.0.2.100:80` for dnat, `203.0.113.2` for snat) or redirect port
+- `nat_to` (required for dnat/snat, optional for redirect): Target address (e.g. `192.0.2.100:80` for dnat, `203.0.113.2` for snat)
+- `redirect_port` (required for redirect if `nat_to` is omitted): Target port for redirect (integer or string matching `^\d{1,5}$`). Note that `redirect` only supports a single port destination; multi-port lists and ranges are not supported by nftables `redirect`.
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `log`: Enable/disable logging (boolean)
 - `comment`: Description of the rule (string)
