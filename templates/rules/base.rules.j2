@@ -137,47 +137,35 @@ table inet filter {
     }
 
     {% if nftables_configure_security_rules | default(false) %}
-    # Empty security protection chain (when security rules are disabled)
+    # Define security protection chain stub for rule augmentation
     chain security_protection {
-        # This chain is empty as security rules are disabled
-        # It exists only for structural integrity when referenced by other chains
     }
     {% endif %}
 
     {% if nftables_cluster_enabled | default(false) %}
-    # Empty cluster chains (when cluster functionality is disabled)
+    # Define cluster chain stubs for rule augmentation
     chain cluster_input {
-        # This chain is empty as cluster functionality is disabled
-        # It exists only for structural integrity when referenced by other chains]
     }
 
     chain cluster_output {
-        # This chain is empty as cluster functionality is disabled
-        # It exists only for structural integrity when referenced by other chains
     }
     {% endif %}
 
     {% if nftables_user_defined_input_enabled | default(false) %}
-    # Empty user-defined input chain (when user-defined input rules are disabled)
+    # Define user-defined input chain stub for rule augmentation
     chain user_defined_input {
-        # This chain is empty as user-defined input rules are disabled
-        # It exists only for structural integrity when referenced by other chains
     }
     {% endif %}
 
     {% if nftables_user_defined_forward_enabled | default(false) %}
-    # Empty user-defined forward chain (when user-defined forward rules are disabled)
+    # Define user-defined forward chain stub for rule augmentation
     chain user_defined_forward {
-        # This chain is empty as user-defined forward rules are disabled
-        # It exists only for structural integrity when referenced by other chains
     }
     {% endif %}
 
     {% if nftables_user_defined_output_enabled | default(false) %}
-    # Empty user-defined output chain (when user-defined output rules are disabled)
+    # Define user-defined output chain stub for rule augmentation
     chain user_defined_output {
-        # This chain is empty as user-defined output rules are disabled
-        # It exists only for structural integrity when referenced by other chains
     }
     {% endif %}
 }
