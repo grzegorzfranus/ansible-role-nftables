@@ -2,9 +2,9 @@
 # =============================================================================
 # Ansible Role: NFTables - Assertions
 # =============================================================================
-# This file contains assertions to validate all role variables before execution.
-# These checks ensure that the provided variable values are of the correct type
-# and within valid ranges/options, preventing runtime errors.
+# Basic type/choice validation is handled by meta/argument_specs.yml.
+# This file performs runtime-only checks (regex patterns, content validation,
+# cross-field logic, and interface definitions).
 #
 # Flow:
 # 1. General Settings
@@ -13,6 +13,8 @@
 # 4. ICMP/Ping Settings
 # 5. Basic Access Control Settings
 # 6. Cluster Communication Settings
+# 7. User-Defined Rules Settings
+# 8. NAT Rules Settings
 # =============================================================================
 
 # -----------------------------------------------------------------------------
