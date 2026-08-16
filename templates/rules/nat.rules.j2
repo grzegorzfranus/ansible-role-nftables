@@ -52,10 +52,15 @@ table ip nat {
         {%- endif %}
         {%- if rule.nat_action == 'dnat' and rule.nat_to is defined %}
             {%- set nat = 'dnat ip to ' ~ rule.nat_to %}
+        {%- elif rule.nat_action == 'redirect' and (rule.redirect_port is defined or rule.port is defined or rule.nat_to is defined) %}
+            {%- set redirect_target = rule.redirect_port | default(rule.port | default(rule.nat_to)) %}
+            {%- set nat = 'redirect to :' ~ redirect_target %}
         {%- else %}
             {%- set nat = '' %}
         {%- endif %}
-        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %}{% if rule.log | default(false) %} log prefix "[nftables] : nat : prerouting : "{% endif %}{% if nat %} {{ nat }}{% endif %} comment "{{ rule.comment | default('DNAT rule') }}"
+        {% if nat %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %}{% if rule.log | default(false) %} log prefix "[nftables] : nat : prerouting : "{% endif %} {{ nat }} comment "{{ rule.comment | default('DNAT rule') }}"
+        {% endif %}
         {% endfor %}
     }
     {% endif %}
@@ -97,7 +102,9 @@ table ip nat {
         {%- else %}
             {%- set nat = '' %}
         {%- endif %}
-        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %}{% if rule.log | default(false) %} log prefix "[nftables] : nat : postrouting : "{% endif %}{% if nat %} {{ nat }}{% endif %} comment "{{ rule.comment | default('SNAT rule') }}"
+        {% if nat %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %}{% if rule.log | default(false) %} log prefix "[nftables] : nat : postrouting : "{% endif %} {{ nat }} comment "{{ rule.comment | default('SNAT rule') }}"
+        {% endif %}
         {% endfor %}
     }
     {% endif %}
