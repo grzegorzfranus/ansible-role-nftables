@@ -246,6 +246,10 @@ nftables_blocked_reserved_ranges:
   - "172.16.0.0/12"    # Private-Use Networks
   - "192.0.0.0/24"     # IETF Protocol Assignments
   - "192.0.2.0/24"     # Documentation (TEST-NET-1)
+  - "192.168.0.0/16"   # Private-Use Networks
+  - "198.18.0.0/15"    # Network Interconnect Device Benchmark Testing
+  - "198.51.100.0/24"  # Documentation (TEST-NET-2)
+  - "203.0.113.0/24"   # Reserved for TEST-NET-3
   - "224.0.0.0/3"      # Multicast & Reserved
 ```
 
