@@ -22,10 +22,10 @@ table inet filter {
     chain security_protection {
         # Block fragmented packets (IPv4)
         ip frag-off & 0x1fff != 0 counter drop comment "Block fragmented packets"
-        
+
         # Block IP packets with bad lengths (IPv4)
         ip length < 20 counter drop comment "Block malformed IP packets (length < 20)"
-        
+
         # Block invalid TCP flags combinations
         tcp flags & (fin|syn|rst|psh|ack|urg) == 0 counter drop comment "Block NULL scan packets"
         tcp flags & (fin|syn) == (fin|syn) counter drop comment "Block invalid FIN+SYN flags"
@@ -33,19 +33,19 @@ table inet filter {
         tcp flags & (fin|rst) == (fin|rst) counter drop comment "Block invalid FIN+RST flags"
         tcp flags & (fin|syn|rst|psh|ack|urg) == (fin|psh|urg) counter drop comment "Block XMAS scan packets"
         tcp flags & (fin|syn|rst|psh|ack|urg) == fin counter drop comment "Block FIN scan packets"
-        
+
         # Block common port scan packets
         tcp dport 0 counter drop comment "Block port 0 TCP scans"
         udp dport 0 counter drop comment "Block port 0 UDP scans"
-        
+
         # Block bogus MSS values
         tcp flags syn tcp option maxseg size 1-500 counter drop comment "Block bogus MSS values"
-        
+
         # Block packets from reserved address spaces
         {% if nftables_blocked_reserved_ranges | default([]) | length > 0 %}
         ip saddr { {{ nftables_blocked_reserved_ranges | join(', ') }} } iifname != lo counter drop comment "Block spoofed private IP ranges"
         {% endif %}
-        
+
         # Return to continue processing
         return
     }

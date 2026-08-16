@@ -9,8 +9,8 @@
 # from the main input, forward and output chains in the base.rules.j2 file.
 # =============================================================================
 
-{% if nftables_user_defined_input_enabled | default(false) or 
-      nftables_user_defined_forward_enabled | default(false) or 
+{% if nftables_user_defined_input_enabled | default(false) or
+      nftables_user_defined_forward_enabled | default(false) or
       nftables_user_defined_output_enabled | default(false) %}
 # -----------------------------------------------------------------------------
 # Extend the Base Filter Table with User-Defined Rules

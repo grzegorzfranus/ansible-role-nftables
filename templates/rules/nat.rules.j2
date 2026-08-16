@@ -24,7 +24,7 @@ table ip nat {
     # Define chain for DNAT operations (destination NAT, port forwarding)
     chain prerouting {
         type nat hook prerouting priority -100; policy accept;
-        
+
         {% for rule in nftables_nat_prerouting_rules | default([]) %}
         {%- set parts = [] -%}
         {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
@@ -69,7 +69,7 @@ table ip nat {
     # Define chain for SNAT operations (source NAT, masquerading)
     chain postrouting {
         type nat hook postrouting priority 100; policy accept;
-        
+
         {% for rule in nftables_nat_postrouting_rules | default([]) %}
         {%- set parts = [] -%}
         {%- if rule.in_interface is defined %} {%- set _ = parts.append('iifname ' ~ rule.in_interface) %} {%- endif %}
