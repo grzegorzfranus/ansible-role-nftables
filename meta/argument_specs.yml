@@ -291,24 +291,13 @@ argument_specs:
         description: "List of IP addresses of nodes participating in cluster communication."
         type: list
         elements: str
-        default:
-          - "192.0.2.10"
-          - "192.0.2.11"
-          - "192.0.2.12"
+        default: []
 
       nftables_cluster_rules:
         description: "List of firewall rules applied for cluster nodes communication."
         type: list
         elements: dict
-        default:
-          - port: 5432
-            protocol: "tcp"
-            log: false
-            comment: "PostgreSQL replication"
-          - port: 6379
-            protocol: "tcp"
-            log: false
-            comment: "Redis replication"
+        default: []
 
       # -------------------------------------------------------------------------
       # 7. User-Defined Rules Settings

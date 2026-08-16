@@ -5,6 +5,11 @@
 # Internal constants and computed values.
 # These are NOT user-overridable. All use double-underscore prefix per Red Hat CoP — Variable Naming.
 #
+# Note: Variables that vary by distribution (__nftables_config_path, __nftables_system_log_path,
+# __nftables_log_directory_user, __nftables_log_directory_group) are intentionally defined solely
+# in OS-specific variable files (vars/debian.yml, vars/ubuntu.yml, vars/redhat.yml). Their presence
+# is validated at runtime by the preflight assertions in tasks/assert.yml.
+#
 # Sections:
 #   1. Service Settings
 #   2. Package Settings

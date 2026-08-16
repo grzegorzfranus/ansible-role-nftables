@@ -197,25 +197,29 @@ nftables_blocked_reserved_ranges:
 nftables_cluster_enabled: false
 
 # List of IP addresses for cluster nodes
+# Example:
+#   nftables_cluster_nodes:
+#     - "192.0.2.10"
+#     - "192.0.2.11"
+#     - "192.0.2.12"
 # Valid values: list of valid IP address or CIDR strings
-nftables_cluster_nodes:
-  - "192.0.2.10"
-  - "192.0.2.11"
-  - "192.0.2.12"
+nftables_cluster_nodes: []
 
 # Rules for communication between cluster nodes
+# Example:
+#   nftables_cluster_rules:
+#     # Allow PostgreSQL database traffic
+#     - port: 5432
+#       protocol: tcp
+#       log: false
+#       comment: "PostgreSQL replication"
+#     # Allow Redis replication
+#     - port: 6379
+#       protocol: tcp
+#       log: false
+#       comment: "Redis replication"
 # Valid values: list of dictionaries with keys: port (int/str), protocol ('tcp'|'udp'), log (bool), comment (str)
-nftables_cluster_rules:
-  # Example: Allow PostgreSQL database traffic
-  - port: 5432
-    protocol: tcp
-    log: false
-    comment: "PostgreSQL replication"
-  # Example: Allow Redis replication
-  - port: 6379
-    protocol: tcp
-    log: false
-    comment: "Redis replication"
+nftables_cluster_rules: []
 
 # -----------------------------------------------------------------------------
 # 7. User-Defined Rules Settings
@@ -229,98 +233,96 @@ nftables_user_defined_forward_enabled: false
 nftables_user_defined_output_enabled: false
 
 # User-defined input rules
+# Example:
+#   nftables_user_defined_input_rules:
+#     - in_interface: "wg0"
+#       source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]
+#       destination: ["192.0.2.100", "192.0.2.101"]
+#       protocol: "tcp"
+#       port: 12345
+#       state: "new,established,related"
+#       rate_limit: "10/minute"
+#       burst: 5
+#       action: "accept"
+#       log: true
+#       counter: true
+#       comment: "Full example: input rule with all options"
+#     - protocol: "tcp"
+#       port: 80
+#       state: "new,established"
+#       action: "accept"
+#       log: false
+#       counter: true
+#       comment: "Allow HTTP traffic"
+#     - source: ["198.51.100.100", "198.51.100.101", "198.51.100.102"]
+#       protocol: "tcp"
+#       port: 8080
+#       state: "new"
+#       action: "accept"
+#       log: true
+#       counter: true
+#       comment: "Allow management access from admin IPs"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
-nftables_user_defined_input_rules:
-  # Example: All options used
-  - in_interface: "wg0"  # Optional input interface matching
-    source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]  # Multiple source IPs supported
-    destination: ["192.0.2.100", "192.0.2.101"]  # Multiple destination IPs supported
-    protocol: "tcp"
-    port: 12345
-    state: "new,established,related"
-    rate_limit: "10/minute"
-    burst: 5
-    action: "accept"
-    log: true
-    counter: true
-    comment: "Full example: input rule with all options"
-  # Example: Allow HTTP traffic
-  - protocol: "tcp"
-    port: 80
-    state: "new,established"
-    action: "accept"
-    log: false
-    counter: true
-    comment: "Allow HTTP traffic"
-  # Example: Allow specific IPs to access management port
-  - source: ["198.51.100.100", "198.51.100.101", "198.51.100.102"]
-    protocol: "tcp"
-    port: 8080
-    state: "new"
-    action: "accept"
-    log: true
-    counter: true
-    comment: "Allow management access from admin IPs"
+nftables_user_defined_input_rules: []
 
 # User-defined forward rules
+# Example:
+#   nftables_user_defined_forward_rules:
+#     - in_interface: "eth0"
+#       out_interface: "eth1"
+#       source: ["198.51.100.1", "198.51.100.2"]
+#       destination: ["192.0.2.100", "192.0.2.101", "192.0.2.102"]
+#       protocol: "udp"
+#       port: 54321
+#       state: "new,established"
+#       rate_limit: "20/minute"
+#       burst: 10
+#       action: "accept"
+#       log: true
+#       counter: true
+#       comment: "Full example: forward rule with all options"
+#     - in_interface: "eth0"
+#       out_interface: "eth1"
+#       state: "established,related"
+#       action: "accept"
+#       log: false
+#       counter: true
+#       comment: "Forward traffic from eth0 to eth1"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
-nftables_user_defined_forward_rules:
-  # Example: All options used
-  - in_interface: "eth0"
-    out_interface: "eth1"
-    source: ["198.51.100.1", "198.51.100.2"]  # Multiple source IPs supported
-    destination: ["192.0.2.100", "192.0.2.101", "192.0.2.102"]  # Multiple destination IPs supported
-    protocol: "udp"
-    port: 54321
-    state: "new,established"
-    rate_limit: "20/minute"
-    burst: 10
-    action: "accept"
-    log: true
-    counter: true
-    comment: "Full example: forward rule with all options"
-  # Example: Forward traffic between specific interfaces
-  - in_interface: "eth0"
-    out_interface: "eth1"
-    state: "established,related"
-    action: "accept"
-    log: false
-    counter: true
-    comment: "Forward traffic from eth0 to eth1"
+nftables_user_defined_forward_rules: []
 
 # User-defined output rules
+# Example:
+#   nftables_user_defined_output_rules:
+#     - out_interface: "eth0"
+#       source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]
+#       destination: ["192.0.2.100", "192.0.2.101", "192.0.2.102"]
+#       protocol: "tcp"
+#       port: "2221,2222"
+#       state: "new,established"
+#       rate_limit: "15/minute"
+#       burst: 8
+#       action: "accept"
+#       log: true
+#       counter: true
+#       comment: "Full example: output rule with all options"
+#     - protocol: "udp"
+#       port: 53
+#       state: "new"
+#       action: "accept"
+#       log: false
+#       counter: true
+#       comment: "Allow DNS queries"
+#     - destination: ["192.0.2.20", "192.0.2.21", "192.0.2.22"]
+#       protocol: "tcp"
+#       port: 443
+#       state: "new,established"
+#       action: "accept"
+#       log: false
+#       counter: true
+#       comment: "Allow HTTPS to internal servers"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
-nftables_user_defined_output_rules:
-  # Example: All options used
-  - out_interface: "eth0"  # Optional output interface matching
-    source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]  # Multiple source IPs supported
-    destination: ["192.0.2.100", "192.0.2.101", "192.0.2.102"]  # Multiple destination IPs supported
-    protocol: "tcp"
-    port: "2221,2222"
-    state: "new,established"
-    rate_limit: "15/minute"
-    burst: 8
-    action: "accept"
-    log: true
-    counter: true
-    comment: "Full example: output rule with all options"
-  # Example: Allow DNS queries
-  - protocol: "udp"
-    port: 53
-    state: "new"
-    action: "accept"
-    log: false
-    counter: true
-    comment: "Allow DNS queries"
-  # Example: Allow HTTPS to specific destinations
-  - destination: ["192.0.2.20", "192.0.2.21", "192.0.2.22"]
-    protocol: "tcp"
-    port: 443
-    state: "new,established"
-    action: "accept"
-    log: false
-    counter: true
-    comment: "Allow HTTPS to internal servers"
+nftables_user_defined_output_rules: []
 
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
@@ -332,61 +334,59 @@ nftables_nat_prerouting_enabled: false
 nftables_nat_postrouting_enabled: false
 
 # Destination NAT (DNAT) rules for port forwarding, etc.
+# Example:
+#   nftables_nat_prerouting_rules:
+#     - in_interface: "eth0"
+#       protocol: "tcp"
+#       port: "80"
+#       nat_action: "dnat"
+#       nat_to: "192.0.2.100:80"
+#       counter: true
+#       log: false
+#       comment: "Forward HTTP to internal web server"
+#     - in_interface: "eth0"
+#       protocol: "tcp"
+#       port: "5000-5100"
+#       nat_action: "dnat"
+#       nat_to: "192.0.2.50"
+#       counter: true
+#       log: false
+#       comment: "Forward port range to DMZ server"
+#     - in_interface: "eth0"
+#       source: ["203.0.113.10", "203.0.113.11", "203.0.113.12"]
+#       protocol: "tcp"
+#       port: "22"
+#       nat_action: "dnat"
+#       nat_to: "192.0.2.50:22"
+#       counter: true
+#       log: true
+#       comment: "Forward SSH from specific external IPs to internal server"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
-nftables_nat_prerouting_rules:
-  # Example: Port forwarding rule (forward port 80 to internal web server)
-  - in_interface: "eth0"
-    protocol: "tcp"
-    port: "80"
-    nat_action: "dnat"
-    nat_to: "192.0.2.100:80"
-    counter: true
-    log: false
-    comment: "Forward HTTP to internal web server"
-  # Example: Forward range of ports to DMZ server
-  - in_interface: "eth0"
-    protocol: "tcp"
-    port: "5000-5100"
-    nat_action: "dnat"
-    nat_to: "192.0.2.50"
-    counter: true
-    log: false
-    comment: "Forward port range to DMZ server"
-  # Example: Forward ports to multiple destination IPs
-  - in_interface: "eth0"
-    source: ["203.0.113.10", "203.0.113.11", "203.0.113.12"]
-    protocol: "tcp"
-    port: "22"
-    nat_action: "dnat"
-    nat_to: "192.0.2.50:22"
-    counter: true
-    log: true
-    comment: "Forward SSH from specific external IPs to internal server"
+nftables_nat_prerouting_rules: []
 
 # Source NAT (SNAT) and masquerading rules for outbound connections
+# Example:
+#   nftables_nat_postrouting_rules:
+#     - out_interface: "eth0"
+#       source: "192.0.2.0/24"
+#       nat_action: "masquerade"
+#       counter: true
+#       log: false
+#       comment: "NAT for LAN clients"
+#     - out_interface: "eth0"
+#       source: "198.51.100.0/24"
+#       nat_action: "snat"
+#       nat_to: "203.0.113.2"
+#       counter: true
+#       log: false
+#       comment: "SNAT for DMZ subnet"
+#     - out_interface: "eth0"
+#       source: ["192.0.2.0/26", "192.0.2.64/26", "192.0.2.128/26"]
+#       destination: ["198.51.100.0/24", "203.0.113.0/24"]
+#       nat_action: "snat"
+#       nat_to: "198.51.100.1"
+#       counter: true
+#       log: true
+#       comment: "SNAT for multiple internal subnets to specific external networks"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
-nftables_nat_postrouting_rules:
-  # Example: Basic masquerading rule for internet access
-  - out_interface: "eth0"
-    source: "192.0.2.0/24"
-    nat_action: "masquerade"
-    counter: true
-    log: false
-    comment: "NAT for LAN clients"
-  # Example: Specific SNAT for a subnet
-  - out_interface: "eth0"
-    source: "198.51.100.0/24"
-    nat_action: "snat"
-    nat_to: "203.0.113.2"
-    counter: true
-    log: false
-    comment: "SNAT for DMZ subnet"
-  # Example: SNAT for multiple source subnets
-  - out_interface: "eth0"
-    source: ["192.0.2.0/26", "192.0.2.64/26", "192.0.2.128/26"]
-    destination: ["198.51.100.0/24", "203.0.113.0/24"]
-    nat_action: "snat"
-    nat_to: "198.51.100.1"
-    counter: true
-    log: true
-    comment: "SNAT for multiple internal subnets to specific external networks"
+nftables_nat_postrouting_rules: []

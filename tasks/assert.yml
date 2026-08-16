@@ -4,7 +4,49 @@
 # =============================================================================
 # Validates role configuration parameters and preflight requirements.
 # Basic type/choice validation is handled by meta/argument_specs.yml.
+#
+# Sections:
+#   0. Preflight & OS Support
+#   1. General Settings
+#   2. Logging Configuration
+#   3. Base Filter Chain Policies
+#   4. ICMP/Ping Settings
+#   5. Basic Access Control Settings
+#   6. Cluster Communication Settings
+#   7. User-Defined Rules Settings
+#   8. NAT Rules Settings
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# 0. Preflight & OS Support
+# -----------------------------------------------------------------------------
+# Validates supported operating system distribution family and internal variables.
+
+- name: NFTables | assert | Validate supported OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] is defined
+      - ansible_facts['os_family'] | lower in ['redhat', 'debian']
+    fail_msg: "Unsupported OS family '{{ ansible_facts['os_family'] | default('undefined') }}'. Supported: RedHat, Debian"
+    success_msg: "OS family: {{ ansible_facts['os_family'] }}"
+
+- name: NFTables | assert | Validate internal OS-specific variables are loaded
+  ansible.builtin.assert:
+    that:
+      - __nftables_package_name is defined
+      - __nftables_service_name is defined
+      - __nftables_config_path is defined
+      - __nftables_rules_directory_path is defined
+      - __nftables_log_directory_path is defined
+      - __nftables_system_log_path is defined
+      - __nftables_log_directory_user is defined
+      - __nftables_log_directory_group is defined
+      - __nftables_logrotate_config_path is defined
+      - __nftables_rsyslog_config_path is defined
+    fail_msg: >-
+      Internal OS-specific variables are not loaded.
+      Ensure that vars/ files are correctly structured for this OS family.
+    success_msg: "All internal OS-specific variables are loaded"
 
 # -----------------------------------------------------------------------------
 # 1. General Settings
@@ -66,6 +108,7 @@
       - nftables_reboot_required is boolean
       - nftables_reboot_message is defined
       - nftables_reboot_message is string
+      - nftables_reboot_message | length > 0
       - nftables_reboot_wait is defined
       - nftables_reboot_wait is boolean
       - nftables_reboot_wait_timeout is defined
@@ -85,7 +128,7 @@
       - nftables_reboot_interval_seconds is defined
       - nftables_reboot_interval_seconds is integer
       - nftables_reboot_interval_seconds >= 0
-    fail_msg: "Reboot configuration parameters are invalid or out of range"
+    fail_msg: "Reboot configuration parameters are invalid, empty, or out of range"
     success_msg: "Reboot configuration parameters validated"
 
 # -----------------------------------------------------------------------------
@@ -100,10 +143,12 @@
       - nftables_logrotate_options is mapping
       - nftables_logrotate_options.archive_directory_path is defined
       - nftables_logrotate_options.archive_directory_path is string
+      - nftables_logrotate_options.archive_directory_path is match('^/')
       - nftables_logrotate_options.frequency is defined
       - nftables_logrotate_options.frequency in ["hourly", "daily", "weekly", "monthly"]
       - nftables_logrotate_options.count is defined
       - nftables_logrotate_options.count is integer
+      - nftables_logrotate_options.count >= 1
       - nftables_logrotate_options.missingok is defined
       - nftables_logrotate_options.missingok is boolean
       - nftables_logrotate_options.compress is defined
@@ -112,7 +157,9 @@
       - nftables_logrotate_options.nocreate is boolean
       - nftables_logrotate_options.dateext is defined
       - nftables_logrotate_options.dateext is boolean
-    fail_msg: "nftables_logrotate_options contains invalid or incomplete settings"
+    fail_msg: >-
+      nftables_logrotate_options contains invalid or incomplete settings
+      (archive_directory_path must be absolute path starting with '/', count >= 1)
     success_msg: "Logrotate options validated"
 
 # -----------------------------------------------------------------------------
@@ -268,13 +315,13 @@
         (
           nftables_cluster_nodes
           | map('string')
-          | map('regex_search', '^(([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?|[a-fA-F0-9:]+(/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?)$')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$')
           | select('string')
           | list | length
         ) == (nftables_cluster_nodes | length)
     fail_msg: >-
       nftables_cluster_nodes must not be empty when cluster mode is enabled;
-      all elements must be valid IP addresses or CIDRs
+      all elements must be valid IPv4 addresses or CIDRs (IPv6 is not supported)
     success_msg: "Cluster nodes list validated"
 
 - name: NFTables | assert | Validate cluster communication rules
@@ -315,6 +362,51 @@
       nftables_cluster_rules must not be empty when cluster mode is enabled;
       each rule must be a dict with numeric 'port'; protocol must be 'tcp' or 'udp'; rate_limit must match format 'X/period'
     success_msg: "Cluster communication rules structure validated"
+
+- name: NFTables | assert | Validate cluster rules optional field types
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_cluster_rules
+          | selectattr('counter', 'defined')
+          | map(attribute='counter')
+          | map('type_debug')
+          | select('equalto', 'bool')
+          | list | length
+        ) == (
+          nftables_cluster_rules
+          | selectattr('counter', 'defined')
+          | list | length
+        )
+      - >
+        (
+          nftables_cluster_rules
+          | selectattr('log', 'defined')
+          | map(attribute='log')
+          | map('type_debug')
+          | select('equalto', 'bool')
+          | list | length
+        ) == (
+          nftables_cluster_rules
+          | selectattr('log', 'defined')
+          | list | length
+        )
+      - >
+        (
+          nftables_cluster_rules
+          | selectattr('comment', 'defined')
+          | map(attribute='comment')
+          | map('type_debug')
+          | select('equalto', 'str')
+          | list | length
+        ) == (
+          nftables_cluster_rules
+          | selectattr('comment', 'defined')
+          | list | length
+        )
+    fail_msg: "Cluster rules 'counter' and 'log' must be boolean values, 'comment' must be a string"
+    success_msg: "Cluster rules optional field types validated"
 
 - name: NFTables | assert | Validate cluster rules burst requires rate_limit
   ansible.builtin.assert:
@@ -403,6 +495,18 @@
     fail_msg: "User-defined rules 'port' must be a numeric port, range (e.g. 1000-2000), or comma-separated list (e.g. 80,443)"
     success_msg: "User-defined rules port fields validated"
 
+- name: NFTables | assert | Validate user-defined rules protocol is specified when port is defined
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_user_defined_input_rules | selectattr('port', 'defined') | list) +
+          (nftables_user_defined_forward_rules | selectattr('port', 'defined') | list) +
+          (nftables_user_defined_output_rules | selectattr('port', 'defined') | list)
+        ) | rejectattr('protocol', 'defined') | list | length == 0
+    fail_msg: "User-defined rules specifying 'port' must also specify 'protocol' ('tcp' or 'udp')"
+    success_msg: "User-defined rules protocol requirement for port validated"
+
 - name: NFTables | assert | Validate user-defined rules source and destination fields
   ansible.builtin.assert:
     that:
@@ -488,6 +592,52 @@
         ) | select() | flatten | select() | list | length
     fail_msg: "User-defined rules 'source' and 'destination' must be strings or lists of strings"
     success_msg: "User-defined rules source and destination fields validated"
+
+- name: NFTables | assert | Validate user-defined rules source and destination IP format
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (
+            (nftables_user_defined_input_rules | selectattr('source', 'defined') | map(attribute='source') | list) +
+            (nftables_user_defined_forward_rules | selectattr('source', 'defined') | map(attribute='source') | list) +
+            (nftables_user_defined_output_rules | selectattr('source', 'defined') | map(attribute='source') | list)
+          )
+          | flatten
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$')
+          | select('string')
+          | list | length
+        ) == (
+          (
+            (nftables_user_defined_input_rules | selectattr('source', 'defined') | map(attribute='source') | list) +
+            (nftables_user_defined_forward_rules | selectattr('source', 'defined') | map(attribute='source') | list) +
+            (nftables_user_defined_output_rules | selectattr('source', 'defined') | map(attribute='source') | list)
+          )
+          | flatten | length
+        )
+      - >
+        (
+          (
+            (nftables_user_defined_input_rules | selectattr('destination', 'defined') | map(attribute='destination') | list) +
+            (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | map(attribute='destination') | list) +
+            (nftables_user_defined_output_rules | selectattr('destination', 'defined') | map(attribute='destination') | list)
+          )
+          | flatten
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$')
+          | select('string')
+          | list | length
+        ) == (
+          (
+            (nftables_user_defined_input_rules | selectattr('destination', 'defined') | map(attribute='destination') | list) +
+            (nftables_user_defined_forward_rules | selectattr('destination', 'defined') | map(attribute='destination') | list) +
+            (nftables_user_defined_output_rules | selectattr('destination', 'defined') | map(attribute='destination') | list)
+          )
+          | flatten | length
+        )
+    fail_msg: "User-defined rules 'source' and 'destination' addresses must be valid IPv4 addresses or CIDRs"
+    success_msg: "User-defined rules source and destination IP formats validated"
 
 - name: NFTables | assert | Validate user-defined rules state field
   ansible.builtin.assert:
@@ -631,6 +781,14 @@
       when prerouting or postrouting NAT is enabled, the corresponding rules list must not be empty
     success_msg: "NAT rules list structures validated"
 
+- name: NFTables | assert | Validate NAT rules have mandatory nat_action
+  ansible.builtin.assert:
+    that:
+      - (nftables_nat_prerouting_rules | rejectattr('nat_action', 'defined') | list | length) == 0
+      - (nftables_nat_postrouting_rules | rejectattr('nat_action', 'defined') | list | length) == 0
+    fail_msg: "Every rule in 'nftables_nat_prerouting_rules' and 'nftables_nat_postrouting_rules' must define 'nat_action'"
+    success_msg: "Mandatory nat_action validated in all NAT rules"
+
 - name: NFTables | assert | Validate NAT prerouting rule actions
   ansible.builtin.assert:
     that:
@@ -707,6 +865,63 @@
     fail_msg: "NAT 'dnat' and 'snat' rules require a non-empty 'nat_to' target address specification"
     success_msg: "NAT dnat and snat target addresses validated"
 
+- name: NFTables | assert | Validate NAT dnat and snat rules nat_to format
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'dnat')
+          | selectattr('nat_to', 'defined')
+          | map(attribute='nat_to')
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]{1,5})?$')
+          | select('string')
+          | list | length
+        ) == (
+          nftables_nat_prerouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'dnat')
+          | selectattr('nat_to', 'defined')
+          | list | length
+        )
+      - >
+        (
+          nftables_nat_postrouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'snat')
+          | selectattr('nat_to', 'defined')
+          | map(attribute='nat_to')
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}$')
+          | select('string')
+          | list | length
+        ) == (
+          nftables_nat_postrouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'snat')
+          | selectattr('nat_to', 'defined')
+          | list | length
+        )
+    fail_msg: >-
+      NAT 'dnat' nat_to target must match IPv4 format with optional port (e.g. '192.0.2.100:80' or '192.0.2.100');
+      NAT 'snat' nat_to target must match IPv4 format without port (e.g. '203.0.113.2')
+    success_msg: "NAT dnat and snat target address formats validated"
+
+- name: NFTables | assert | Validate masquerade rules specify out_interface
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_nat_postrouting_rules
+          | selectattr('nat_action', 'defined')
+          | selectattr('nat_action', 'equalto', 'masquerade')
+          | list
+        ) | rejectattr('out_interface', 'defined') | list | length == 0
+    fail_msg: "NAT 'masquerade' rules must specify an 'out_interface'"
+    success_msg: "NAT masquerade out_interface requirement validated"
+
 - name: NFTables | assert | Validate NAT redirect rules target port
   ansible.builtin.assert:
     that:
@@ -777,6 +992,54 @@
     fail_msg: "NAT rules 'port' must be numeric, a port range (e.g. 1000-2000), or a comma-separated list (e.g. 80,443)"
     success_msg: "NAT rules port fields validated"
 
+- name: NFTables | assert | Validate NAT rules protocol is specified when port is defined
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_nat_prerouting_rules | selectattr('port', 'defined') | list) +
+          (nftables_nat_postrouting_rules | selectattr('port', 'defined') | list)
+        ) | rejectattr('protocol', 'defined') | list | length == 0
+    fail_msg: "NAT rules specifying 'port' must also specify 'protocol' ('tcp' or 'udp')"
+    success_msg: "NAT rules protocol requirement for port validated"
+
+- name: NFTables | assert | Validate NAT rules interface fields
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_nat_prerouting_rules
+          | selectattr('in_interface', 'defined')
+          | map(attribute='in_interface')
+          | map('type_debug')
+          | select('equalto', 'str')
+          | list | length
+        ) == (
+          nftables_nat_prerouting_rules
+          | selectattr('in_interface', 'defined')
+          | list | length
+        )
+      - >
+        (
+          nftables_nat_postrouting_rules
+          | selectattr('out_interface', 'defined')
+          | map(attribute='out_interface')
+          | map('type_debug')
+          | select('equalto', 'str')
+          | list | length
+        ) == (
+          nftables_nat_postrouting_rules
+          | selectattr('out_interface', 'defined')
+          | list | length
+        )
+      - (nftables_nat_prerouting_rules | selectattr('out_interface', 'defined') | list | length) == 0
+      - (nftables_nat_postrouting_rules | selectattr('in_interface', 'defined') | list | length) == 0
+    fail_msg: >-
+      NAT rules interface configuration is invalid: 'in_interface' and 'out_interface' must be strings;
+      'in_interface' is only supported in prerouting rules;
+      'out_interface' is only supported in postrouting rules
+    success_msg: "NAT rules interface fields validated"
+
 - name: NFTables | assert | Validate NAT rules source and destination fields
   ansible.builtin.assert:
     that:
@@ -818,6 +1081,48 @@
         ) | select() | flatten | select() | list | length
     fail_msg: "NAT rules 'source' and 'destination' fields must be strings or lists of strings"
     success_msg: "NAT rules source and destination fields validated"
+
+- name: NFTables | assert | Validate NAT rules source and destination IP format
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (
+            (nftables_nat_prerouting_rules | selectattr('source', 'defined') | map(attribute='source') | list) +
+            (nftables_nat_postrouting_rules | selectattr('source', 'defined') | map(attribute='source') | list)
+          )
+          | flatten
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$')
+          | select('string')
+          | list | length
+        ) == (
+          (
+            (nftables_nat_prerouting_rules | selectattr('source', 'defined') | map(attribute='source') | list) +
+            (nftables_nat_postrouting_rules | selectattr('source', 'defined') | map(attribute='source') | list)
+          )
+          | flatten | length
+        )
+      - >
+        (
+          (
+            (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | map(attribute='destination') | list) +
+            (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | map(attribute='destination') | list)
+          )
+          | flatten
+          | map('string')
+          | map('regex_search', '^([0-9]{1,3}\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$')
+          | select('string')
+          | list | length
+        ) == (
+          (
+            (nftables_nat_prerouting_rules | selectattr('destination', 'defined') | map(attribute='destination') | list) +
+            (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | map(attribute='destination') | list)
+          )
+          | flatten | length
+        )
+    fail_msg: "NAT rules 'source' and 'destination' addresses must be valid IPv4 addresses or CIDRs"
+    success_msg: "NAT rules source and destination IP formats validated"
 
 - name: NFTables | assert | Validate NAT rules counter and log fields
   ansible.builtin.assert:
