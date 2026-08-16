@@ -1,16 +1,8 @@
 ---
 # =============================================================================
-# Ansible Role: NFTables - Installation Tasks
+# Ansible Role: NFTables - Tasks: Installation
 # =============================================================================
-# This file handles the installation of the NFTables package on the target system.
-# It ensures that the proper version of the software is installed according to
-# the distribution-specific package name defined in variables.
-#
-# Flow:
-# 1. Package Installation
-#
-# The role uses the generic package module to be compatible with various
-# package managers across different Linux distributions.
+# Installs the NFTables package on target systems using distribution package names.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
