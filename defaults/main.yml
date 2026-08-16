@@ -43,6 +43,11 @@ nftables_configure_security_rules: false
 # Valid values: true, false
 nftables_docker_aware: false
 
+# Enable or disable IPv6 address support in cluster and user-defined rules
+# When false (default), only IPv4 addresses and CIDRs are accepted.
+# Valid values: true, false
+nftables_enable_ipv6: false
+
 # Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode
 # Valid values: list of interface name strings e.g. ["docker0"]
 nftables_docker_aware_bridge_interfaces:
@@ -332,6 +337,8 @@ nftables_user_defined_output_rules: []
 nftables_nat_prerouting_enabled: false
 # Valid values: true, false
 nftables_nat_postrouting_enabled: false
+# Valid values: true, false
+nftables_nat_output_enabled: false
 
 # Destination NAT (DNAT) rules for port forwarding, etc.
 # Example:
@@ -363,6 +370,20 @@ nftables_nat_postrouting_enabled: false
 #       comment: "Forward SSH from specific external IPs to internal server"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_nat_prerouting_rules: []
+
+# Destination NAT (DNAT) and redirect rules for locally-generated outbound traffic
+# Example:
+#   nftables_nat_output_rules:
+#     - out_interface: "eth0"
+#       protocol: "tcp"
+#       port: "80"
+#       nat_action: "redirect"
+#       redirect_port: "8080"
+#       counter: true
+#       log: false
+#       comment: "Transparently redirect outbound HTTP to local proxy"
+# Valid values: list of rule dictionaries (see documentation for supported fields)
+nftables_nat_output_rules: []
 
 # Source NAT (SNAT) and masquerading rules for outbound connections
 # Example:

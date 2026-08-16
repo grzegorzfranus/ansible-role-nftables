@@ -37,6 +37,11 @@ argument_specs:
         type: bool
         default: false
 
+      nftables_enable_ipv6:
+        description: "Enable or disable IPv6 address filtering support in cluster and user-defined rules."
+        type: bool
+        default: false
+
       nftables_docker_aware_bridge_interfaces:
         description: "Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode."
         type: list
@@ -348,8 +353,19 @@ argument_specs:
         type: bool
         default: false
 
+      nftables_nat_output_enabled:
+        description: "Enable Destination NAT (DNAT) / redirect output rules for locally generated traffic."
+        type: bool
+        default: false
+
       nftables_nat_prerouting_rules:
         description: "List of DNAT prerouting rules for port forwarding and redirect."
+        type: list
+        elements: dict
+        default: []
+
+      nftables_nat_output_rules:
+        description: "List of DNAT / redirect output rules for locally generated traffic."
         type: list
         elements: dict
         default: []

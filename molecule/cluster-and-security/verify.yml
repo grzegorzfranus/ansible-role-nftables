@@ -3,7 +3,7 @@
 # Ansible Role: NFTables - Molecule Verification Playbook (Cluster & Security)
 # =============================================================================
 # This playbook verifies that the NFTables role correctly installed and configured
-# cluster communication and security protection rules.
+# cluster communication (IPv4 & IPv6), NAT output, and security protection rules.
 # =============================================================================
 
 - name: molecule | Verify Role (Cluster & Security)
@@ -112,13 +112,15 @@
         fail_msg: "Security protection rules are missing or rendered incorrectly in inet filter table."
 
     # -----------------------------------------------------------------------------
-    # 6. Cluster Chains Verification
+    # 6. Cluster Chains Verification (IPv4 and IPv6)
     # -----------------------------------------------------------------------------
     - name: Verify | Validate cluster_input and cluster_output chain contents
       ansible.builtin.assert:
         that:
           - "'chain cluster_input {' in _filter_table_.stdout"
           - "'192.0.2.10' in _filter_table_.stdout"
+          - "'ip6 saddr { 2001:db8::1 }' in _filter_table_.stdout or '2001:db8::1' in _filter_table_.stdout"
+          - "'ip6 daddr { 2001:db8::1 }' in _filter_table_.stdout or '2001:db8::1' in _filter_table_.stdout"
           - "'PostgreSQL cluster replication' in _filter_table_.stdout"
           - "'Redis cluster replication' in _filter_table_.stdout"
           - "('tcp dport 5432' in _filter_table_.stdout or 'tcp dport { 5432 }' in _filter_table_.stdout)"
@@ -126,7 +128,7 @@
           - "'log prefix \"[nftables] : accept : cluster : tcp/5432 : \"' in _filter_table_.stdout"
           - "'chain cluster_output {' in _filter_table_.stdout"
           - "'log prefix \"[nftables] : accept : output : cluster : tcp/5432 : \"' in _filter_table_.stdout"
-        fail_msg: "Cluster communication rules are missing or rendered incorrectly in inet filter table."
+        fail_msg: "Cluster communication rules (IPv4/IPv6) are missing or rendered incorrectly in inet filter table."
 
     # -----------------------------------------------------------------------------
     # 7. User Defined Chains Verification
@@ -142,7 +144,28 @@
         fail_msg: "User-defined rules are missing or rendered incorrectly in inet filter table."
 
     # -----------------------------------------------------------------------------
-    # 8. Summary
+    # 8. NAT Output Chain Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Get NAT table ruleset
+      ansible.builtin.command:
+        cmd: nft list table ip nat
+      register: _nat_table_
+      changed_when: false
+
+    - name: Verify | Show current ip nat ruleset
+      ansible.builtin.debug:
+        var: _nat_table_.stdout_lines
+
+    - name: Verify | Validate NAT output chain contents
+      ansible.builtin.assert:
+        that:
+          - "'chain output {' in _nat_table_.stdout"
+          - "'redirect to :8080' in _nat_table_.stdout"
+          - "'Redirect outbound HTTP traffic to local proxy' in _nat_table_.stdout"
+        fail_msg: "NAT output rules are missing or rendered incorrectly in ip nat table."
+
+    # -----------------------------------------------------------------------------
+    # 9. Summary
     # -----------------------------------------------------------------------------
     - name: Verify | Summarize test results
       ansible.builtin.debug:
@@ -155,6 +178,7 @@
           Service Enabled: PASS
           ICMPv6 & Rule Ordering: PASS
           Security Protection Chain: PASS
-          Cluster Input Chain: PASS
-          Cluster Output Chain: PASS
+          Cluster Input Chain (IPv4/IPv6): PASS
+          Cluster Output Chain (IPv4/IPv6): PASS
           User Defined Chains: PASS
+          NAT Output Chain: PASS

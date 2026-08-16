@@ -167,6 +167,7 @@ nftables_user_defined_forward_rules:
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
 | `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
+| `nftables_enable_ipv6` | Enable or disable IPv6 address filtering support in cluster and user-defined rules | `false` |
 | `nftables_docker_aware_bridge_interfaces` | List of bridge interfaces allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
 | `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
 | `nftables_reboot_message` | Message displayed before system reboot | `"Reboot initialized by Ansible"` |
@@ -260,7 +261,7 @@ To disable this protection or customize the ranges, modify this variable in your
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_cluster_enabled` | Enable/disable cluster communication rules | `false` |
-| `nftables_cluster_nodes` | List of IPv4 addresses or CIDRs for cluster nodes | `[]` |
+| `nftables_cluster_nodes` | List of IP addresses or CIDRs for cluster nodes | `[]` |
 | `nftables_cluster_rules` | Rules for communication between cluster nodes | `[]` |
 
 **Cluster rule fields:**
@@ -274,7 +275,7 @@ To disable this protection or customize the ranges, modify this variable in your
 - `comment` (optional): Descriptive comment for the rule (string)
 
 > [!NOTE]
-> `nftables_cluster_nodes` accepts valid IPv4 addresses and CIDRs. IPv6 cluster node addresses are not supported.
+> `nftables_cluster_nodes` accepts valid IPv4 addresses and CIDRs by default. When `nftables_enable_ipv6: true`, IPv6 addresses and CIDRs are also accepted and rendered into `ip6 saddr` / `ip6 daddr` rules.
 
 ### 7. User-Defined Rules Settings
 
@@ -290,8 +291,8 @@ To disable this protection or customize the ranges, modify this variable in your
 **User-defined rule fields:**
 - `in_interface` (optional): Input interface matching (`iifname`). Valid for `input` and `forward` rules only; specifying on `output` rules will fail validation (string)
 - `out_interface` (optional): Output interface matching (`oifname`). Valid for `forward` and `output` rules only; specifying on `input` rules will fail validation (string)
-- `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
-- `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
+- `source` (optional): Source IP address/network (string or list of strings for multiple sources)
+- `destination` (optional): Destination IP address/network (string or list of strings for multiple destinations)
 - `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `state` (optional): Connection state to match (e.g. `"new"`, `"established,related"`) - defaults to `"new"` if not specified
@@ -301,6 +302,9 @@ To disable this protection or customize the ranges, modify this variable in your
 - `log` (optional): Enable/disable logging (boolean)
 - `counter` (optional): Enable/disable packet/byte counting for the rule (boolean)
 - `comment` (optional): Description of the rule (string)
+
+> [!NOTE]
+> `source` and `destination` fields accept IPv4 addresses and CIDRs by default. When `nftables_enable_ipv6: true`, IPv6 addresses and CIDRs are also supported (rendered with `ip6 saddr` / `ip6 daddr`).
 
 **Example: Restrict SSH to WireGuard VPN interface (`in_interface`):**
 ```yaml
@@ -349,14 +353,19 @@ nftables_user_defined_input_rules:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_nat_prerouting_enabled` | Enable/disable NAT prerouting rules | `false` |
+| `nftables_nat_output_enabled` | Enable/disable NAT output rules (for locally-generated traffic) | `false` |
 | `nftables_nat_postrouting_enabled` | Enable/disable NAT postrouting rules | `false` |
 | `nftables_nat_prerouting_rules` | List of DNAT (destination NAT) and redirect rules | `[]` |
+| `nftables_nat_output_rules` | List of DNAT and redirect rules for locally-generated traffic | `[]` |
 | `nftables_nat_postrouting_rules` | List of SNAT (source NAT) and masquerading rules | `[]` |
 
+> [!NOTE]
+> NAT rules apply strictly to IPv4 traffic. IPv6 NAT is not supported.
+
 **NAT rule fields:**
-- `nat_action` (required): NAT action (`"dnat"`, `"redirect"` for prerouting; `"snat"`, `"masquerade"` for postrouting)
+- `nat_action` (required): NAT action (`"dnat"`, `"redirect"` for prerouting/output; `"snat"`, `"masquerade"` for postrouting)
 - `in_interface` (optional): Input interface matching. Valid in prerouting rules only (string)
-- `out_interface` (optional, required for `masquerade`): Output interface matching. Valid in postrouting rules only (string)
+- `out_interface` (optional, required for `masquerade`): Output interface matching. Valid in output and postrouting rules only (string)
 - `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
 - `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
@@ -396,6 +405,15 @@ nftables_nat_prerouting_rules:
     log: true
     comment: "Forward SSH from specific external IPs to internal server"
 
+nftables_nat_output_rules:
+  - out_interface: "eth0"
+    protocol: "tcp"
+    port: "80"
+    nat_action: "redirect"
+    redirect_port: "8080"
+    counter: true
+    log: false
+    comment: "Transparently redirect outbound HTTP traffic to local proxy"
 
 nftables_nat_postrouting_rules:
   - out_interface: "eth0"

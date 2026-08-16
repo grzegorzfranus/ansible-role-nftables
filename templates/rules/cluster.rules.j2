@@ -9,7 +9,16 @@
 # from the main input and output chains in the base.rules.j2 file.
 # =============================================================================
 
-{% if nftables_cluster_enabled | default(false) %}
+{% if nftables_cluster_enabled | default(false) | bool %}
+{% set ipv4_nodes = [] %}
+{% set ipv6_nodes = [] %}
+{% for node in nftables_cluster_nodes | default([]) %}
+    {% if ':' in node %}
+        {% set _ = ipv6_nodes.append(node) %}
+    {% else %}
+        {% set _ = ipv4_nodes.append(node) %}
+    {% endif %}
+{% endfor %}
 # -----------------------------------------------------------------------------
 # Extend the Base Filter Table with Cluster Communication Rules
 # -----------------------------------------------------------------------------
@@ -17,16 +26,28 @@ table inet filter {
     # Define dedicated chain for cluster input traffic
     chain cluster_input {
         {% for rule in nftables_cluster_rules | default([]) %}
-        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} from cluster nodes
-        ip saddr { {{ nftables_cluster_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.state is defined %}ct state {{ rule.state }}{% elif rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if (rule.rate_limit | default(rule.limit | default(''))) | length > 0 %}limit rate {{ rule.rate_limit | default(rule.limit) }}{% if rule.burst is defined %} burst {{ rule.burst }} packets{% endif %} {% endif %}{% if rule.log | default(false) %}log prefix "[nftables] : accept : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %} counter accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' from cluster nodes') }}"
+        {% if ipv4_nodes | length > 0 %}
+        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} from IPv4 cluster nodes
+        ip saddr { {{ ipv4_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.state is defined %}ct state {{ rule.state }}{% elif rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if (rule.rate_limit | default(rule.limit | default(''))) | length > 0 %}limit rate {{ rule.rate_limit | default(rule.limit) }}{% if rule.burst is defined %} burst {{ rule.burst }} packets{% endif %} {% endif %}{% if rule.log | default(false) %}log prefix "[nftables] : accept : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %}{% if rule.counter | default(false) %} counter{% endif %} accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' from cluster nodes') }}"
+        {% endif %}
+        {% if ipv6_nodes | length > 0 %}
+        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} from IPv6 cluster nodes
+        ip6 saddr { {{ ipv6_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.state is defined %}ct state {{ rule.state }}{% elif rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if (rule.rate_limit | default(rule.limit | default(''))) | length > 0 %}limit rate {{ rule.rate_limit | default(rule.limit) }}{% if rule.burst is defined %} burst {{ rule.burst }} packets{% endif %} {% endif %}{% if rule.log | default(false) %}log prefix "[nftables] : accept : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %}{% if rule.counter | default(false) %} counter{% endif %} accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' from cluster nodes') }}"
+        {% endif %}
         {% endfor %}
     }
 
     # Define dedicated chain for cluster output traffic
     chain cluster_output {
         {% for rule in nftables_cluster_rules | default([]) %}
-        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} to cluster nodes
-        ip daddr { {{ nftables_cluster_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.state is defined %}ct state {{ rule.state }}{% elif rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if (rule.rate_limit | default(rule.limit | default(''))) | length > 0 %}limit rate {{ rule.rate_limit | default(rule.limit) }}{% if rule.burst is defined %} burst {{ rule.burst }} packets{% endif %} {% endif %}{% if rule.log | default(false) %}log prefix "[nftables] : accept : output : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %} counter accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' to cluster nodes') }}"
+        {% if ipv4_nodes | length > 0 %}
+        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} to IPv4 cluster nodes
+        ip daddr { {{ ipv4_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.state is defined %}ct state {{ rule.state }}{% elif rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if (rule.rate_limit | default(rule.limit | default(''))) | length > 0 %}limit rate {{ rule.rate_limit | default(rule.limit) }}{% if rule.burst is defined %} burst {{ rule.burst }} packets{% endif %} {% endif %}{% if rule.log | default(false) %}log prefix "[nftables] : accept : output : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %}{% if rule.counter | default(false) %} counter{% endif %} accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' to cluster nodes') }}"
+        {% endif %}
+        {% if ipv6_nodes | length > 0 %}
+        # Allow {{ rule.protocol | default('tcp') }} traffic on port {{ rule.port }} to IPv6 cluster nodes
+        ip6 daddr { {{ ipv6_nodes | join(', ') }} } {{ rule.protocol | default('tcp') }} dport { {{ rule.port }} } {% if rule.state is defined %}ct state {{ rule.state }}{% elif rule.ct_state is defined %}ct state {{ rule.ct_state }}{% else %}ct state new,established,related{% endif %} {% if (rule.rate_limit | default(rule.limit | default(''))) | length > 0 %}limit rate {{ rule.rate_limit | default(rule.limit) }}{% if rule.burst is defined %} burst {{ rule.burst }} packets{% endif %} {% endif %}{% if rule.log | default(false) %}log prefix "[nftables] : accept : output : cluster : {{ rule.protocol | default('tcp') }}/{{ rule.port }} : "{% endif %}{% if rule.counter | default(false) %} counter{% endif %} accept comment "{{ rule.comment | default('Allow ' ~ rule.protocol | default('tcp') ~ '/' ~ rule.port ~ ' to cluster nodes') }}"
+        {% endif %}
         {% endfor %}
     }
 }
