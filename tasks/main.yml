@@ -4,7 +4,7 @@
 # =============================================================================
 # Orchestrates the execution of all role components in sequential order.
 #
-# Flow: include_vars → assert → prerequisites → reboot → install → configure → acl → logrotate → upgrade
+# Flow: include_vars → assert → prerequisites → reboot → install → configure → logrotate → acl → upgrade
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -75,16 +75,7 @@
     - nftables_configure
 
 # -----------------------------------------------------------------------------
-# 7. Rules Configuration
-# -----------------------------------------------------------------------------
-- name: NFTables | acl | Configure access control lists for NFTables
-  ansible.builtin.import_tasks: acl.yml
-  tags:
-    - nftables_configure
-    - nftables_rules
-
-# -----------------------------------------------------------------------------
-# 8. Logrotate Configuration (Optional)
+# 7. Logrotate Configuration (Optional)
 # -----------------------------------------------------------------------------
 - name: NFTables | logrotate | Configure logrotate for NFTables service
   ansible.builtin.import_tasks: logrotate.yml
@@ -92,6 +83,15 @@
   tags:
     - nftables_configure
     - nftables_logrotate
+
+# -----------------------------------------------------------------------------
+# 8. Rules Configuration
+# -----------------------------------------------------------------------------
+- name: NFTables | acl | Configure access control lists for NFTables
+  ansible.builtin.import_tasks: acl.yml
+  tags:
+    - nftables_configure
+    - nftables_rules
 
 # -----------------------------------------------------------------------------
 # 9. Package Upgrade

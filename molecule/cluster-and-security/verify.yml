@@ -173,6 +173,7 @@
         that:
           - "'chain output {' in _nat_table_.stdout"
           - "'redirect to :8080' in _nat_table_.stdout"
+          - "('tcp dport 8088' in _nat_table_.stdout or 'tcp dport { 8088 }' in _nat_table_.stdout)"
           - "'Redirect outbound HTTP traffic to local proxy' in _nat_table_.stdout"
         fail_msg: "NAT output rules are missing or rendered incorrectly in ip nat table."
 
