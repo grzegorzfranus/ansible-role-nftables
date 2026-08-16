@@ -88,10 +88,10 @@
 - name: NFTables | assert | Validate enable ipv6 flag
   ansible.builtin.assert:
     that:
-      - nftables_enable_ipv6 is defined
-      - nftables_enable_ipv6 is boolean
-    fail_msg: "nftables_enable_ipv6 must be a boolean (true/false)"
-    success_msg: "Enable IPv6 flag validated: {{ nftables_enable_ipv6 }}"
+      - nftables_ipv6_enabled is defined
+      - nftables_ipv6_enabled is boolean
+    fail_msg: "nftables_ipv6_enabled must be a boolean (true/false)"
+    success_msg: "Enable IPv6 flag validated: {{ nftables_ipv6_enabled }}"
 
 - name: NFTables | assert | Validate docker-aware bridge interfaces
   ansible.builtin.assert:
@@ -125,9 +125,6 @@
       - nftables_reboot_connect_timeout is defined
       - nftables_reboot_connect_timeout is integer
       - nftables_reboot_connect_timeout >= 1
-      - nftables_reboot_wait_ctimeout is defined
-      - nftables_reboot_wait_ctimeout is integer
-      - nftables_reboot_wait_ctimeout >= 1
       - nftables_reboot_wait_delay is defined
       - nftables_reboot_wait_delay is integer
       - nftables_reboot_wait_delay >= 0
@@ -320,7 +317,7 @@
       - nftables_cluster_nodes is sequence
       - not (nftables_cluster_enabled | bool) or (nftables_cluster_nodes | length > 0)
       - >
-        (nftables_enable_ipv6 | default(false) | bool) or
+        (nftables_ipv6_enabled | default(false) | bool) or
         (
           (
             nftables_cluster_nodes
@@ -331,7 +328,7 @@
           ) == (nftables_cluster_nodes | length)
         )
       - >
-        not (nftables_enable_ipv6 | default(false) | bool) or
+        not (nftables_ipv6_enabled | default(false) | bool) or
         (
           (
             nftables_cluster_nodes
@@ -343,7 +340,7 @@
         )
     fail_msg: >-
       nftables_cluster_nodes must not be empty when cluster mode is enabled;
-      all elements must be valid IP addresses or CIDRs (IPv4, or IPv6 when nftables_enable_ipv6 is true)
+      all elements must be valid IP addresses or CIDRs (IPv4, or IPv6 when nftables_ipv6_enabled is true)
     success_msg: "Cluster nodes list validated"
 
 - name: NFTables | assert | Validate cluster communication rules
@@ -619,7 +616,7 @@
   ansible.builtin.assert:
     that:
       - >
-        (nftables_enable_ipv6 | default(false) | bool) or
+        (nftables_ipv6_enabled | default(false) | bool) or
         (
           (
             (
@@ -642,7 +639,7 @@
           )
         )
       - >
-        (nftables_enable_ipv6 | default(false) | bool) or
+        (nftables_ipv6_enabled | default(false) | bool) or
         (
           (
             (
@@ -665,7 +662,7 @@
           )
         )
       - >
-        not (nftables_enable_ipv6 | default(false) | bool) or
+        not (nftables_ipv6_enabled | default(false) | bool) or
         (
           (
             (
@@ -688,7 +685,7 @@
           )
         )
       - >
-        not (nftables_enable_ipv6 | default(false) | bool) or
+        not (nftables_ipv6_enabled | default(false) | bool) or
         (
           (
             (
@@ -710,8 +707,34 @@
             | flatten | length
           )
         )
-    fail_msg: "User-defined rules 'source' and 'destination' addresses must be valid IP addresses or CIDRs (IPv4, or IPv6 when nftables_enable_ipv6 is true)"
+    fail_msg: "User-defined rules 'source' and 'destination' addresses must be valid IP addresses or CIDRs (IPv4, or IPv6 when nftables_ipv6_enabled is true)"
     success_msg: "User-defined rules source and destination IP formats validated"
+
+- name: NFTables | assert | Validate user-defined rules address family compatibility
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules)
+          | selectattr('source', 'defined')
+          | selectattr('destination', 'defined')
+          | rejectattr('source', 'search', ':')
+          | rejectattr('destination', 'search', '\\.')
+          | list
+          | length == 0
+        )
+      - >
+        (
+          (nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules)
+          | selectattr('source', 'defined')
+          | selectattr('destination', 'defined')
+          | rejectattr('source', 'search', '\\.')
+          | rejectattr('destination', 'search', ':')
+          | list
+          | length == 0
+        )
+    fail_msg: "User-defined rules must not specify disjoint address families between 'source' and 'destination'"
+    success_msg: "User-defined rules address family compatibility validated"
 
 - name: NFTables | assert | Validate user-defined rules state field
   ansible.builtin.assert:

@@ -55,7 +55,7 @@
   vars:
     nftables_service_enabled: true
     nftables_configure_logrotate: true
-    nftables_enable_ipv6: true
+    nftables_ipv6_enabled: true
     nftables_input_default_policy: "drop"
     nftables_forward_default_policy: "drop"
     nftables_output_default_policy: "accept"
@@ -100,6 +100,15 @@
         counter: true
         log: true
         comment: "Allow SSH for testing"
+      - source:
+          - "192.0.2.100"
+          - "2001:db8::100"
+        protocol: "tcp"
+        port: "8080"
+        action: "accept"
+        counter: true
+        log: false
+        comment: "Allow management access from dual-stack admin"
 
     nftables_user_defined_output_enabled: true
     nftables_user_defined_output_rules:

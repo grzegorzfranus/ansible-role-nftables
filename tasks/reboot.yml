@@ -17,20 +17,21 @@
   when: >
     nftables_reboot_wait | default(true) | bool
 
-# Justification: Use shell module to trigger reboot asynchronously without blocking/waiting because the native reboot module requires waiting for the host to come back.
+# Justification: Use shell module to trigger reboot asynchronously without blocking/waiting
+# because the native reboot module requires waiting for the host to come back.
 - name: NFTables | reboot | Trigger reboot without waiting
   become: true
   ansible.builtin.shell: |
     sleep 2 && shutdown -r now "{{ nftables_reboot_message | default('Reboot initialized by Ansible') }}"
   async: 1
   poll: 0
-  changed_when: false
-  failed_when: false
+  changed_when: true
   when: >
     not (nftables_reboot_wait | default(true) | bool)
 
 - name: NFTables | reboot | Report reboot completion time
   ansible.builtin.debug:
     msg: "The system rebooted in {{ __nftables_reboot_result.elapsed }} seconds."
-  when: >
-    __nftables_reboot_result is defined
+  when:
+    - not (__nftables_reboot_result.skipped | default(false) | bool)
+    - __nftables_reboot_result.elapsed is defined

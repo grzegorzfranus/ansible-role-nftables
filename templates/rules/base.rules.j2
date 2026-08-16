@@ -40,8 +40,9 @@ table inet filter {
         jump existing
 
         # Mandatory ICMPv6 control messages (RFC 4861 Neighbor Discovery, RFC 4443 errors).
-        # Deliberately unconditional and not rate-limited: throttling these breaks IPv6
-        # neighbour resolution and Path MTU Discovery.
+        # These are permitted unconditionally regardless of nftables_ipv6_enabled, because
+        # blocking them breaks Neighbor Discovery (ND), Multicast Listener Discovery (MLD),
+        # and Path MTU Discovery (PMTUD).
         icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert, packet-too-big, destination-unreachable, time-exceeded, parameter-problem } counter accept comment "Allow mandatory ICMPv6 control messages"
         icmpv6 type { mld-listener-query, mld-listener-report, mld-listener-done, mld2-listener-report } counter accept comment "Allow MLD multicast control messages"
 
@@ -117,8 +118,9 @@ table inet filter {
         jump existing
 
         # Mandatory ICMPv6 control messages (RFC 4861 Neighbor Discovery, RFC 4443 errors).
-        # Deliberately unconditional and not rate-limited: throttling these breaks IPv6
-        # neighbour resolution and Path MTU Discovery.
+        # These are permitted unconditionally regardless of nftables_ipv6_enabled, because
+        # blocking them breaks Neighbor Discovery (ND), Multicast Listener Discovery (MLD),
+        # and Path MTU Discovery (PMTUD).
         icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert, packet-too-big, destination-unreachable, time-exceeded, parameter-problem } counter accept comment "Allow mandatory ICMPv6 control messages"
         icmpv6 type { mld-listener-query, mld-listener-report, mld-listener-done, mld2-listener-report } counter accept comment "Allow MLD multicast control messages"
 

@@ -119,8 +119,8 @@
         that:
           - "'chain cluster_input {' in _filter_table_.stdout"
           - "'192.0.2.10' in _filter_table_.stdout"
-          - "'ip6 saddr { 2001:db8::1 }' in _filter_table_.stdout or '2001:db8::1' in _filter_table_.stdout"
-          - "'ip6 daddr { 2001:db8::1 }' in _filter_table_.stdout or '2001:db8::1' in _filter_table_.stdout"
+          - "('ip6 saddr 2001:db8::1' in _filter_table_.stdout or 'ip6 saddr { 2001:db8::1 }' in _filter_table_.stdout)"
+          - "('ip6 daddr 2001:db8::1' in _filter_table_.stdout or 'ip6 daddr { 2001:db8::1 }' in _filter_table_.stdout)"
           - "'PostgreSQL cluster replication' in _filter_table_.stdout"
           - "'Redis cluster replication' in _filter_table_.stdout"
           - "('tcp dport 5432' in _filter_table_.stdout or 'tcp dport { 5432 }' in _filter_table_.stdout)"
@@ -138,6 +138,18 @@
         that:
           - "'chain user_defined_input {' in _filter_table_.stdout"
           - "('tcp dport 22' in _filter_table_.stdout or 'tcp dport { 22 }' in _filter_table_.stdout)"
+          - "('ip saddr 192.0.2.100' in _filter_table_.stdout or 'ip saddr { 192.0.2.100 }' in _filter_table_.stdout)"
+          - "('ip6 saddr 2001:db8::100' in _filter_table_.stdout or 'ip6 saddr { 2001:db8::100 }' in _filter_table_.stdout)"
+          - "'Allow management access from dual-stack admin (IPv4)' in _filter_table_.stdout"
+          - "'Allow management access from dual-stack admin (IPv6)' in _filter_table_.stdout"
+          - >
+            (
+              _filter_table_.stdout_lines
+              | select('search', 'Allow management access from dual-stack admin')
+              | reject('search', 'saddr')
+              | list
+              | length == 0
+            )
           - "'chain user_defined_output {' in _filter_table_.stdout"
           - "('udp dport 53' in _filter_table_.stdout or 'udp dport { 53 }' in _filter_table_.stdout)"
           - "'tcp dport { 80, 443 }' in _filter_table_.stdout"
