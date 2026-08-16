@@ -30,8 +30,8 @@ table inet filter {
 
         # Allow loopback traffic (processed first for efficiency)
         iifname lo accept comment "Allow loopback traffic"
-        iifname != lo ip daddr 127.0.0.1/8 drop comment "Drop traffic to loopback not coming from loopback"
-        iifname != lo ip6 daddr ::1/128 drop comment "Drop traffic to loopback not coming from loopback"
+        iifname != lo ip daddr 127.0.0.0/8 drop comment "Drop traffic to loopback not coming from loopback"
+        iifname != lo ip6 daddr ::1 drop comment "Drop traffic to loopback not coming from loopback"
 
         # Reject invalid connections
         ct state invalid drop comment "Drop invalid packets"
@@ -46,7 +46,7 @@ table inet filter {
 
         # ICMP/Ping handling for input chain
         {% if nftables_ping_input.enabled | default(true) %}
-        meta l4proto icmp limit rate {{ nftables_ping_input.rate_limit | default('3/second') }} burst {{ nftables_ping_input.burst | default(4) }} packets {% if nftables_ping_input.log | default(false) %}log prefix "[nftables] : accept : input : icmp : "{% endif %} counter accept comment "{{ nftables_ping_input.comment | default('Allow limited ICMP/ping input') }}"
+        meta l4proto { icmp, ipv6-icmp } limit rate {{ nftables_ping_input.rate_limit | default('3/second') }} burst {{ nftables_ping_input.burst | default(4) }} packets {% if nftables_ping_input.log | default(false) %}log prefix "[nftables] : accept : input : icmp : "{% endif %} counter accept comment "{{ nftables_ping_input.comment | default('Allow limited ICMP/ping input') }}"
         {% endif %}
 
         # Jump to cluster input chain if enabled
@@ -111,7 +111,7 @@ table inet filter {
 
         # ICMP/Ping handling for output chain
         {% if nftables_ping_output.enabled | default(true) %}
-        meta l4proto icmp limit rate {{ nftables_ping_output.rate_limit | default('6/second') }} burst {{ nftables_ping_output.burst | default(8) }} packets {% if nftables_ping_output.log | default(false) %}log prefix "[nftables] : accept : output : icmp : "{% endif %} counter accept comment "{{ nftables_ping_output.comment | default('Allow limited ICMP/ping output') }}"
+        meta l4proto { icmp, ipv6-icmp } limit rate {{ nftables_ping_output.rate_limit | default('6/second') }} burst {{ nftables_ping_output.burst | default(8) }} packets {% if nftables_ping_output.log | default(false) %}log prefix "[nftables] : accept : output : icmp : "{% endif %} counter accept comment "{{ nftables_ping_output.comment | default('Allow limited ICMP/ping output') }}"
         {% endif %}
 
         # Jump to cluster output chain if enabled
@@ -133,9 +133,7 @@ table inet filter {
     # Chain for handling established/related connections
     chain existing {
         # Allow established/related connections
-        ip protocol tcp ct state { established, related } counter accept comment "Allow established/related TCP connections"
-        ip protocol udp ct state { established, related } counter accept comment "Allow established/related UDP connections"
-        ip protocol icmp ct state { established, related } counter accept comment "Allow established/related ICMP connections"
+        ct state { established, related } counter accept comment "Allow established/related connections"
     }
 
     {% if nftables_configure_security_rules | default(false) %}
