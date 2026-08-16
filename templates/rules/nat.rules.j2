@@ -47,7 +47,7 @@ table ip nat {
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
             {%- else %}
-                {%- set _ = parts.append(rule.protocol) %}
+                {%- set _ = parts.append('meta l4proto ' ~ rule.protocol) %}
             {%- endif %}
         {%- endif %}
         {%- if rule.nat_action == 'dnat' and rule.nat_to is defined %}
@@ -87,7 +87,7 @@ table ip nat {
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
             {%- else %}
-                {%- set _ = parts.append(rule.protocol) %}
+                {%- set _ = parts.append('meta l4proto ' ~ rule.protocol) %}
             {%- endif %}
         {%- endif %}
         {%- if rule.nat_action == 'snat' and rule.nat_to is defined %}

@@ -40,7 +40,7 @@ table inet filter {
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
             {%- else %}
-                {%- set _ = parts.append(rule.protocol) %}
+                {%- set _ = parts.append('meta l4proto ' ~ rule.protocol) %}
             {%- endif %}
         {%- endif %}
         {%- if rule.state is defined %}
@@ -81,7 +81,7 @@ table inet filter {
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
             {%- else %}
-                {%- set _ = parts.append(rule.protocol) %}
+                {%- set _ = parts.append('meta l4proto ' ~ rule.protocol) %}
             {%- endif %}
         {%- endif %}
         {%- if rule.state is defined %}
@@ -121,7 +121,7 @@ table inet filter {
             {%- if rule.port is defined %}
                 {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
             {%- else %}
-                {%- set _ = parts.append(rule.protocol) %}
+                {%- set _ = parts.append('meta l4proto ' ~ rule.protocol) %}
             {%- endif %}
         {%- endif %}
         {%- if rule.state is defined %}
