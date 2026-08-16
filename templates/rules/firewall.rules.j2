@@ -6,6 +6,10 @@
 # =============================================================================
 # This file contains security rules to protect against common network attacks.
 # It configures a dedicated chain that can be attached to the input chain.
+#
+# Note: Security protection rules in this file apply strictly to IPv4 traffic
+# (ip frag-off, ip length, ip saddr bogon filtering) and transport layer
+# TCP/UDP flag anomalies. IPv6 bogon filtering is not covered by this chain.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -13,13 +17,13 @@
 # -----------------------------------------------------------------------------
 table inet filter {
     # -----------------------------------------------------------------------------
-    # Security Protection Chain
+    # Security Protection Chain (IPv4 & Transport Layer Protection)
     # -----------------------------------------------------------------------------
     chain security_protection {
-        # Block fragmented packets
+        # Block fragmented packets (IPv4)
         ip frag-off & 0x1fff != 0 counter drop comment "Block fragmented packets"
         
-        # Block IP packets with bad lengths
+        # Block IP packets with bad lengths (IPv4)
         ip length < 20 counter drop comment "Block malformed IP packets (length < 20)"
         
         # Block invalid TCP flags combinations

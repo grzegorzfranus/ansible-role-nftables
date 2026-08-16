@@ -227,6 +227,16 @@
     fail_msg: "❌ Invalid cluster communication rules. Each rule must have a numeric 'port'"
     success_msg: "✅ Cluster communication rules structure is valid"
 
+- name: NFTables | assert | Validate cluster rules burst requires rate_limit
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          nftables_cluster_rules | selectattr('burst', 'defined') | list
+        ) | rejectattr('rate_limit', 'defined') | rejectattr('limit', 'defined') | list | length == 0
+    fail_msg: "❌ Cluster rules specifying 'burst' must also specify 'rate_limit'"
+    success_msg: "✅ Cluster rules burst and rate_limit dependencies are valid"
+
 # -----------------------------------------------------------------------------
 # 7. User-Defined Rules Settings
 # -----------------------------------------------------------------------------
@@ -327,6 +337,18 @@
     fail_msg: "❌ User-defined rules 'counter' field must be boolean when provided"
     success_msg: "✅ User-defined rules 'counter' field types are valid"
 
+- name: NFTables | assert | Validate user-defined rules burst requires rate_limit
+  ansible.builtin.assert:
+    that:
+      - >
+        (
+          (nftables_user_defined_input_rules | selectattr('burst', 'defined') | list) +
+          (nftables_user_defined_forward_rules | selectattr('burst', 'defined') | list) +
+          (nftables_user_defined_output_rules | selectattr('burst', 'defined') | list)
+        ) | rejectattr('rate_limit', 'defined') | list | length == 0
+    fail_msg: "❌ User-defined rules specifying 'burst' must also specify 'rate_limit'"
+    success_msg: "✅ User-defined rules burst and rate_limit dependencies are valid"
+
 - name: NFTables | assert | Validate user-defined rules interface fields
   ansible.builtin.assert:
     that:
@@ -390,8 +412,12 @@
         ) | selectattr('port', 'defined') | select() | list | length
       - >
         (
-          nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
-        ) | selectattr('nat_action', 'defined') | map(attribute='nat_action') | select() | list | difference(['dnat', 'snat', 'masquerade']) | length == 0
+          nftables_nat_prerouting_rules | selectattr('nat_action', 'defined') | map(attribute='nat_action') | select() | list | difference(['dnat', 'redirect']) | length == 0
+        )
+      - >
+        (
+          nftables_nat_postrouting_rules | selectattr('nat_action', 'defined') | map(attribute='nat_action') | select() | list | difference(['snat', 'masquerade']) | length == 0
+        )
       - >
         (
           nftables_nat_prerouting_rules + nftables_nat_postrouting_rules
@@ -440,6 +466,6 @@
           (nftables_nat_postrouting_rules | selectattr('destination', 'defined') | selectattr('destination', 'sequence') | map(attribute='destination') | list)
         ) | select() | flatten | select() | list | length
     fail_msg: >-
-      ❌ NAT rules validation failed: each rule must be a dict; ports numeric/range/list; nat_action in [dnat, snat, masquerade];
-      source and destination must be strings or lists of strings (all list items must be strings)
+      ❌ NAT rules validation failed: each rule must be a dict; prerouting nat_action in [dnat, redirect], postrouting nat_action in [snat, masquerade];
+      ports numeric/range/list; source and destination must be strings or lists of strings (all list items must be strings)
     success_msg: "✅ NAT rules structure looks valid"

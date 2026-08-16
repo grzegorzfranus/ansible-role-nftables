@@ -79,7 +79,23 @@
         var: _filter_table_.stdout_lines
 
     # -----------------------------------------------------------------------------
-    # 4. Security Protection Chain Verification
+    # 4. ICMPv6 and Rule Ordering Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Validate ICMPv6 control messages and rule ordering
+      ansible.builtin.assert:
+        that:
+          - "'nd-neighbor-solicit' in _filter_table_.stdout"
+          - "'nd-neighbor-advert' in _filter_table_.stdout"
+          - "'mld-listener-query' in _filter_table_.stdout"
+          - "'Allow mandatory ICMPv6 control messages' in _filter_table_.stdout"
+          - "_filter_table_.stdout.find('jump cluster_input') != -1"
+          - "_filter_table_.stdout.find('jump security_protection') != -1"
+          - "_filter_table_.stdout.find('jump cluster_input') < _filter_table_.stdout.find('jump security_protection')"
+        fail_msg: "Mandatory ICMPv6 rules are missing or jump security_protection is not placed after jump cluster_input."
+        success_msg: "Mandatory ICMPv6 rules and security chain ordering verified successfully."
+
+    # -----------------------------------------------------------------------------
+    # 5. Security Protection Chain Verification
     # -----------------------------------------------------------------------------
     - name: Verify | Validate security_protection chain contents
       ansible.builtin.assert:
@@ -96,7 +112,7 @@
         fail_msg: "Security protection rules are missing or rendered incorrectly in inet filter table."
 
     # -----------------------------------------------------------------------------
-    # 5. Cluster Chains Verification
+    # 6. Cluster Chains Verification
     # -----------------------------------------------------------------------------
     - name: Verify | Validate cluster_input and cluster_output chain contents
       ansible.builtin.assert:
@@ -113,7 +129,7 @@
         fail_msg: "Cluster communication rules are missing or rendered incorrectly in inet filter table."
 
     # -----------------------------------------------------------------------------
-    # 6. User Defined Chains Verification
+    # 7. User Defined Chains Verification
     # -----------------------------------------------------------------------------
     - name: Verify | Validate user_defined chains contents
       ansible.builtin.assert:
@@ -126,7 +142,7 @@
         fail_msg: "User-defined rules are missing or rendered incorrectly in inet filter table."
 
     # -----------------------------------------------------------------------------
-    # 7. Summary
+    # 8. Summary
     # -----------------------------------------------------------------------------
     - name: Verify | Summarize test results
       ansible.builtin.debug:
@@ -137,6 +153,7 @@
           Binary Available: PASS
           Service Running: PASS
           Service Enabled: PASS
+          ICMPv6 & Rule Ordering: PASS
           Security Protection Chain: PASS
           Cluster Input Chain: PASS
           Cluster Output Chain: PASS

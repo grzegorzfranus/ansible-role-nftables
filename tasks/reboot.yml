@@ -49,3 +49,4 @@
 - name: NFTables | reboot | Report reboot completion time
   ansible.builtin.debug:
     msg: "The system rebooted in {{ _nftables_reboot_result_.elapsed }} seconds."
+  when: not _nftables_reboot_result_.skipped | default(false)

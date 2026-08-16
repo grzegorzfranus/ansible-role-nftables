@@ -222,6 +222,9 @@ nftables_user_defined_forward_rules:
 |----------|-------------|---------|
 | `nftables_blocked_reserved_ranges` | List of reserved address spaces to block (anti-spoofing protection) | See below |
 
+> [!NOTE]
+> Security protection rules enabled by `nftables_configure_security_rules` (`10-firewall.rules`) apply strictly to IPv4 address filtering (`ip frag-off`, `ip length`, `ip saddr` bogon filtering) and transport layer TCP/UDP flags. IPv6 bogon filtering is not covered.
+
 **Reserved address ranges:**
 By default, the following address ranges are blocked on external interfaces to prevent spoofing:
 ```yaml
@@ -245,6 +248,15 @@ To disable this protection or customize the ranges, modify this variable in your
 | `nftables_cluster_enabled` | Enable/disable cluster communication rules | `false` |
 | `nftables_cluster_nodes` | List of IP addresses for cluster nodes | `[]` |
 | `nftables_cluster_rules` | Rules for communication between cluster nodes | `[]` |
+
+**Cluster rule fields:**
+- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`), defaults to `"tcp"`
+- `port` (required): Destination port (integer e.g. `5432`)
+- `state` (optional): Connection state match (e.g. `"new,established,related"`), defaults to `"new,established,related"`
+- `rate_limit` (optional): Rate limit for cluster traffic (e.g. `"10/second"`, `"100/minute"`)
+- `burst` (optional): Burst packet count when `rate_limit` is set (integer e.g. `5`)
+- `log` (optional): Enable logging for matched cluster traffic (boolean)
+- `comment` (optional): Descriptive comment for the rule (string)
 
 ### 7. User-Defined Rules Settings
 
@@ -320,7 +332,7 @@ nftables_user_defined_input_rules:
 |----------|-------------|---------|
 | `nftables_nat_prerouting_enabled` | Enable/disable NAT prerouting rules | `false` |
 | `nftables_nat_postrouting_enabled` | Enable/disable NAT postrouting rules | `false` |
-| `nftables_nat_prerouting_rules` | List of DNAT (destination NAT) rules | `[]` |
+| `nftables_nat_prerouting_rules` | List of DNAT (destination NAT) and redirect rules | `[]` |
 | `nftables_nat_postrouting_rules` | List of SNAT (source NAT) and masquerading rules | `[]` |
 
 **NAT rule fields:**
@@ -330,8 +342,8 @@ nftables_user_defined_input_rules:
 - `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
 - `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
-- `nat_action`: NAT action (`"dnat"`, `"snat"`, `"masquerade"`)
-- `nat_to` (required for dnat/snat): Target address (e.g. `192.0.2.100:80` for dnat, `203.0.113.2` for snat)
+- `nat_action`: NAT action (`"dnat"`, `"redirect"` for prerouting; `"snat"`, `"masquerade"` for postrouting)
+- `nat_to` (required for dnat/snat, optional for redirect): Target address (e.g. `192.0.2.100:80` for dnat, `203.0.113.2` for snat) or redirect port
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `log`: Enable/disable logging (boolean)
 - `comment`: Description of the rule (string)
