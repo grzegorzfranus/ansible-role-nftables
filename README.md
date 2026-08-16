@@ -15,7 +15,7 @@ This Ansible role installs, configures, hardens, and manages NFTables, the moder
 - 🔀 **Integrated NAT & Port Forwarding**: Native DNAT (prerouting) and SNAT / Masquerading (postrouting) support
 - 📝 **Rate-Limited Logging & Logrotate**: Drop-packet logging with configurable burst/rate limits and automated log rotation
 - 🛑 **Conflict Service Mitigation**: Automatically detects, stops, and disables conflicting firewall daemons (`firewalld`, `iptables`, `ufw`, `netfilter-persistent`)
-- 🧪 **Molecule Tested**: Multi-distribution testing across Ubuntu 22.04/24.04, Debian 11/12, and Rocky Linux 9
+- 🧪 **Molecule Tested**: Multi-distribution testing across Ubuntu 26.04/24.04/22.04, Debian 13/12/11, and Rocky Linux 9
 - 🔄 **Idempotent & Safe Execution**: Pre-validates all generated rule files via `nft -c -f` before applying service reloads
 
 ## 🎯 Architecture
@@ -50,8 +50,10 @@ List of officially supported operating systems for this role:
 
 | OS Family | Version | Status |
 |-----------|---------|---------|
+| Ubuntu | 26.04 (Resolute) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Ubuntu | 24.04 (Noble) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Ubuntu | 22.04 (Jammy) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
+| Debian | 13 (Trixie)   | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 12 (Bookworm) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | Debian | 11 (Bullseye) | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
 | EL (RHEL, Rocky, Alma) | 9 | ![✓](https://img.shields.io/badge/✓-brightgreen.svg) |
@@ -597,7 +599,7 @@ Runs on every Pull Request in a two-tier gate pattern:
 4. **Ansible Lint** — checks Ansible best practices and role standards (`profile: shared`)
 5. **Galaxy Metadata Validation** — verifies `meta/main.yml` schema and requirements (`ansible-meta-validate.yml`)
 6. **Security Scanning** — TruffleHog secret detection and Trivy IaC scanning (`ansible-security.yml`)
-7. **Molecule Integration Tests** — executes Molecule test matrix across supported distros (`ansible-molecule.yml`)
+7. **Molecule Integration Tests** — executes Molecule test matrix across Ubuntu 26.04, Ubuntu 24.04, Ubuntu 22.04, Debian 13, Debian 12, Debian 11, and Rocky Linux 9 (`ansible-molecule.yml`)
 8. **Merge Check Gate** — single authoritative status check aggregating all results for branch protection
 
 ### Release & Publish Pipeline (`ansible-publish.yml`)

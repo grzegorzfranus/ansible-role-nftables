@@ -18,25 +18,24 @@ galaxy_info:
   platforms:
     - name: Debian
       versions:
+        - "trixie"
         - "bookworm"
         - "bullseye"
     - name: Ubuntu
       versions:
+        - "resolute"
         - "noble"
         - "jammy"
-    - name: Rocky
+    - name: EL
       versions:
-        - "9.0"
+        - "9"
 
   galaxy_tags:
     - nftables
-    - nft
-    - netfilter
     - firewall
+    - netfilter
     - security
     - networking
-    - debian
-    - ubuntu
-    - rocky
+    - system
 
 dependencies: []
