@@ -8,12 +8,19 @@
 # -----------------------------------------------------------------------------
 # 1. Rsyslog Setup
 # -----------------------------------------------------------------------------
+# Note: 'update_cache' is not a documented parameter of ansible.builtin.package; it is passed
+# through to the backend module (apt/dnf), both of which support it. Revisit if support for a
+# package manager without that parameter is ever added.
 - name: NFTables | prerequisites | Install rsyslog package
   become: true
   ansible.builtin.package:
     name: rsyslog
     state: present
+    update_cache: true
   register: _nftables_rsyslog_package_
+  retries: 3
+  delay: 5
+  until: _nftables_rsyslog_package_ is succeeded
 
 - name: NFTables | prerequisites | Ensure service is enabled
   become: true

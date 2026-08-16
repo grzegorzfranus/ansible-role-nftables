@@ -19,6 +19,9 @@ __nftables_config_path: "/etc/nftables.conf"
 # -----------------------------------------------------------------------------
 # 2. Logging Settings
 # -----------------------------------------------------------------------------
+# Note: On Ubuntu 26.04+ (and Debian 13+), rsyslog is not installed by default
+# (journald-only base system). This role explicitly provisions and enables rsyslog
+# in tasks/prerequisites.yml, making /var/log/syslog the valid destination.
 # Path to the system log file on Ubuntu systems
 __nftables_system_log_path: "/var/log/syslog"
 
