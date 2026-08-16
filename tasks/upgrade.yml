@@ -23,7 +23,7 @@
 - name: NFTables | upgrade | Upgrade NFTables package to the latest version  # noqa: package-latest
   become: true
   ansible.builtin.package:
-    name: "{{ nftables_package_name }}"
+    name: "{{ __nftables_package_name }}"
     state: latest
     update_cache: true
   notify: NFTables | handlers | Restart nftables service

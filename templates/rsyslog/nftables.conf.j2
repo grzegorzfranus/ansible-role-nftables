@@ -16,5 +16,5 @@
 # =============================================================================
 
 # Redirect NFTables log messages to a dedicated log file
-:msg, contains, "[nftables]" {{ nftables_log_directory_path }}/nftables.log
+:msg, contains, "[nftables]" {{ __nftables_log_directory_path }}/nftables.log
 & stop

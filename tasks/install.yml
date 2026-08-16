@@ -19,5 +19,5 @@
 - name: NFTables | install | Install NFTables package
   become: true
   ansible.builtin.package:
-    name: "{{ nftables_package_name }}"
+    name: "{{ __nftables_package_name }}"
     state: present

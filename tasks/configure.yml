@@ -19,7 +19,7 @@
 - name: NFTables | configure | Enable NFTables service on system startup
   become: true
   ansible.builtin.service:
-    name: "{{ nftables_service_name }}"
+    name: "{{ __nftables_service_name }}"
     state: started
     enabled: true
   when: >
@@ -28,7 +28,7 @@
 - name: NFTables | configure | Disable NFTables service on system startup
   become: true
   ansible.builtin.service:
-    name: "{{ nftables_service_name }}"
+    name: "{{ __nftables_service_name }}"
     state: stopped
     enabled: false
   when: >
@@ -40,7 +40,7 @@
 - name: NFTables | configure | Create directory for rules
   become: true
   ansible.builtin.file:
-    path: "{{ nftables_rules_directory_path }}"
+    path: "{{ __nftables_rules_directory_path }}"
     state: directory
     owner: root
     group: root
@@ -53,7 +53,7 @@
   become: true
   ansible.builtin.template:
     src: templates/nftables.conf.j2
-    dest: "{{ nftables_config_path }}"
+    dest: "{{ __nftables_config_path }}"
     owner: root
     group: root
     mode: "0600"
@@ -67,17 +67,17 @@
 - name: NFTables | configure | Create directory for log files
   become: true
   ansible.builtin.file:
-    path: "{{ nftables_log_directory_path }}"
+    path: "{{ __nftables_log_directory_path }}"
     state: directory
-    owner: "{{ nftables_log_directory_user }}"
-    group: "{{ nftables_log_directory_group }}"
+    owner: "{{ __nftables_log_directory_user }}"
+    group: "{{ __nftables_log_directory_group }}"
     mode: "0750"
 
 - name: NFTables | configure | Deploy rsyslog configuration file
   become: true
   ansible.builtin.template:
     src: templates/rsyslog/nftables.conf.j2
-    dest: "{{ nftables_rsyslog_config_path }}"
+    dest: "{{ __nftables_rsyslog_config_path }}"
     owner: root
     group: root
     mode: "0600"

@@ -26,5 +26,5 @@
   listen: "NFTables | handlers | Restart nftables service"
   become: true
   ansible.builtin.service:
-    name: "{{ nftables_service_name }}"
+    name: "{{ __nftables_service_name }}"
     state: restarted
