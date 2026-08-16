@@ -19,7 +19,7 @@
     - router.nft
   loop_control:
     label: "{{ item }}"
-  register: _nftables_default_rules_removed_
+  register: __nftables_default_rules_removed
   when: >
     ansible_facts['os_family'] | lower == "redhat"
 
@@ -36,18 +36,18 @@
     mode: "0600"
     backup: true
     validate: nft -c -f %s
-  register: _nftables_security_rules_
+  register: __nftables_security_rules
   when: >
-    nftables_configure_security_rules | default(false)
+    (nftables_configure_security_rules | default(false) | bool)
 
 - name: NFTables | acl | Remove security protection rules file (if exists)
   become: true
   ansible.builtin.file:
     path: "{{ __nftables_rules_directory_path }}/10-firewall.rules"
     state: absent
-  register: _nftables_security_rules_removed_
+  register: __nftables_security_rules_removed
   when: >
-    not nftables_configure_security_rules | default(false)
+    not (nftables_configure_security_rules | default(false) | bool)
 
 # -----------------------------------------------------------------------------
 # 3. Cluster Communication Rules
@@ -62,18 +62,18 @@
     mode: "0600"
     backup: true
     validate: nft -c -f %s
-  register: _nftables_cluster_rules_
+  register: __nftables_cluster_rules
   when: >
-    nftables_cluster_enabled | default(false)
+    (nftables_cluster_enabled | default(false) | bool)
 
 - name: NFTables | acl | Remove cluster communication rules file (if exists)
   become: true
   ansible.builtin.file:
     path: "{{ __nftables_rules_directory_path }}/20-cluster.rules"
     state: absent
-  register: _nftables_cluster_rules_removed_
+  register: __nftables_cluster_rules_removed
   when: >
-    not nftables_cluster_enabled | default(false)
+    not (nftables_cluster_enabled | default(false) | bool)
 
 # -----------------------------------------------------------------------------
 # 4. User-Defined Rules
@@ -88,22 +88,22 @@
     mode: "0600"
     backup: true
     validate: nft -c -f %s
-  register: _nftables_user_defined_rules_
+  register: __nftables_user_defined_rules
   when: >
-    nftables_user_defined_input_enabled | default(false) or
-    nftables_user_defined_forward_enabled | default(false) or
-    nftables_user_defined_output_enabled | default(false)
+    (nftables_user_defined_input_enabled | default(false) | bool) or
+    (nftables_user_defined_forward_enabled | default(false) | bool) or
+    (nftables_user_defined_output_enabled | default(false) | bool)
 
 - name: NFTables | acl | Remove user-defined rules file (if exists)
   become: true
   ansible.builtin.file:
     path: "{{ __nftables_rules_directory_path }}/30-user-defined.rules"
     state: absent
-  register: _nftables_user_defined_rules_removed_
+  register: __nftables_user_defined_rules_removed
   when: >
-    not nftables_user_defined_input_enabled | default(false) and
-    not nftables_user_defined_forward_enabled | default(false) and
-    not nftables_user_defined_output_enabled | default(false)
+    not (nftables_user_defined_input_enabled | default(false) | bool) and
+    not (nftables_user_defined_forward_enabled | default(false) | bool) and
+    not (nftables_user_defined_output_enabled | default(false) | bool)
 
 # -----------------------------------------------------------------------------
 # 5. NAT Rules
@@ -118,45 +118,45 @@
     mode: "0600"
     backup: true
     validate: nft -c -f %s
-  register: _nftables_nat_rules_
+  register: __nftables_nat_rules
   when: >
-    nftables_nat_prerouting_enabled | default(false) or
-    nftables_nat_postrouting_enabled | default(false)
+    (nftables_nat_prerouting_enabled | default(false) | bool) or
+    (nftables_nat_postrouting_enabled | default(false) | bool)
 
 - name: NFTables | acl | Remove NAT rules file (if exists)
   become: true
   ansible.builtin.file:
     path: "{{ __nftables_rules_directory_path }}/40-nat.rules"
     state: absent
-  register: _nftables_nat_rules_removed_
+  register: __nftables_nat_rules_removed
   when: >
-    not nftables_nat_prerouting_enabled | default(false) and
-    not nftables_nat_postrouting_enabled | default(false)
+    not (nftables_nat_prerouting_enabled | default(false) | bool) and
+    not (nftables_nat_postrouting_enabled | default(false) | bool)
 
 - name: NFTables | acl | Check if inet nftables_nat table exists
   become: true
   ansible.builtin.command: >
     nft list table inet nftables_nat
-  register: _nftables_nat_table_check_
+  register: __nftables_nat_table_check
   failed_when: false
   changed_when: false
   when: >
-    (nftables_docker_aware | default(false)) and
-    not nftables_nat_prerouting_enabled | default(false) and
-    not nftables_nat_postrouting_enabled | default(false)
+    (nftables_docker_aware | default(false) | bool) and
+    not (nftables_nat_prerouting_enabled | default(false) | bool) and
+    not (nftables_nat_postrouting_enabled | default(false) | bool)
 
 - name: NFTables | acl | Remove stale inet nftables_nat table
   become: true
   ansible.builtin.command: >
     nft delete table inet nftables_nat
-  register: _nftables_nat_table_removed_
+  register: __nftables_nat_table_removed
   failed_when: false
-  changed_when: _nftables_nat_table_check_.rc | default(1) == 0
+  changed_when: __nftables_nat_table_check.rc | default(1) == 0
   when: >
-    (nftables_docker_aware | default(false)) and
-    not nftables_nat_prerouting_enabled | default(false) and
-    not nftables_nat_postrouting_enabled | default(false) and
-    _nftables_nat_table_check_.rc | default(1) == 0
+    (nftables_docker_aware | default(false) | bool) and
+    not (nftables_nat_prerouting_enabled | default(false) | bool) and
+    not (nftables_nat_postrouting_enabled | default(false) | bool) and
+    __nftables_nat_table_check.rc | default(1) == 0
 
 # -----------------------------------------------------------------------------
 # 6. Base Structure
@@ -171,24 +171,24 @@
     mode: "0600"
     backup: true
     validate: nft -c -f %s
-  register: _nftables_base_rules_
+  register: __nftables_base_rules
 
 # -----------------------------------------------------------------------------
 # 7. Service Verification
 # -----------------------------------------------------------------------------
 - name: NFTables | acl | Restart and verify nftables service
   when: >
-    _nftables_default_rules_removed_.changed | default(false) or
-    _nftables_base_rules_.changed | default(false) or
-    _nftables_security_rules_.changed | default(false) or
-    _nftables_security_rules_removed_.changed | default(false) or
-    _nftables_cluster_rules_.changed | default(false) or
-    _nftables_cluster_rules_removed_.changed | default(false) or
-    _nftables_user_defined_rules_.changed | default(false) or
-    _nftables_user_defined_rules_removed_.changed | default(false) or
-    _nftables_nat_rules_.changed | default(false) or
-    _nftables_nat_rules_removed_.changed | default(false) or
-    _nftables_nat_table_removed_.changed | default(false)
+    (__nftables_default_rules_removed.changed | default(false) | bool) or
+    (__nftables_base_rules.changed | default(false) | bool) or
+    (__nftables_security_rules.changed | default(false) | bool) or
+    (__nftables_security_rules_removed.changed | default(false) | bool) or
+    (__nftables_cluster_rules.changed | default(false) | bool) or
+    (__nftables_cluster_rules_removed.changed | default(false) | bool) or
+    (__nftables_user_defined_rules.changed | default(false) | bool) or
+    (__nftables_user_defined_rules_removed.changed | default(false) | bool) or
+    (__nftables_nat_rules.changed | default(false) | bool) or
+    (__nftables_nat_rules_removed.changed | default(false) | bool) or
+    (__nftables_nat_table_removed.changed | default(false) | bool)
 
   block:
     - name: NFTables | acl | Force restart nftables service
@@ -210,11 +210,11 @@
         systemctl is-active {{ __nftables_service_name }}
       failed_when: false
       changed_when: false
-      register: _nftables_service_state_
+      register: __nftables_service_state
 
     - name: NFTables | acl | Fail if nftables service is not running
       ansible.builtin.fail:
         msg: "nftables service is not running!"
       when: >
-        _nftables_service_state_.stdout == "inactive" or
-        _nftables_service_state_.stdout == "failed"
+        __nftables_service_state.stdout == "inactive" or
+        __nftables_service_state.stdout == "failed"
