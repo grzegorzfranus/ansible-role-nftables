@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.0.1...v2.0.2) (2026-08-16)
+
+
+### Bug Fixes
+
+* **rules:** stop dropping IPv6 traffic in inet filter table ([#20](https://github.com/grzegorzfranus/ansible-role-nftables/issues/20)) ([#21](https://github.com/grzegorzfranus/ansible-role-nftables/issues/21)) ([1a06fc4](https://github.com/grzegorzfranus/ansible-role-nftables/commit/1a06fc48d5d64a3dd24e2ca9e80e90e8768d1b8a))
+
 ## [2.0.1](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.0.0...v2.0.1) (2026-08-16)
 
 
