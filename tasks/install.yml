@@ -5,9 +5,6 @@
 # Installs the NFTables package on target systems using distribution package names.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# Package Installation
-# -----------------------------------------------------------------------------
 - name: NFTables | install | Install NFTables package
   become: true
   ansible.builtin.package:

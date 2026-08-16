@@ -5,9 +5,6 @@
 # Prepares the system environment by configuring rsyslog and disabling conflicting services.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# 1. Rsyslog Setup
-# -----------------------------------------------------------------------------
 # Note: 'update_cache' is not a documented parameter of ansible.builtin.package; it is passed
 # through to the backend module (apt/dnf), both of which support it. Revisit if support for a
 # package manager without that parameter is ever added.
@@ -29,9 +26,6 @@
     state: started
     enabled: true
 
-# -----------------------------------------------------------------------------
-# 2. Conflicting Firewall Services
-# -----------------------------------------------------------------------------
 - name: NFTables | prerequisites | Gather service facts
   become: true
   ansible.builtin.service_facts:

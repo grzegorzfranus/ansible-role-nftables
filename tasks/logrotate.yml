@@ -5,18 +5,12 @@
 # Installs and configures logrotate for managing and archiving NFTables log files.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# 1. Package Installation
-# -----------------------------------------------------------------------------
 - name: NFTables | logrotate | Install logrotate package
   become: true
   ansible.builtin.package:
     name: logrotate
     state: present
 
-# -----------------------------------------------------------------------------
-# 2. Archive Directory Setup
-# -----------------------------------------------------------------------------
 - name: NFTables | logrotate | Create archive log directory
   become: true
   ansible.builtin.file:
@@ -26,9 +20,6 @@
     group: "{{ __nftables_log_directory_group }}"
     mode: "0750"
 
-# -----------------------------------------------------------------------------
-# 3. Logrotate Configuration
-# -----------------------------------------------------------------------------
 - name: NFTables | logrotate | Deploy logrotate configuration file
   become: true
   ansible.builtin.template:
