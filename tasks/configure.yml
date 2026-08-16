@@ -44,7 +44,7 @@
 - name: NFTables | configure | Deploy configuration file
   become: true
   ansible.builtin.template:
-    src: templates/nftables.conf.j2
+    src: nftables.conf.j2
     dest: "{{ __nftables_config_path }}"
     owner: root
     group: root
@@ -68,7 +68,7 @@
 - name: NFTables | configure | Deploy rsyslog configuration file
   become: true
   ansible.builtin.template:
-    src: templates/rsyslog/nftables.conf.j2
+    src: rsyslog/nftables.conf.j2
     dest: "{{ __nftables_rsyslog_config_path }}"
     owner: root
     group: root

@@ -17,13 +17,7 @@
 # -----------------------------------------------------------------------------
 # 2. Archive Directory Setup
 # -----------------------------------------------------------------------------
-- name: NFTables | logrotate | Check if archive log directory exists
-  become: true
-  ansible.builtin.stat:
-    path: "{{ nftables_logrotate_options.archive_directory_path }}"
-  register: _nftables_archive_log_dir_stat_
-
-- name: NFTables | logrotate | Create archive log directory if needed
+- name: NFTables | logrotate | Create archive log directory
   become: true
   ansible.builtin.file:
     path: "{{ nftables_logrotate_options.archive_directory_path }}"
@@ -31,8 +25,6 @@
     owner: "{{ __nftables_log_directory_user }}"
     group: "{{ __nftables_log_directory_group }}"
     mode: "0750"
-  when: >
-    not _nftables_archive_log_dir_stat_.stat.exists
 
 # -----------------------------------------------------------------------------
 # 3. Logrotate Configuration
@@ -40,7 +32,7 @@
 - name: NFTables | logrotate | Deploy logrotate configuration file
   become: true
   ansible.builtin.template:
-    src: "templates/logrotate/nftables.j2"
+    src: "logrotate/nftables.j2"
     dest: "{{ __nftables_logrotate_config_path }}"
     owner: root
     group: root

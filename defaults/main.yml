@@ -2,8 +2,13 @@
 # =============================================================================
 # Ansible Role: NFTables - Default Variables
 # =============================================================================
-# This file defines default configuration values for the NFTables firewall.
-# These values can be overridden by setting them in your playbook or inventory.
+# Purpose: Define baseline configuration for the NFTables firewall role.
+# All default values documented here can be overridden in inventory or playbooks.
+#
+# Supported OS distributions:
+# - Ubuntu 24.04 (Noble), 22.04 (Jammy)
+# - Debian 12 (Bookworm), 11 (Bullseye)
+# - EL9: Rocky Linux 9, RHEL 9, AlmaLinux 9
 #
 # Sections:
 #   1. General Settings
@@ -22,67 +27,89 @@
 # Role execution control and basic service configuration
 
 # Enable/disable NFTables service on boot
+# Valid values: true, false
 nftables_service_enabled: true
 
 # Enable/disable logrotate configuration for NFTables logs
+# Valid values: true, false
 nftables_configure_logrotate: true
 
-# Additional rule set configurations
+# Additional rule set configurations (malformed packets, invalid TCP flags, port scan prevention)
+# Valid values: true, false
 nftables_configure_security_rules: false
 
 # Enable Docker-aware firewall mode to prevent flushing Docker iptables-nft tables
 # and isolate role NAT chains in a dedicated 'inet nftables_nat' table
+# Valid values: true, false
 nftables_docker_aware: false
 
 # Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode
+# Valid values: list of interface name strings e.g. ["docker0"]
 nftables_docker_aware_bridge_interfaces:
   - "docker0"
 
 # Flag indicating whether a system reboot is required during execution
+# Valid values: true, false
 nftables_reboot_required: false
 
 # Message displayed to users before system reboot
+# Valid values: string
 nftables_reboot_message: "Reboot initialized by Ansible"
 
 # Enable/disable waiting for the system to come back online after reboot
+# Valid values: true, false
 nftables_reboot_wait: true
 
 # Maximum time (in seconds) to wait for the machine to complete reboot
+# Valid values: integer >= 1
 nftables_reboot_wait_timeout: 300
 
 # Connection timeout (in seconds) when waiting for reboot to complete
+# Valid values: integer >= 1
 nftables_reboot_connect_timeout: 60
 
 # Sleep interval (in seconds) between connection attempts after reboot
+# Valid values: integer >= 1
 nftables_reboot_wait_ctimeout: 5
 
 # Delay (in seconds) before starting connection polling after reboot
+# Valid values: integer >= 0
 nftables_reboot_wait_delay: 10
 
 # Enable/disable a post-reboot delay interval
+# Valid values: true, false
 nftables_reboot_interval: true
 
 # Duration (in seconds) of post-reboot delay interval
+# Valid values: integer >= 0
 nftables_reboot_interval_seconds: 10
 
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------
 # Configuration for log rotation to manage NFTables log files
+# Valid values: dictionary with keys: archive_directory_path, frequency, count, missingok, compress, nocreate, dateext
 nftables_logrotate_options:
   # Directory where archived logs will be stored
+  # Valid values: valid directory path string
   archive_directory_path: "/var/log/nftables"
   # How often to rotate logs (options: hourly, daily, weekly, monthly)
+  # Valid values: hourly, daily, weekly, monthly
   frequency: "daily"
   # Number of rotated log files to keep
+  # Valid values: integer >= 1
   count: 90
   # Don't error if log file is missing
+  # Valid values: true, false
   missingok: true
   # Compress rotated logs using gzip
+  # Valid values: true, false
   compress: true
   # Don't create new empty log file
+  # Valid values: true, false
   nocreate: false
   # Add date extension to rotated logs
+  # Valid values: true, false
   dateext: true
   # Note: copytruncate is always enabled to ensure continuous logging without service interruption
 
@@ -90,30 +117,43 @@ nftables_logrotate_options:
 # 3. Base Filter Chain Policies
 # -----------------------------------------------------------------------------
 # Default policy for base filter chains (Options: 'accept', 'drop', 'reject')
+# Valid values: accept, drop, reject
 nftables_input_default_policy: "drop"
+# Valid values: accept, drop, reject
 nftables_forward_default_policy: "drop"
+# Valid values: accept, drop, reject
 nftables_output_default_policy: "drop"
 
 # Logging options for dropped packets in base filter chains
 # Enable/disable logging for packets dropped by respective chains
+# Valid values: true, false
 nftables_log_input_dropped: true
+# Valid values: true, false
 nftables_log_forward_dropped: true
+# Valid values: true, false
 nftables_log_output_dropped: true
 
 # Rate limit settings for logging dropped packets
 # Syntax: "X/period" where period can be: second, minute, hour, day
 # Format example: "10/minute" means max 10 logs per minute
+# Valid values: rate limit string matching '^\d+/(second|minute|hour|day)$'
 nftables_log_input_dropped_rate_limit: "10/minute"
+# Valid values: integer >= 1
 nftables_log_input_dropped_burst: 10
+# Valid values: rate limit string matching '^\d+/(second|minute|hour|day)$'
 nftables_log_forward_dropped_rate_limit: "10/minute"
+# Valid values: integer >= 1
 nftables_log_forward_dropped_burst: 10
+# Valid values: rate limit string matching '^\d+/(second|minute|hour|day)$'
 nftables_log_output_dropped_rate_limit: "10/minute"
+# Valid values: integer >= 1
 nftables_log_output_dropped_burst: 10
 
 # -----------------------------------------------------------------------------
 # 4. ICMP/Ping Settings
 # -----------------------------------------------------------------------------
 # ICMP/Ping input configuration
+# Valid values: dictionary with keys: enabled (bool), rate_limit (str), burst (int), log (bool), comment (str)
 nftables_ping_input:
   enabled: true
   rate_limit: "3/second"
@@ -122,6 +162,7 @@ nftables_ping_input:
   comment: "Allow limited ICMP/ping input"
 
 # ICMP/Ping output configuration
+# Valid values: dictionary with keys: enabled (bool), rate_limit (str), burst (int), log (bool), comment (str)
 nftables_ping_output:
   enabled: true
   rate_limit: "6/second"
@@ -133,6 +174,7 @@ nftables_ping_output:
 # 5. Basic Access Control Settings
 # -----------------------------------------------------------------------------
 # Reserved address spaces to block (anti-spoofing protection)
+# Valid values: list of valid IPv4 CIDR strings
 nftables_blocked_reserved_ranges:
   - "0.0.0.0/8"        # "This" Network
   - "10.0.0.0/8"       # Private-Use Networks
@@ -151,15 +193,18 @@ nftables_blocked_reserved_ranges:
 # 6. Cluster Communication Settings
 # -----------------------------------------------------------------------------
 # Enable/disable cluster communication rules
+# Valid values: true, false
 nftables_cluster_enabled: false
 
 # List of IP addresses for cluster nodes
+# Valid values: list of valid IP address or CIDR strings
 nftables_cluster_nodes:
   - "192.0.2.10"
   - "192.0.2.11"
   - "192.0.2.12"
 
 # Rules for communication between cluster nodes
+# Valid values: list of dictionaries with keys: port (int/str), protocol ('tcp'|'udp'), log (bool), comment (str)
 nftables_cluster_rules:
   # Example: Allow PostgreSQL database traffic
   - port: 5432
@@ -176,11 +221,15 @@ nftables_cluster_rules:
 # 7. User-Defined Rules Settings
 # -----------------------------------------------------------------------------
 # Enable/disable user-defined rules for each chain
+# Valid values: true, false
 nftables_user_defined_input_enabled: false
+# Valid values: true, false
 nftables_user_defined_forward_enabled: false
+# Valid values: true, false
 nftables_user_defined_output_enabled: false
 
 # User-defined input rules
+# Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_user_defined_input_rules:
   # Example: All options used
   - in_interface: "wg0"  # Optional input interface matching
@@ -214,6 +263,7 @@ nftables_user_defined_input_rules:
     comment: "Allow management access from admin IPs"
 
 # User-defined forward rules
+# Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_user_defined_forward_rules:
   # Example: All options used
   - in_interface: "eth0"
@@ -239,6 +289,7 @@ nftables_user_defined_forward_rules:
     comment: "Forward traffic from eth0 to eth1"
 
 # User-defined output rules
+# Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_user_defined_output_rules:
   # Example: All options used
   - out_interface: "eth0"  # Optional output interface matching
@@ -275,10 +326,13 @@ nftables_user_defined_output_rules:
 # 8. NAT Rules Settings
 # -----------------------------------------------------------------------------
 # Enable/disable NAT rules for each chain
+# Valid values: true, false
 nftables_nat_prerouting_enabled: false
+# Valid values: true, false
 nftables_nat_postrouting_enabled: false
 
 # Destination NAT (DNAT) rules for port forwarding, etc.
+# Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_nat_prerouting_rules:
   # Example: Port forwarding rule (forward port 80 to internal web server)
   - in_interface: "eth0"
@@ -310,6 +364,7 @@ nftables_nat_prerouting_rules:
     comment: "Forward SSH from specific external IPs to internal server"
 
 # Source NAT (SNAT) and masquerading rules for outbound connections
+# Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_nat_postrouting_rules:
   # Example: Basic masquerading rule for internet access
   - out_interface: "eth0"

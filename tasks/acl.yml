@@ -13,10 +13,12 @@
   ansible.builtin.file:
     path: "/etc/nftables/{{ item }}"
     state: absent
-  with_items:
+  loop:
     - main.nft
     - nat.nft
     - router.nft
+  loop_control:
+    label: "{{ item }}"
   register: _nftables_default_rules_removed_
   when: >
     ansible_facts['os_family'] | lower == "redhat"
@@ -27,7 +29,7 @@
 - name: NFTables | acl | Deploy security protection rules file
   become: true
   ansible.builtin.template:
-    src: templates/rules/firewall.rules.j2
+    src: rules/firewall.rules.j2
     dest: "{{ __nftables_rules_directory_path }}/10-firewall.rules"
     owner: root
     group: root
@@ -53,7 +55,7 @@
 - name: NFTables | acl | Deploy cluster communication rules file
   become: true
   ansible.builtin.template:
-    src: templates/rules/cluster.rules.j2
+    src: rules/cluster.rules.j2
     dest: "{{ __nftables_rules_directory_path }}/20-cluster.rules"
     owner: root
     group: root
@@ -79,7 +81,7 @@
 - name: NFTables | acl | Deploy user-defined rules file
   become: true
   ansible.builtin.template:
-    src: templates/rules/user_defined.rules.j2
+    src: rules/user_defined.rules.j2
     dest: "{{ __nftables_rules_directory_path }}/30-user-defined.rules"
     owner: root
     group: root
@@ -109,7 +111,7 @@
 - name: NFTables | acl | Deploy NAT rules file
   become: true
   ansible.builtin.template:
-    src: templates/rules/nat.rules.j2
+    src: rules/nat.rules.j2
     dest: "{{ __nftables_rules_directory_path }}/40-nat.rules"
     owner: root
     group: root
@@ -162,7 +164,7 @@
 - name: NFTables | acl | Deploy base structure file
   become: true
   ansible.builtin.template:
-    src: templates/rules/base.rules.j2
+    src: rules/base.rules.j2
     dest: "{{ __nftables_rules_directory_path }}/00-base.rules"
     owner: root
     group: root
