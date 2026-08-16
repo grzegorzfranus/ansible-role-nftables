@@ -5,9 +5,6 @@
 # Upgrades the NFTables package to the latest release and triggers service reload.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# Package Upgrade
-# -----------------------------------------------------------------------------
 # Justification: 'state: latest' is the explicit purpose of this task file — the
 # 'upgrade' role action exists specifically to pull the newest packaged NFTables release.
 # ansible-lint's package-latest rule cannot express this intent, hence the scoped noqa.

@@ -5,9 +5,6 @@
 # Deploys and validates modular NFTables firewall rulesets, tables, and chains.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# 1. Clearing Default Rule Files
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Clear default NFT files with rules (RedHat-specific)
   become: true
   ansible.builtin.file:
@@ -23,9 +20,6 @@
   when: >
     ansible_facts['os_family'] | lower == "redhat"
 
-# -----------------------------------------------------------------------------
-# 2. Security Protection Rules
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy security protection rules file
   become: true
   ansible.builtin.template:
@@ -49,9 +43,6 @@
   when: >
     not (nftables_configure_security_rules | default(false) | bool)
 
-# -----------------------------------------------------------------------------
-# 3. Cluster Communication Rules
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy cluster communication rules file
   become: true
   ansible.builtin.template:
@@ -75,9 +66,6 @@
   when: >
     not (nftables_cluster_enabled | default(false) | bool)
 
-# -----------------------------------------------------------------------------
-# 4. User-Defined Rules
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy user-defined rules file
   become: true
   ansible.builtin.template:
@@ -105,9 +93,6 @@
     not (nftables_user_defined_forward_enabled | default(false) | bool) and
     not (nftables_user_defined_output_enabled | default(false) | bool)
 
-# -----------------------------------------------------------------------------
-# 5. NAT Rules
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy NAT rules file
   become: true
   ansible.builtin.template:
@@ -158,9 +143,6 @@
     not (nftables_nat_postrouting_enabled | default(false) | bool) and
     __nftables_nat_table_check.rc | default(1) == 0
 
-# -----------------------------------------------------------------------------
-# 6. Base Structure
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Deploy base structure file
   become: true
   ansible.builtin.template:
@@ -173,9 +155,6 @@
     validate: nft -c -f %s
   register: __nftables_base_rules
 
-# -----------------------------------------------------------------------------
-# 7. Service Verification
-# -----------------------------------------------------------------------------
 - name: NFTables | acl | Restart and verify nftables service
   when: >
     (__nftables_default_rules_removed.changed | default(false) | bool) or

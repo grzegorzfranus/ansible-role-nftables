@@ -183,8 +183,8 @@ nftables_user_defined_forward_rules:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `nftables_logrotate_options` | Dictionary of logrotate settings | See below |
-| `nftables_logrotate_options.archive_directory_path` | Directory where archived logs will be stored | `/var/log/nftables` |
+| `nftables_logrotate_options` | Dictionary of logrotate settings (`dict`) | See below |
+| `nftables_logrotate_options.archive_directory_path` | Directory where archived logs will be stored | `"/var/log/nftables"` |
 | `nftables_logrotate_options.frequency` | How often to rotate logs | `"daily"` |
 | `nftables_logrotate_options.count` | Number of rotated log files to keep | `90` |
 | `nftables_logrotate_options.missingok` | Don't error if log file is missing | `true` |
@@ -260,17 +260,21 @@ To disable this protection or customize the ranges, modify this variable in your
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_cluster_enabled` | Enable/disable cluster communication rules | `false` |
-| `nftables_cluster_nodes` | List of IP addresses for cluster nodes | `[]` |
+| `nftables_cluster_nodes` | List of IPv4 addresses or CIDRs for cluster nodes | `[]` |
 | `nftables_cluster_rules` | Rules for communication between cluster nodes | `[]` |
 
 **Cluster rule fields:**
-- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`), defaults to `"tcp"`
 - `port` (required): Destination port (integer e.g. `5432`)
+- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`), defaults to `"tcp"`
 - `state` (optional): Connection state match (e.g. `"new,established,related"`), defaults to `"new,established,related"`
 - `rate_limit` (optional): Rate limit for cluster traffic (e.g. `"10/second"`, `"100/minute"`)
 - `burst` (optional): Burst packet count when `rate_limit` is set (integer e.g. `5`)
 - `log` (optional): Enable logging for matched cluster traffic (boolean)
+- `counter` (optional): Enable packet/byte counting for the rule (boolean)
 - `comment` (optional): Descriptive comment for the rule (string)
+
+> [!NOTE]
+> `nftables_cluster_nodes` accepts valid IPv4 addresses and CIDRs. IPv6 cluster node addresses are not supported.
 
 ### 7. User-Defined Rules Settings
 
@@ -286,17 +290,17 @@ To disable this protection or customize the ranges, modify this variable in your
 **User-defined rule fields:**
 - `in_interface` (optional): Input interface matching (`iifname`). Valid for `input` and `forward` rules only; specifying on `output` rules will fail validation (string)
 - `out_interface` (optional): Output interface matching (`oifname`). Valid for `forward` and `output` rules only; specifying on `input` rules will fail validation (string)
-- `source` (optional): Source IP/network (string or list of strings for multiple sources)
-- `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
-- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`). If omitted but `port` is provided, the role defaults to `tcp`.
+- `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
+- `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
+- `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `state` (optional): Connection state to match (e.g. `"new"`, `"established,related"`) - defaults to `"new"` if not specified
 - `rate_limit` (optional): Rate limit in format `"X/period"` where period can be: second, minute, hour, day (e.g. `"10/minute"`)
 - `burst` (optional): Burst value for the rate limit (integer)
-- `action`: Action to take (e.g. `"accept"`, `"drop"`)
-- `log`: Enable/disable logging (boolean)
-- `counter`: Enable/disable packet/byte counting for the rule (boolean)
-- `comment`: Description of the rule (string)
+- `action` (optional): Action to take (`"accept"`, `"drop"`, `"reject"`, `"return"`), defaults to `"accept"`
+- `log` (optional): Enable/disable logging (boolean)
+- `counter` (optional): Enable/disable packet/byte counting for the rule (boolean)
+- `comment` (optional): Description of the rule (string)
 
 **Example: Restrict SSH to WireGuard VPN interface (`in_interface`):**
 ```yaml
@@ -350,18 +354,18 @@ nftables_user_defined_input_rules:
 | `nftables_nat_postrouting_rules` | List of SNAT (source NAT) and masquerading rules | `[]` |
 
 **NAT rule fields:**
-- `in_interface` (optional): Input interface (string)
-- `out_interface` (optional): Output interface (string)
-- `source` (optional): Source IP/network (string or list of strings for multiple sources)
-- `destination` (optional): Destination IP/network (string or list of strings for multiple destinations)
-- `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`)
+- `nat_action` (required): NAT action (`"dnat"`, `"redirect"` for prerouting; `"snat"`, `"masquerade"` for postrouting)
+- `in_interface` (optional): Input interface matching. Valid in prerouting rules only (string)
+- `out_interface` (optional, required for `masquerade`): Output interface matching. Valid in postrouting rules only (string)
+- `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
+- `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
+- `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
-- `nat_action`: NAT action (`"dnat"`, `"redirect"` for prerouting; `"snat"`, `"masquerade"` for postrouting)
-- `nat_to` (required for dnat/snat, optional for redirect): Target address (e.g. `192.0.2.100:80` for dnat, `203.0.113.2` for snat)
+- `nat_to` (required for dnat/snat, optional for redirect): Target IPv4 address with optional port for dnat (e.g. `"192.0.2.100:80"`), or IPv4 address without port for snat (e.g. `"203.0.113.2"`)
 - `redirect_port` (required for redirect if `nat_to` is omitted): Target port for redirect (integer or string matching `^\d{1,5}$`). Note that `redirect` only supports a single port destination; multi-port lists and ranges are not supported by nftables `redirect`.
-- `counter`: Enable/disable packet/byte counting for the rule (boolean)
-- `log`: Enable/disable logging (boolean)
-- `comment`: Description of the rule (string)
+- `counter` (optional): Enable/disable packet/byte counting for the rule (boolean)
+- `log` (optional): Enable/disable logging (boolean)
+- `comment` (optional): Description of the rule (string)
 
 **Examples:**
 ```yaml

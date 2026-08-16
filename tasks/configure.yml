@@ -5,9 +5,6 @@
 # Configures NFTables service state, directories, configuration files, and rsyslog integration.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# 1. Service Management
-# -----------------------------------------------------------------------------
 - name: NFTables | configure | Enable NFTables service on system startup
   become: true
   ansible.builtin.service:
@@ -26,9 +23,6 @@
   when: >
     not (nftables_service_enabled | default(false) | bool)
 
-# -----------------------------------------------------------------------------
-# 2. Directory Structure
-# -----------------------------------------------------------------------------
 - name: NFTables | configure | Create directory for rules
   become: true
   ansible.builtin.file:
@@ -38,9 +32,6 @@
     group: root
     mode: "0700"
 
-# -----------------------------------------------------------------------------
-# 3. Main Configuration
-# -----------------------------------------------------------------------------
 - name: NFTables | configure | Deploy configuration file
   become: true
   ansible.builtin.template:
@@ -53,9 +44,6 @@
     validate: nft -c -f %s
   notify: NFTables | handlers | Restart nftables service
 
-# -----------------------------------------------------------------------------
-# 4. Logging Setup
-# -----------------------------------------------------------------------------
 - name: NFTables | configure | Create directory for log files
   become: true
   ansible.builtin.file:
