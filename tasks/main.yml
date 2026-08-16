@@ -50,7 +50,7 @@
 - name: NFTables | reboot | Reboot system if required
   ansible.builtin.import_tasks: reboot.yml
   when: >
-    nftables_reboot_required | default(false) and
+    (nftables_reboot_required | default(false) | bool) and
     not (ansible_facts['virtualization_type'] is defined and
       ansible_facts['virtualization_type'] == 'docker')
   tags:

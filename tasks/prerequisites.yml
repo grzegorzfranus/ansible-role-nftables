@@ -17,10 +17,10 @@
     name: rsyslog
     state: present
     update_cache: true
-  register: _nftables_rsyslog_package_
+  register: __nftables_rsyslog_package
   retries: 3
   delay: 5
-  until: _nftables_rsyslog_package_ is succeeded
+  until: __nftables_rsyslog_package is succeeded
 
 - name: NFTables | prerequisites | Ensure service is enabled
   become: true
@@ -28,7 +28,6 @@
     name: rsyslog
     state: started
     enabled: true
-  register: _nftables_rsyslog_status_
 
 # -----------------------------------------------------------------------------
 # 2. Conflicting Firewall Services
@@ -50,8 +49,6 @@
     - ufw
   loop_control:
     label: "{{ item }}"
-  retries: 3
-  delay: 5
   when: >
     ansible_facts.services[item + '.service'] is defined and
     (

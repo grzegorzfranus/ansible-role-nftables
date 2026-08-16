@@ -27,9 +27,9 @@
     sleep: "{{ nftables_reboot_wait_ctimeout | default(5) }}"
     delay: "{{ nftables_reboot_wait_delay | default(10) }}"
     timeout: "{{ nftables_reboot_wait_timeout | default(300) }}"
-  register: _nftables_reboot_result_
+  register: __nftables_reboot_result
   when: >
-    nftables_reboot_wait | default(true)
+    (nftables_reboot_wait | default(true) | bool)
 
 # -----------------------------------------------------------------------------
 # 3. Post-Reboot Actions
@@ -38,9 +38,9 @@
   ansible.builtin.pause:
     seconds: "{{ nftables_reboot_interval_seconds | default(10) }}"
   when: >
-    nftables_reboot_interval | default(true)
+    (nftables_reboot_interval | default(true) | bool)
 
 - name: NFTables | reboot | Report reboot completion time
   ansible.builtin.debug:
-    msg: "The system rebooted in {{ _nftables_reboot_result_.elapsed }} seconds."
-  when: not _nftables_reboot_result_.skipped | default(false)
+    msg: "The system rebooted in {{ __nftables_reboot_result.elapsed }} seconds."
+  when: not (__nftables_reboot_result.skipped | default(false) | bool)

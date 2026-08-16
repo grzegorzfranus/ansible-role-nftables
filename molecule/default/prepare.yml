@@ -31,6 +31,7 @@
           chmod 0400 /etc/shadow
           ls -l /etc/shadow
           echo ""
+      changed_when: false
 
     - name: Prepare | Verify shadow file permissions
       ansible.builtin.debug:
