@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.2.1...v2.2.2) (2026-08-16)
+
+
+### Bug Fixes
+
+* **assert:** empty example rule defaults and close validation gaps ([#68](https://github.com/grzegorzfranus/ansible-role-nftables/issues/68)) ([#69](https://github.com/grzegorzfranus/ansible-role-nftables/issues/69)) ([5684351](https://github.com/grzegorzfranus/ansible-role-nftables/commit/5684351c8c5adfa2022258cf18eec0658676a8d7))
+
 ## [2.2.1](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.2.0...v2.2.1) (2026-08-16)
 
 
