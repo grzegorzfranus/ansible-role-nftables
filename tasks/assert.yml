@@ -718,7 +718,17 @@
           (nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules)
           | selectattr('source', 'defined')
           | selectattr('destination', 'defined')
-          | rejectattr('source', 'search', ':')
+          | selectattr('source', 'search', ':')
+          | rejectattr('destination', 'search', ':')
+          | list
+          | length == 0
+        )
+      - >
+        (
+          (nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules)
+          | selectattr('source', 'defined')
+          | selectattr('destination', 'defined')
+          | selectattr('source', 'search', '\\.')
           | rejectattr('destination', 'search', '\\.')
           | list
           | length == 0
@@ -728,12 +738,68 @@
           (nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules)
           | selectattr('source', 'defined')
           | selectattr('destination', 'defined')
-          | rejectattr('source', 'search', '\\.')
-          | rejectattr('destination', 'search', ':')
+          | selectattr('destination', 'search', ':')
+          | rejectattr('source', 'search', ':')
           | list
           | length == 0
         )
-    fail_msg: "User-defined rules must not specify disjoint address families between 'source' and 'destination'"
+      - >
+        (
+          (nftables_user_defined_input_rules + nftables_user_defined_forward_rules + nftables_user_defined_output_rules)
+          | selectattr('source', 'defined')
+          | selectattr('destination', 'defined')
+          | selectattr('destination', 'search', '\\.')
+          | rejectattr('source', 'search', '\\.')
+          | list
+          | length == 0
+        )
+    fail_msg: >-
+      {%- set errors = [] -%}
+      {%- for chain_name, r_list in [
+            ('input', nftables_user_defined_input_rules),
+            ('forward', nftables_user_defined_forward_rules),
+            ('output', nftables_user_defined_output_rules)
+          ] -%}
+        {%- for r in r_list -%}
+          {%- if r.source is defined and r.destination is defined -%}
+            {%- set s_list = [r.source] if r.source is string else r.source -%}
+            {%- set d_list = [r.destination] if r.destination is string else r.destination -%}
+            {%- set s_v4 = s_list | reject('search', ':') | list -%}
+            {%- set s_v6 = s_list | select('search', ':') | list -%}
+            {%- set d_v4 = d_list | reject('search', ':') | list -%}
+            {%- set d_v6 = d_list | select('search', ':') | list -%}
+            {%- if s_v6 | length > 0 and d_v6 | length == 0 -%}
+              {%- set _ = errors.append(
+                    "user_defined_" ~ chain_name ~ " rule '" ~ (r.comment | default('unnamed')) ~
+                    "': IPv6 addresses in source (" ~ (s_v6 | join(', ')) ~
+                    ") have no IPv6 destination (IPv6 rule would be omitted)"
+                  ) -%}
+            {%- endif -%}
+            {%- if s_v4 | length > 0 and d_v4 | length == 0 -%}
+              {%- set _ = errors.append(
+                    "user_defined_" ~ chain_name ~ " rule '" ~ (r.comment | default('unnamed')) ~
+                    "': IPv4 addresses in source (" ~ (s_v4 | join(', ')) ~
+                    ") have no IPv4 destination (IPv4 rule would be omitted)"
+                  ) -%}
+            {%- endif -%}
+            {%- if d_v6 | length > 0 and s_v6 | length == 0 -%}
+              {%- set _ = errors.append(
+                    "user_defined_" ~ chain_name ~ " rule '" ~ (r.comment | default('unnamed')) ~
+                    "': IPv6 addresses in destination (" ~ (d_v6 | join(', ')) ~
+                    ") have no IPv6 source (IPv6 rule would be omitted)"
+                  ) -%}
+            {%- endif -%}
+            {%- if d_v4 | length > 0 and s_v4 | length == 0 -%}
+              {%- set _ = errors.append(
+                    "user_defined_" ~ chain_name ~ " rule '" ~ (r.comment | default('unnamed')) ~
+                    "': IPv4 addresses in destination (" ~ (d_v4 | join(', ')) ~
+                    ") have no IPv4 source (IPv4 rule would be omitted)"
+                  ) -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      Mismatched address families between source and destination: {{ errors | join('; ') }}
     success_msg: "User-defined rules address family compatibility validated"
 
 - name: NFTables | assert | Validate user-defined rules state field

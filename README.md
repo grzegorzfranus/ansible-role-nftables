@@ -646,7 +646,22 @@ In version 2.0.0, execution flow gating via the `nftables_role_action` variable 
 | `reboot` | `--tags nftables_reboot` |
 | `upgrade` | `--tags nftables_upgrade` |
 
-## CI/CD Pipeline
+## 🔄 Upgrade Procedure
+
+Package upgrade tasks in `tasks/upgrade.yml` are guarded by the `never` tag to prevent unexpected package upgrades during standard playbook execution.
+
+To upgrade the NFTables package to the latest available distribution release:
+
+```bash
+ansible-playbook -i inventory/hosts playbook.yml --tags nftables_upgrade
+```
+
+This procedure performs:
+1. Package manager cache update (`apt` / `dnf`).
+2. Upgrading the `nftables` package to `state: latest`.
+3. Notifying the handler to safely restart the `nftables` service and re-apply the active ruleset.
+
+## 🚀 CI/CD Pipeline
 
 This repository uses centralized, reusable GitHub Actions workflows from [github-workflows](https://github.com/grzegorzfranus/github-workflows) (`@main`) for quality assurance, security scanning, and release automation.
 
@@ -672,7 +687,7 @@ Automated via [Release Please](https://github.com/googleapis/release-please):
 3. **Merge Release PR** → creates Git version tag and GitHub Release automatically
 4. **Ansible Galaxy Publish** → publishes tagged release to Ansible Galaxy via `ansible-publish.yml`
 
-## Example Playbooks
+## 📖 Example Playbooks
 
 ### Basic Firewall Setup
 
