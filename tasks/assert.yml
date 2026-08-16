@@ -61,6 +61,14 @@
     fail_msg: "❌ Invalid docker-aware bridge interfaces. Must be a list of interface name strings"
     success_msg: "✅ Docker-aware bridge interfaces list is valid"
 
+- name: NFTables | assert | Validate reboot required parameter
+  ansible.builtin.assert:
+    that:
+      - nftables_reboot_required is defined
+      - nftables_reboot_required is boolean
+    fail_msg: "❌ Invalid reboot required flag '{{ nftables_reboot_required | default('undefined') }}'. Must be boolean (true/false)"
+    success_msg: "✅ Reboot required flag is valid: {{ nftables_reboot_required }}"
+
 
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
