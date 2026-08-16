@@ -1,4 +1,10 @@
 ---
+# =============================================================================
+# Ansible Role: NFTables - Galaxy Metadata
+# =============================================================================
+# Role metadata for Ansible Galaxy publication and requirements definition.
+# =============================================================================
+
 galaxy_info:
   role_name: nftables
   author: Grzegorz Franus

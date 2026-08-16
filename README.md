@@ -40,7 +40,7 @@ flowchart TD
 
 ## 📋 Requirements
 
-- **Ansible**: 2.20 or higher
+- **Ansible**: 2.15 or higher
 - **Python**: 3.9 or higher on target hosts
 - **Privileges**: sudo/root access on target hosts
 
@@ -287,8 +287,8 @@ nftables_user_defined_input_rules:
 ```yaml
 nftables_user_defined_output_rules:
   - out_interface: "eth0"
-    source: "10.0.0.1"
-    destination: "192.168.1.100"
+    source: "198.51.100.1"
+    destination: "192.0.2.100"
     protocol: "tcp"
     port: "2221,2222"
     state: "new,established"
@@ -303,8 +303,8 @@ nftables_user_defined_output_rules:
 **Example with multiple IP addresses:**
 ```yaml
 nftables_user_defined_input_rules:
-  - source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
-    destination: ["192.168.1.100", "192.168.1.101"]
+  - source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]
+    destination: ["192.0.2.100", "192.0.2.101"]
     protocol: "tcp"
     port: "22"
     state: "new,established"
@@ -331,7 +331,7 @@ nftables_user_defined_input_rules:
 - `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
 - `nat_action`: NAT action (`"dnat"`, `"snat"`, `"masquerade"`)
-- `nat_to` (required for dnat/snat): Target address (e.g. `192.168.1.100:80` for dnat, `203.0.113.2` for snat)
+- `nat_to` (required for dnat/snat): Target address (e.g. `192.0.2.100:80` for dnat, `203.0.113.2` for snat)
 - `counter`: Enable/disable packet/byte counting for the rule (boolean)
 - `log`: Enable/disable logging (boolean)
 - `comment`: Description of the rule (string)
@@ -343,7 +343,7 @@ nftables_nat_prerouting_rules:
     protocol: "tcp"
     port: "80"
     nat_action: "dnat"
-    nat_to: "192.168.1.100:80"
+    nat_to: "192.0.2.100:80"
     counter: true
     log: false
     comment: "Forward HTTP to internal web server"
@@ -351,7 +351,7 @@ nftables_nat_prerouting_rules:
     protocol: "tcp"
     port: "5000-5100"
     nat_action: "dnat"
-    nat_to: "192.168.2.50"
+    nat_to: "192.0.2.50"
     counter: true
     log: false
     comment: "Forward port range to DMZ server"
@@ -360,7 +360,7 @@ nftables_nat_prerouting_rules:
     protocol: "tcp"
     port: "22"
     nat_action: "dnat"
-    nat_to: "192.168.1.50:22"
+    nat_to: "192.0.2.50:22"
     counter: true
     log: true
     comment: "Forward SSH from specific external IPs to internal server"
@@ -368,20 +368,20 @@ nftables_nat_prerouting_rules:
 
 nftables_nat_postrouting_rules:
   - out_interface: "eth0"
-    source: "192.168.1.0/24"
+    source: "192.0.2.0/24"
     nat_action: "masquerade"
     counter: true
     log: false
     comment: "NAT for LAN clients"
   - out_interface: "eth0"
-    source: "192.168.2.0/24"
+    source: "198.51.100.0/24"
     nat_action: "snat"
     nat_to: "203.0.113.2"
     counter: true
     log: false
     comment: "SNAT for DMZ subnet"
   - out_interface: "eth0"
-    source: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    source: ["192.0.2.0/26", "192.0.2.64/26", "192.0.2.128/26"]
     destination: ["198.51.100.0/24", "203.0.113.0/24"]
     nat_action: "snat"
     nat_to: "198.51.100.1"
@@ -492,6 +492,7 @@ ansible-role-nftables/
 ├── handlers/
 │   └── main.yml                # Service reload and restart handlers
 ├── meta/
+│   ├── argument_specs.yml      # Declarative argument specifications
 │   └── main.yml                # Role metadata and Galaxy specifications
 ├── molecule/                   # Molecule testing framework
 │   └── default/                # Default testing scenario
@@ -632,21 +633,21 @@ Automated via [Release Please](https://github.com/googleapis/release-please):
             protocol: "tcp"
             port: "80"
             nat_action: "dnat"
-            nat_to: "192.168.1.100:80"
+            nat_to: "192.0.2.100:80"
             log: false
             comment: "Forward HTTP to internal web server"
           - in_interface: "eth0"
             protocol: "tcp"
             port: "443"
             nat_action: "dnat"
-            nat_to: "192.168.1.100:443"
+            nat_to: "192.0.2.100:443"
             log: false
             comment: "Forward HTTPS to internal web server"
 
         # Masquerade internal network for internet access
         nftables_nat_postrouting_rules:
           - out_interface: "eth0"
-            source: "192.168.1.0/24"
+            source: "192.0.2.0/24"
             nat_action: "masquerade"
             log: false
             comment: "NAT for LAN clients"
@@ -708,9 +709,9 @@ Automated via [Release Please](https://github.com/googleapis/release-please):
       vars:
         nftables_cluster_enabled: true
         nftables_cluster_nodes:
-          - "192.168.10.10"
-          - "192.168.10.11"
-          - "192.168.10.12"
+          - "192.0.2.10"
+          - "192.0.2.11"
+          - "192.0.2.12"
         nftables_cluster_rules:
           - port: 5432
             protocol: "tcp"
