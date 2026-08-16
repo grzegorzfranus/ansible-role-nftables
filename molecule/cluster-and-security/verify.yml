@@ -1,0 +1,143 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Molecule Verification Playbook (Cluster & Security)
+# =============================================================================
+# This playbook verifies that the NFTables role correctly installed and configured
+# cluster communication and security protection rules.
+# =============================================================================
+
+- name: molecule | Verify Role (Cluster & Security)
+  hosts: all
+  gather_facts: true
+
+  vars_files:
+    - ../../defaults/main.yml
+    - ../../vars/main.yml
+
+  tasks:
+    - name: Verify | Gather OS specific variables
+      ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+            - "{{ ansible_facts['distribution'] | lower }}_{{ ansible_facts['distribution_major_version'] | lower }}.yml"
+            - "{{ ansible_facts['distribution'] | lower }}.yml"
+            - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_version'] | lower }}.yml"
+            - "{{ ansible_facts['os_family'] | lower }}_{{ ansible_facts['distribution_major_version'].split('.')[0] }}.yml"
+            - "{{ ansible_facts['os_family'] | lower }}.yml"
+            - "main.yml"
+          paths:
+            - "../../vars"
+
+    # -----------------------------------------------------------------------------
+    # 1. Package & Binary Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check if nftables package is installed
+      ansible.builtin.package:
+        name: "{{ __nftables_package_name | default('nftables') }}"
+        state: present
+      check_mode: true
+      register: _pkg_check_
+      failed_when: _pkg_check_.changed
+
+    - name: Verify | Check if 'nft' binary is available
+      ansible.builtin.command:
+        cmd: which nft
+      register: _nft_binary_
+      changed_when: false
+      failed_when: _nft_binary_.rc != 0
+
+    # -----------------------------------------------------------------------------
+    # 2. Service Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Check if nftables service is running
+      ansible.builtin.command:
+        cmd: systemctl is-active {{ __nftables_service_name | default('nftables') }}
+      register: _service_status_
+      changed_when: false
+      failed_when: _service_status_.rc != 0
+
+    - name: Verify | Check if nftables service is enabled
+      ansible.builtin.command:
+        cmd: systemctl is-enabled {{ __nftables_service_name | default('nftables') }}
+      register: _service_enabled_
+      changed_when: false
+      failed_when: _service_enabled_.rc != 0
+
+    # -----------------------------------------------------------------------------
+    # 3. Ruleset Retrieval
+    # -----------------------------------------------------------------------------
+    - name: Verify | Get inet filter table ruleset
+      ansible.builtin.command:
+        cmd: nft list table inet filter
+      register: _filter_table_
+      changed_when: false
+
+    - name: Verify | Show current inet filter ruleset
+      ansible.builtin.debug:
+        var: _filter_table_.stdout_lines
+
+    # -----------------------------------------------------------------------------
+    # 4. Security Protection Chain Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Validate security_protection chain contents
+      ansible.builtin.assert:
+        that:
+          - "'chain security_protection {' in _filter_table_.stdout"
+          - "'ip frag-off' in _filter_table_.stdout"
+          - "'ip length < 20' in _filter_table_.stdout"
+          - "'tcp flags' in _filter_table_.stdout"
+          - "'tcp dport 0' in _filter_table_.stdout"
+          - "'udp dport 0' in _filter_table_.stdout"
+          - "'198.51.100.0/24' in _filter_table_.stdout"
+          - "'203.0.113.0/24' in _filter_table_.stdout"
+          - "'return' in _filter_table_.stdout"
+        fail_msg: "Security protection rules are missing or rendered incorrectly in inet filter table."
+
+    # -----------------------------------------------------------------------------
+    # 5. Cluster Chains Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Validate cluster_input and cluster_output chain contents
+      ansible.builtin.assert:
+        that:
+          - "'chain cluster_input {' in _filter_table_.stdout"
+          - "'192.0.2.10' in _filter_table_.stdout"
+          - "'PostgreSQL cluster replication' in _filter_table_.stdout"
+          - "'Redis cluster replication' in _filter_table_.stdout"
+          - "('tcp dport 5432' in _filter_table_.stdout or 'tcp dport { 5432 }' in _filter_table_.stdout)"
+          - "('tcp dport 6379' in _filter_table_.stdout or 'tcp dport { 6379 }' in _filter_table_.stdout)"
+          - "'log prefix \"[nftables] : accept : cluster : tcp/5432 : \"' in _filter_table_.stdout"
+          - "'chain cluster_output {' in _filter_table_.stdout"
+          - "'log prefix \"[nftables] : accept : output : cluster : tcp/5432 : \"' in _filter_table_.stdout"
+        fail_msg: "Cluster communication rules are missing or rendered incorrectly in inet filter table."
+
+    # -----------------------------------------------------------------------------
+    # 6. User Defined Chains Verification
+    # -----------------------------------------------------------------------------
+    - name: Verify | Validate user_defined chains contents
+      ansible.builtin.assert:
+        that:
+          - "'chain user_defined_input {' in _filter_table_.stdout"
+          - "('tcp dport 22' in _filter_table_.stdout or 'tcp dport { 22 }' in _filter_table_.stdout)"
+          - "'chain user_defined_output {' in _filter_table_.stdout"
+          - "('udp dport 53' in _filter_table_.stdout or 'udp dport { 53 }' in _filter_table_.stdout)"
+          - "'tcp dport { 80, 443 }' in _filter_table_.stdout"
+        fail_msg: "User-defined rules are missing or rendered incorrectly in inet filter table."
+
+    # -----------------------------------------------------------------------------
+    # 7. Summary
+    # -----------------------------------------------------------------------------
+    - name: Verify | Summarize test results
+      ansible.builtin.debug:
+        msg: |
+          NFTables Cluster & Security Verification Summary:
+          -------------------------------------------------
+          Package Installed: PASS
+          Binary Available: PASS
+          Service Running: PASS
+          Service Enabled: PASS
+          Security Protection Chain: PASS
+          Cluster Input Chain: PASS
+          Cluster Output Chain: PASS
+          User Defined Chains: PASS
