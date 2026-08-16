@@ -1,0 +1,114 @@
+# =============================================================================
+# Ansible Role: NFTables - Molecule Convergence Playbook (Cluster & Security)
+# =============================================================================
+# This playbook executes the main role functionality in the test environment
+# with cluster and security protection rulesets enabled.
+#
+# Flow:
+# 1. Update package cache
+# 2. Wait for system initialization
+# 3. Apply NFTables role with cluster and security test variables
+# =============================================================================
+
+---
+# -----------------------------------------------------------------------------
+# 1. Pre-Tasks Setup
+# -----------------------------------------------------------------------------
+- name: molecule | Converge (Cluster & Security)
+  hosts: all
+
+  pre_tasks:
+    # Package Cache Update
+    - name: Converge | Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      changed_when: false
+      when: >
+        ansible_facts['os_family'] == "Debian"
+
+    - name: Converge | Update dnf cache
+      ansible.builtin.dnf:
+        update_cache: true
+      changed_when: false
+      when: >
+        ansible_facts['os_family'] == "RedHat"
+
+    # System Initialization
+    - name: Converge | Wait for systemd to complete initialization
+      ansible.builtin.command:
+        cmd: systemctl is-system-running
+      register: systemctl_status
+      until: >
+        'running' in systemctl_status.stdout or
+        'degraded' in systemctl_status.stdout
+      retries: 30
+      delay: 5
+      when: >
+        ansible_facts['service_mgr'] == 'systemd'
+      changed_when: false
+      failed_when: systemctl_status.rc > 1
+
+# -----------------------------------------------------------------------------
+# 2. Role Execution with Cluster & Security Test Variables
+# -----------------------------------------------------------------------------
+  vars:
+    nftables_service_enabled: true
+    nftables_configure_logrotate: true
+    nftables_input_default_policy: "drop"
+    nftables_forward_default_policy: "drop"
+    nftables_output_default_policy: "accept"
+
+    # Security Rules Configuration
+    nftables_configure_security_rules: true
+    nftables_blocked_reserved_ranges:
+      - "198.51.100.0/24"
+      - "203.0.113.0/24"
+
+    # Cluster Configuration
+    nftables_cluster_enabled: true
+    nftables_cluster_nodes:
+      - "192.0.2.10"
+      - "192.0.2.11"
+      - "192.0.2.12"
+    nftables_cluster_rules:
+      - port: 5432
+        protocol: "tcp"
+        log: true
+        comment: "PostgreSQL cluster replication"
+      - port: 6379
+        protocol: "tcp"
+        log: false
+        comment: "Redis cluster replication"
+
+    # User Defined Rules
+    nftables_user_defined_input_enabled: true
+    nftables_user_defined_input_rules:
+      - protocol: "tcp"
+        port: "22"
+        action: "accept"
+        counter: true
+        log: true
+        comment: "Allow SSH for testing"
+
+    nftables_user_defined_output_enabled: true
+    nftables_user_defined_output_rules:
+      - protocol: "udp"
+        port: "53"
+        action: "accept"
+        counter: true
+        log: false
+        comment: "Allow DNS outbound for testing"
+      - protocol: "tcp"
+        port: "80,443"
+        action: "accept"
+        counter: true
+        log: false
+        comment: "Allow HTTP/HTTPS outbound for testing"
+
+    nftables_reboot_required: false
+
+  tasks:
+    - name: Converge | Include NFTables role
+      ansible.builtin.include_role:
+        name: "{{ playbook_dir }}/../.."
