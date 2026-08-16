@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.8](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.1.7...v2.1.8) (2026-08-16)
+
+
+### Tests
+
+* **molecule:** add cluster and security-rules scenario ([#47](https://github.com/grzegorzfranus/ansible-role-nftables/issues/47)) ([#48](https://github.com/grzegorzfranus/ansible-role-nftables/issues/48)) ([2d28b09](https://github.com/grzegorzfranus/ansible-role-nftables/commit/2d28b09dad3b7d00a0c620d1c6135793b05cb056))
+
 ## [2.1.7](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.1.6...v2.1.7) (2026-08-16)
 
 
