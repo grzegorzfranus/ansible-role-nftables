@@ -131,9 +131,9 @@ nftables_cluster_enabled: false
 
 # List of IP addresses for cluster nodes
 nftables_cluster_nodes:
-  - "192.168.1.10"
-  - "192.168.1.11"
-  - "192.168.1.12"
+  - "192.0.2.10"
+  - "192.0.2.11"
+  - "192.0.2.12"
 
 # Rules for communication between cluster nodes
 nftables_cluster_rules:
@@ -160,8 +160,8 @@ nftables_user_defined_output_enabled: false
 nftables_user_defined_input_rules:
   # Example: All options used
   - in_interface: "wg0"  # Optional input interface matching
-    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
-    destination: ["192.168.1.100", "192.168.1.101"]  # Multiple destination IPs supported
+    source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]  # Multiple source IPs supported
+    destination: ["192.0.2.100", "192.0.2.101"]  # Multiple destination IPs supported
     protocol: "tcp"
     port: 12345
     state: "new,established,related"
@@ -180,7 +180,7 @@ nftables_user_defined_input_rules:
     counter: true
     comment: "Allow HTTP traffic"
   # Example: Allow specific IPs to access management port
-  - source: ["10.0.0.100", "10.0.0.101", "10.0.0.102"]
+  - source: ["198.51.100.100", "198.51.100.101", "198.51.100.102"]
     protocol: "tcp"
     port: 8080
     state: "new"
@@ -194,8 +194,8 @@ nftables_user_defined_forward_rules:
   # Example: All options used
   - in_interface: "eth0"
     out_interface: "eth1"
-    source: ["10.0.0.1", "10.0.0.2"]  # Multiple source IPs supported
-    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
+    source: ["198.51.100.1", "198.51.100.2"]  # Multiple source IPs supported
+    destination: ["192.0.2.100", "192.0.2.101", "192.0.2.102"]  # Multiple destination IPs supported
     protocol: "udp"
     port: 54321
     state: "new,established"
@@ -218,8 +218,8 @@ nftables_user_defined_forward_rules:
 nftables_user_defined_output_rules:
   # Example: All options used
   - out_interface: "eth0"  # Optional output interface matching
-    source: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]  # Multiple source IPs supported
-    destination: ["192.168.1.100", "192.168.1.101", "192.168.1.102"]  # Multiple destination IPs supported
+    source: ["198.51.100.1", "198.51.100.2", "198.51.100.3"]  # Multiple source IPs supported
+    destination: ["192.0.2.100", "192.0.2.101", "192.0.2.102"]  # Multiple destination IPs supported
     protocol: "tcp"
     port: "2221,2222"
     state: "new,established"
@@ -238,7 +238,7 @@ nftables_user_defined_output_rules:
     counter: true
     comment: "Allow DNS queries"
   # Example: Allow HTTPS to specific destinations
-  - destination: ["192.168.10.20", "192.168.10.21", "192.168.10.22"]
+  - destination: ["192.0.2.20", "192.0.2.21", "192.0.2.22"]
     protocol: "tcp"
     port: 443
     state: "new,established"
@@ -261,7 +261,7 @@ nftables_nat_prerouting_rules:
     protocol: "tcp"
     port: "80"
     nat_action: "dnat"
-    nat_to: "192.168.1.100:80"
+    nat_to: "192.0.2.100:80"
     counter: true
     log: false
     comment: "Forward HTTP to internal web server"
@@ -270,7 +270,7 @@ nftables_nat_prerouting_rules:
     protocol: "tcp"
     port: "5000-5100"
     nat_action: "dnat"
-    nat_to: "192.168.2.50"
+    nat_to: "192.0.2.50"
     counter: true
     log: false
     comment: "Forward port range to DMZ server"
@@ -280,7 +280,7 @@ nftables_nat_prerouting_rules:
     protocol: "tcp"
     port: "22"
     nat_action: "dnat"
-    nat_to: "192.168.1.50:22"
+    nat_to: "192.0.2.50:22"
     counter: true
     log: true
     comment: "Forward SSH from specific external IPs to internal server"
@@ -289,14 +289,14 @@ nftables_nat_prerouting_rules:
 nftables_nat_postrouting_rules:
   # Example: Basic masquerading rule for internet access
   - out_interface: "eth0"
-    source: "192.168.1.0/24"
+    source: "192.0.2.0/24"
     nat_action: "masquerade"
     counter: true
     log: false
     comment: "NAT for LAN clients"
   # Example: Specific SNAT for a subnet
   - out_interface: "eth0"
-    source: "192.168.2.0/24"
+    source: "198.51.100.0/24"
     nat_action: "snat"
     nat_to: "203.0.113.2"
     counter: true
@@ -304,7 +304,7 @@ nftables_nat_postrouting_rules:
     comment: "SNAT for DMZ subnet"
   # Example: SNAT for multiple source subnets
   - out_interface: "eth0"
-    source: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    source: ["192.0.2.0/26", "192.0.2.64/26", "192.0.2.128/26"]
     destination: ["198.51.100.0/24", "203.0.113.0/24"]
     nat_action: "snat"
     nat_to: "198.51.100.1"

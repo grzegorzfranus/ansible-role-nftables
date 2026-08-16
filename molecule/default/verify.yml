@@ -173,7 +173,7 @@
       changed_when: false
       when: not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04')
       failed_when: >
-        'dnat to 192.168.1.100:80' not in _legacy_nat_table_.stdout or
+        'dnat to 192.0.2.100:80' not in _legacy_nat_table_.stdout or
         'log prefix "[nftables] : nat : prerouting : "' not in _legacy_nat_table_.stdout or
         'masquerade' not in _legacy_nat_table_.stdout or
         'snat to 203.0.113.2' not in _legacy_nat_table_.stdout or
@@ -186,7 +186,7 @@
       changed_when: false
       when: ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04'
       failed_when: >
-        'dnat ip to 192.168.1.100:80' not in _docker_nat_table_.stdout or
+        'dnat ip to 192.0.2.100:80' not in _docker_nat_table_.stdout or
         'log prefix "[nftables] : nat : prerouting : "' not in _docker_nat_table_.stdout or
         'masquerade' not in _docker_nat_table_.stdout or
         'snat ip to 203.0.113.2' not in _docker_nat_table_.stdout or
