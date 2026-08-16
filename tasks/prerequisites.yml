@@ -25,6 +25,7 @@
   become: true
   ansible.builtin.service:
     name: rsyslog
+    state: started
     enabled: true
   register: _nftables_rsyslog_status_
 

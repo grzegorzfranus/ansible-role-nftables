@@ -42,6 +42,7 @@
     owner: root
     group: root
     mode: "0600"
+    backup: true
     validate: nft -c -f %s
   register: _nftables_security_rules_
   when: >
@@ -67,6 +68,7 @@
     owner: root
     group: root
     mode: "0600"
+    backup: true
     validate: nft -c -f %s
   register: _nftables_cluster_rules_
   when: >
@@ -92,6 +94,7 @@
     owner: root
     group: root
     mode: "0600"
+    backup: true
     validate: nft -c -f %s
   register: _nftables_user_defined_rules_
   when: >
@@ -121,6 +124,7 @@
     owner: root
     group: root
     mode: "0600"
+    backup: true
     validate: nft -c -f %s
   register: _nftables_nat_rules_
   when: >
@@ -173,6 +177,7 @@
     owner: root
     group: root
     mode: "0600"
+    backup: true
     validate: nft -c -f %s
   register: _nftables_base_rules_
 
