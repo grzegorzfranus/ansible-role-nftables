@@ -1,0 +1,327 @@
+---
+# =============================================================================
+# Ansible Role: NFTables - Argument Specifications
+# =============================================================================
+# This file defines declarative argument specifications for the NFTables role.
+# Basic type/choice validation is handled here; complex runtime checks are in tasks/assert.yml.
+# =============================================================================
+
+argument_specs:
+  main:
+    short_description: Deploy and configure NFTables firewall
+    description:
+      - Installs NFTables via native package management.
+      - Configures base filter, security, cluster, user-defined, and NAT rulesets.
+      - Manages log rotation and systemd service state.
+    options:
+      # -------------------------------------------------------------------------
+      # 1. General Settings
+      # -------------------------------------------------------------------------
+      nftables_service_enabled:
+        description: "Enable or disable the NFTables systemd service on boot."
+        type: bool
+        default: true
+
+      nftables_configure_logrotate:
+        description: "Enable or disable logrotate configuration for NFTables logs."
+        type: bool
+        default: true
+
+      nftables_configure_security_rules:
+        description: "Enable or disable security protection rules (malformed packets, invalid TCP flags, port scan prevention)."
+        type: bool
+        default: false
+
+      nftables_docker_aware:
+        description: "Enable Docker-aware firewall mode to prevent flushing Docker iptables-nft tables and isolate NAT chains."
+        type: bool
+        default: false
+
+      nftables_docker_aware_bridge_interfaces:
+        description: "Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode."
+        type: list
+        elements: str
+        default:
+          - "docker0"
+
+      # -------------------------------------------------------------------------
+      # 2. Logging Configuration
+      # -------------------------------------------------------------------------
+      nftables_logrotate_options:
+        description: "Configuration options for logrotate managing NFTables log files."
+        type: dict
+        options:
+          archive_directory_path:
+            description: "Directory where archived logs will be stored."
+            type: str
+            default: "/var/log/nftables"
+          frequency:
+            description: "How often to rotate logs."
+            type: str
+            choices:
+              - "hourly"
+              - "daily"
+              - "weekly"
+              - "monthly"
+            default: "daily"
+          count:
+            description: "Number of rotated log files to keep."
+            type: int
+            default: 90
+          missingok:
+            description: "Do not error if log file is missing."
+            type: bool
+            default: true
+          compress:
+            description: "Compress rotated logs using gzip."
+            type: bool
+            default: true
+          nocreate:
+            description: "Do not create new empty log file."
+            type: bool
+            default: false
+          dateext:
+            description: "Add date extension to rotated logs."
+            type: bool
+            default: true
+
+      # -------------------------------------------------------------------------
+      # 3. Base Filter Chain Policies
+      # -------------------------------------------------------------------------
+      nftables_input_default_policy:
+        description: "Default policy for the base filter input chain."
+        type: str
+        choices:
+          - "accept"
+          - "drop"
+          - "reject"
+        default: "drop"
+
+      nftables_forward_default_policy:
+        description: "Default policy for the base filter forward chain."
+        type: str
+        choices:
+          - "accept"
+          - "drop"
+          - "reject"
+        default: "drop"
+
+      nftables_output_default_policy:
+        description: "Default policy for the base filter output chain."
+        type: str
+        choices:
+          - "accept"
+          - "drop"
+          - "reject"
+        default: "drop"
+
+      nftables_log_input_dropped:
+        description: "Enable logging for packets dropped by the input chain."
+        type: bool
+        default: true
+
+      nftables_log_forward_dropped:
+        description: "Enable logging for packets dropped by the forward chain."
+        type: bool
+        default: true
+
+      nftables_log_output_dropped:
+        description: "Enable logging for packets dropped by the output chain."
+        type: bool
+        default: true
+
+      nftables_log_input_dropped_rate_limit:
+        description: "Rate limit for logging dropped packets in input chain (e.g. '10/minute')."
+        type: str
+        default: "10/minute"
+
+      nftables_log_input_dropped_burst:
+        description: "Burst allowance for logging dropped packets in input chain."
+        type: int
+        default: 10
+
+      nftables_log_forward_dropped_rate_limit:
+        description: "Rate limit for logging dropped packets in forward chain (e.g. '10/minute')."
+        type: str
+        default: "10/minute"
+
+      nftables_log_forward_dropped_burst:
+        description: "Burst allowance for logging dropped packets in forward chain."
+        type: int
+        default: 10
+
+      nftables_log_output_dropped_rate_limit:
+        description: "Rate limit for logging dropped packets in output chain (e.g. '10/minute')."
+        type: str
+        default: "10/minute"
+
+      nftables_log_output_dropped_burst:
+        description: "Burst allowance for logging dropped packets in output chain."
+        type: int
+        default: 10
+
+      # -------------------------------------------------------------------------
+      # 4. ICMP/Ping Settings
+      # -------------------------------------------------------------------------
+      nftables_ping_input:
+        description: "ICMP/Ping input rate limiting and logging configuration."
+        type: dict
+        options:
+          enabled:
+            description: "Enable ICMP/ping handling in input chain."
+            type: bool
+            default: true
+          rate_limit:
+            description: "Rate limit for ICMP packets."
+            type: str
+            default: "3/second"
+          burst:
+            description: "Burst allowance for ICMP packets."
+            type: int
+            default: 4
+          log:
+            description: "Log accepted ICMP packets."
+            type: bool
+            default: false
+          comment:
+            description: "Rule comment."
+            type: str
+            default: "Allow limited ICMP/ping input"
+
+      nftables_ping_output:
+        description: "ICMP/Ping output rate limiting and logging configuration."
+        type: dict
+        options:
+          enabled:
+            description: "Enable ICMP/ping handling in output chain."
+            type: bool
+            default: true
+          rate_limit:
+            description: "Rate limit for ICMP packets."
+            type: str
+            default: "6/second"
+          burst:
+            description: "Burst allowance for ICMP packets."
+            type: int
+            default: 8
+          log:
+            description: "Log accepted ICMP packets."
+            type: bool
+            default: false
+          comment:
+            description: "Rule comment."
+            type: str
+            default: "Allow limited ICMP/ping output"
+
+      # -------------------------------------------------------------------------
+      # 5. Basic Access Control Settings
+      # -------------------------------------------------------------------------
+      nftables_blocked_reserved_ranges:
+        description: "Reserved IP address spaces to block for anti-spoofing protection."
+        type: list
+        elements: str
+        default:
+          - "0.0.0.0/8"
+          - "10.0.0.0/8"
+          - "127.0.0.0/8"
+          - "169.254.0.0/16"
+          - "172.16.0.0/12"
+          - "192.0.0.0/24"
+          - "192.0.2.0/24"
+          - "192.168.0.0/16"
+          - "198.18.0.0/15"
+          - "198.51.100.0/24"
+          - "203.0.113.0/24"
+          - "224.0.0.0/3"
+
+      # -------------------------------------------------------------------------
+      # 6. Cluster Communication Settings
+      # -------------------------------------------------------------------------
+      nftables_cluster_enabled:
+        description: "Enable cluster communication rules."
+        type: bool
+        default: false
+
+      nftables_cluster_nodes:
+        description: "List of IP addresses of nodes participating in cluster communication."
+        type: list
+        elements: str
+        default:
+          - "192.168.1.10"
+          - "192.168.1.11"
+          - "192.168.1.12"
+
+      nftables_cluster_rules:
+        description: "List of firewall rules applied for cluster nodes communication."
+        type: list
+        elements: dict
+        default:
+          - port: 5432
+            protocol: "tcp"
+            log: false
+            comment: "PostgreSQL replication"
+          - port: 6379
+            protocol: "tcp"
+            log: false
+            comment: "Redis replication"
+
+      # -------------------------------------------------------------------------
+      # 7. User-Defined Rules Settings
+      # -------------------------------------------------------------------------
+      nftables_user_defined_input_enabled:
+        description: "Enable user-defined rules in input chain."
+        type: bool
+        default: false
+
+      nftables_user_defined_forward_enabled:
+        description: "Enable user-defined rules in forward chain."
+        type: bool
+        default: false
+
+      nftables_user_defined_output_enabled:
+        description: "Enable user-defined rules in output chain."
+        type: bool
+        default: false
+
+      nftables_user_defined_input_rules:
+        description: "List of custom user-defined input firewall rules."
+        type: list
+        elements: dict
+        default: []
+
+      nftables_user_defined_forward_rules:
+        description: "List of custom user-defined forward firewall rules."
+        type: list
+        elements: dict
+        default: []
+
+      nftables_user_defined_output_rules:
+        description: "List of custom user-defined output firewall rules."
+        type: list
+        elements: dict
+        default: []
+
+      # -------------------------------------------------------------------------
+      # 8. NAT Rules Settings
+      # -------------------------------------------------------------------------
+      nftables_nat_prerouting_enabled:
+        description: "Enable Destination NAT (DNAT) prerouting rules."
+        type: bool
+        default: false
+
+      nftables_nat_postrouting_enabled:
+        description: "Enable Source NAT (SNAT) / masquerading postrouting rules."
+        type: bool
+        default: false
+
+      nftables_nat_prerouting_rules:
+        description: "List of DNAT prerouting rules for port forwarding and redirect."
+        type: list
+        elements: dict
+        default: []
+
+      nftables_nat_postrouting_rules:
+        description: "List of SNAT / masquerading postrouting rules for outbound connections."
+        type: list
+        elements: dict
+        default: []
