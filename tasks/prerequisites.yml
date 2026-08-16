@@ -9,9 +9,6 @@
 # Flow:
 # 1. Setting up rsyslog for logging
 # 2. Disabling conflicting firewall services
-#
-# The tasks automatically determine if a system reboot is needed based on
-# changes made to critical services.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -30,13 +27,6 @@
     name: rsyslog
     enabled: true
   register: _nftables_rsyslog_status_
-
-- name: NFTables | prerequisites | Check if system requires reboot
-  ansible.builtin.set_fact:
-    nftables_reboot_required: true
-  when: >
-    _nftables_rsyslog_package_.changed | default(false) or
-    _nftables_rsyslog_status_.changed | default(false)
 
 # -----------------------------------------------------------------------------
 # 2. Conflicting Firewall Services

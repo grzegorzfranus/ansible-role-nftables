@@ -38,6 +38,9 @@ nftables_docker_aware: false
 nftables_docker_aware_bridge_interfaces:
   - "docker0"
 
+# Flag indicating whether a system reboot is required during execution
+nftables_reboot_required: false
+
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------
