@@ -103,8 +103,10 @@
         that:
           - "'chain cluster_input {' in _filter_table_.stdout"
           - "'192.0.2.10' in _filter_table_.stdout"
-          - "'tcp dport 5432' in _filter_table_.stdout"
-          - "'tcp dport 6379' in _filter_table_.stdout"
+          - "'PostgreSQL cluster replication' in _filter_table_.stdout"
+          - "'Redis cluster replication' in _filter_table_.stdout"
+          - "('tcp dport 5432' in _filter_table_.stdout or 'tcp dport { 5432 }' in _filter_table_.stdout)"
+          - "('tcp dport 6379' in _filter_table_.stdout or 'tcp dport { 6379 }' in _filter_table_.stdout)"
           - "'log prefix \"[nftables] : accept : cluster : tcp/5432 : \"' in _filter_table_.stdout"
           - "'chain cluster_output {' in _filter_table_.stdout"
           - "'log prefix \"[nftables] : accept : output : cluster : tcp/5432 : \"' in _filter_table_.stdout"
@@ -117,9 +119,9 @@
       ansible.builtin.assert:
         that:
           - "'chain user_defined_input {' in _filter_table_.stdout"
-          - "'tcp dport 22' in _filter_table_.stdout"
+          - "('tcp dport 22' in _filter_table_.stdout or 'tcp dport { 22 }' in _filter_table_.stdout)"
           - "'chain user_defined_output {' in _filter_table_.stdout"
-          - "'udp dport 53' in _filter_table_.stdout"
+          - "('udp dport 53' in _filter_table_.stdout or 'udp dport { 53 }' in _filter_table_.stdout)"
           - "'tcp dport { 80, 443 }' in _filter_table_.stdout"
         fail_msg: "User-defined rules are missing or rendered incorrectly in inet filter table."
 
