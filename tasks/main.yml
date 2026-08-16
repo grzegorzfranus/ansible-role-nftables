@@ -2,9 +2,7 @@
 # =============================================================================
 # Ansible Role: NFTables - Tasks: Main Orchestration
 # =============================================================================
-# This is the main task file for the NFTables role. It orchestrates the execution
-# of all role components in the correct order. Each task is tagged appropriately
-# to allow for selective execution.
+# Orchestrates the execution of all role components in sequential order.
 #
 # Flow: include_vars → assert → prerequisites → reboot → install → configure → acl → logrotate → upgrade
 # =============================================================================

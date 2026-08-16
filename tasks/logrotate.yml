@@ -1,16 +1,8 @@
 ---
 # =============================================================================
-# Ansible Role: NFTables - Logrotate Tasks
+# Ansible Role: NFTables - Tasks: Log Rotation
 # =============================================================================
-# This file configures log rotation for NFTables log files to ensure they
-# don't grow indefinitely and are properly archived.
-#
-# Flow:
-# 1. Installs logrotate package
-# 2. Creates the archive directory if it doesn't exist
-# 3. Deploys a logrotate configuration file with specified options
-#
-# The logrotate configuration is customizable via role variables.
+# Installs and configures logrotate for managing and archiving NFTables log files.
 # =============================================================================
 
 # -----------------------------------------------------------------------------

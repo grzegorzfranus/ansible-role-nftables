@@ -1,18 +1,8 @@
 ---
 # =============================================================================
-# Ansible Role: NFTables - Access Control Lists
+# Ansible Role: NFTables - Tasks: Access Control Lists
 # =============================================================================
-# This file manages the configuration of NFTables access control lists (rules).
-# It handles the deployment of various rule sets to control network traffic.
-#
-# Flow:
-# 1. Clearing default rule files
-# 2. Security protection rules
-# 3. Cluster communication rules
-# 4. User-defined rules
-# 5. NAT rules
-# 6. Base structure (tables and chains)
-# 7. Service validation after rule changes
+# Deploys and validates modular NFTables firewall rulesets, tables, and chains.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
