@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.1.12...v2.2.0) (2026-08-16)
+
+
+### Features
+
+* **platforms:** add Ubuntu 26.04 and Debian 13 support ([#62](https://github.com/grzegorzfranus/ansible-role-nftables/issues/62)) ([#63](https://github.com/grzegorzfranus/ansible-role-nftables/issues/63)) ([fac685c](https://github.com/grzegorzfranus/ansible-role-nftables/commit/fac685c8da7896bc47d974126d93b5af99dcf65e))
+
 ## [2.1.12](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.1.11...v2.1.12) (2026-08-16)
 
 
