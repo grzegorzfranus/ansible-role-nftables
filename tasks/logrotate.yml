@@ -36,8 +36,8 @@
   ansible.builtin.file:
     path: "{{ nftables_logrotate_options.archive_directory_path }}"
     state: directory
-    owner: "{{ nftables_log_directory_user }}"
-    group: "{{ nftables_log_directory_group }}"
+    owner: "{{ __nftables_log_directory_user }}"
+    group: "{{ __nftables_log_directory_group }}"
     mode: "0750"
   when: >
     not _nftables_archive_log_dir_stat_.stat.exists
@@ -49,7 +49,7 @@
   become: true
   ansible.builtin.template:
     src: "templates/logrotate/nftables.j2"
-    dest: "{{ nftables_logrotate_config_path }}"
+    dest: "{{ __nftables_logrotate_config_path }}"
     owner: root
     group: root
     mode: "0644"

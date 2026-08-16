@@ -10,7 +10,7 @@
 # =============================================================================
 
 # Define log files to rotate
-{{ nftables_log_directory_path }}/nftables.log {
+{{ __nftables_log_directory_path }}/nftables.log {
   # Rotation frequency (daily, weekly, monthly)
   {{ nftables_logrotate_options.frequency }}
   # Number of rotated files to keep

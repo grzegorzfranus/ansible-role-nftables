@@ -38,7 +38,7 @@
   become: true
   ansible.builtin.template:
     src: templates/rules/firewall.rules.j2
-    dest: "{{ nftables_rules_directory_path }}/10-firewall.rules"
+    dest: "{{ __nftables_rules_directory_path }}/10-firewall.rules"
     owner: root
     group: root
     mode: "0600"
@@ -51,7 +51,7 @@
 - name: NFTables | acl | Remove security protection rules file (if exists)
   become: true
   ansible.builtin.file:
-    path: "{{ nftables_rules_directory_path }}/10-firewall.rules"
+    path: "{{ __nftables_rules_directory_path }}/10-firewall.rules"
     state: absent
   register: _nftables_security_rules_removed_
   when: >
@@ -64,7 +64,7 @@
   become: true
   ansible.builtin.template:
     src: templates/rules/cluster.rules.j2
-    dest: "{{ nftables_rules_directory_path }}/20-cluster.rules"
+    dest: "{{ __nftables_rules_directory_path }}/20-cluster.rules"
     owner: root
     group: root
     mode: "0600"
@@ -77,7 +77,7 @@
 - name: NFTables | acl | Remove cluster communication rules file (if exists)
   become: true
   ansible.builtin.file:
-    path: "{{ nftables_rules_directory_path }}/20-cluster.rules"
+    path: "{{ __nftables_rules_directory_path }}/20-cluster.rules"
     state: absent
   register: _nftables_cluster_rules_removed_
   when: >
@@ -90,7 +90,7 @@
   become: true
   ansible.builtin.template:
     src: templates/rules/user_defined.rules.j2
-    dest: "{{ nftables_rules_directory_path }}/30-user-defined.rules"
+    dest: "{{ __nftables_rules_directory_path }}/30-user-defined.rules"
     owner: root
     group: root
     mode: "0600"
@@ -105,7 +105,7 @@
 - name: NFTables | acl | Remove user-defined rules file (if exists)
   become: true
   ansible.builtin.file:
-    path: "{{ nftables_rules_directory_path }}/30-user-defined.rules"
+    path: "{{ __nftables_rules_directory_path }}/30-user-defined.rules"
     state: absent
   register: _nftables_user_defined_rules_removed_
   when: >
@@ -120,7 +120,7 @@
   become: true
   ansible.builtin.template:
     src: templates/rules/nat.rules.j2
-    dest: "{{ nftables_rules_directory_path }}/40-nat.rules"
+    dest: "{{ __nftables_rules_directory_path }}/40-nat.rules"
     owner: root
     group: root
     mode: "0600"
@@ -134,7 +134,7 @@
 - name: NFTables | acl | Remove NAT rules file (if exists)
   become: true
   ansible.builtin.file:
-    path: "{{ nftables_rules_directory_path }}/40-nat.rules"
+    path: "{{ __nftables_rules_directory_path }}/40-nat.rules"
     state: absent
   register: _nftables_nat_rules_removed_
   when: >
@@ -173,7 +173,7 @@
   become: true
   ansible.builtin.template:
     src: templates/rules/base.rules.j2
-    dest: "{{ nftables_rules_directory_path }}/00-base.rules"
+    dest: "{{ __nftables_rules_directory_path }}/00-base.rules"
     owner: root
     group: root
     mode: "0600"
@@ -202,7 +202,7 @@
     - name: NFTables | acl | Force restart nftables service
       become: true
       ansible.builtin.service:
-        name: "{{ nftables_service_name }}"
+        name: "{{ __nftables_service_name }}"
         state: restarted
 
     - name: NFTables | acl | Pause for 5 seconds to load nftables service
@@ -215,7 +215,7 @@
     - name: NFTables | acl | Verify nftables service status  # noqa: command-instead-of-module
       become: true
       ansible.builtin.command: >
-        systemctl is-active {{ nftables_service_name }}
+        systemctl is-active {{ __nftables_service_name }}
       failed_when: false
       changed_when: false
       register: _nftables_service_state_
