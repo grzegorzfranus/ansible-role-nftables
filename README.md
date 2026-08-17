@@ -443,12 +443,12 @@ nftables_nat_prerouting_rules:
 nftables_nat_output_rules:
   - out_interface: "eth0"
     protocol: "tcp"
-    port: "80"
+    port: "8088"
     nat_action: "redirect"
     redirect_port: "8080"
     counter: true
     log: false
-    comment: "Transparently redirect outbound HTTP traffic to local proxy"
+    comment: "Transparently redirect outbound traffic on port 8088 to local proxy"
 
 nftables_nat_postrouting_rules:
   - out_interface: "eth0"
@@ -473,6 +473,9 @@ nftables_nat_postrouting_rules:
     log: true
     comment: "SNAT for multiple internal subnets to specific external networks"
 ```
+
+> [!WARNING]
+> Redirecting standard outbound ports (such as HTTP port `80`) via `nftables_nat_output_rules` intercepts all locally-generated outbound traffic to those ports, including system utilities and package managers (`apt`, `dnf`) fetching repository updates over HTTP. When defining output NAT redirection, ensure the target service/proxy is running, or scope the rules to specific destination subnets or custom ports (e.g. `8088`).
 
 ## 📌 Role Properties
 

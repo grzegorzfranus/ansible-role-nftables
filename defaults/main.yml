@@ -372,12 +372,12 @@ nftables_nat_prerouting_rules: []
 #   nftables_nat_output_rules:
 #     - out_interface: "eth0"
 #       protocol: "tcp"
-#       port: "80"
+#       port: "8088"
 #       nat_action: "redirect"
 #       redirect_port: "8080"
 #       counter: true
 #       log: false
-#       comment: "Transparently redirect outbound HTTP to local proxy"
+#       comment: "Transparently redirect outbound traffic on port 8088 to local proxy"
 # Valid values: list of rule dictionaries (see documentation for supported fields)
 nftables_nat_output_rules: []
 

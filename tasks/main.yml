@@ -77,6 +77,7 @@
 # -----------------------------------------------------------------------------
 # 7. Logrotate Configuration (Optional)
 # -----------------------------------------------------------------------------
+# Ensure package installation and log directory creation occur before firewall rules and NAT redirection are applied.
 - name: NFTables | logrotate | Configure logrotate for NFTables service
   ansible.builtin.import_tasks: logrotate.yml
   when: nftables_configure_logrotate | bool
