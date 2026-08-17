@@ -2,7 +2,7 @@
 # Ansible Role: NFTables - Molecule Convergence Playbook (Cluster & Security)
 # =============================================================================
 # This playbook executes the main role functionality in the test environment
-# with cluster and security protection rulesets enabled.
+# with cluster, IPv6, NAT output, and security protection rulesets enabled.
 #
 # Flow:
 # 1. Update package cache
@@ -55,6 +55,7 @@
   vars:
     nftables_service_enabled: true
     nftables_configure_logrotate: true
+    nftables_ipv6_enabled: true
     nftables_input_default_policy: "drop"
     nftables_forward_default_policy: "drop"
     nftables_output_default_policy: "accept"
@@ -62,12 +63,13 @@
     # Security Rules Configuration
     nftables_configure_security_rules: true
 
-    # Cluster Configuration
+    # Cluster Configuration with IPv4 and IPv6 nodes
     nftables_cluster_enabled: true
     nftables_cluster_nodes:
       - "192.0.2.10"
       - "192.0.2.11"
       - "192.0.2.12"
+      - "2001:db8::1"
     nftables_cluster_rules:
       - port: 5432
         protocol: "tcp"
@@ -78,6 +80,17 @@
         log: false
         comment: "Redis cluster replication"
 
+    # NAT Output Configuration
+    nftables_nat_output_enabled: true
+    nftables_nat_output_rules:
+      - protocol: "tcp"
+        port: "8088"
+        nat_action: "redirect"
+        redirect_port: "8080"
+        counter: true
+        log: false
+        comment: "Redirect outbound HTTP traffic to local proxy"
+
     # User Defined Rules
     nftables_user_defined_input_enabled: true
     nftables_user_defined_input_rules:
@@ -87,6 +100,15 @@
         counter: true
         log: true
         comment: "Allow SSH for testing"
+      - source:
+          - "192.0.2.100"
+          - "2001:db8::100"
+        protocol: "tcp"
+        port: "8080"
+        action: "accept"
+        counter: true
+        log: false
+        comment: "Allow management access from dual-stack admin"
 
     nftables_user_defined_output_enabled: true
     nftables_user_defined_output_rules:

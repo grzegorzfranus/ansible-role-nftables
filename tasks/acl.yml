@@ -106,6 +106,7 @@
   register: __nftables_nat_rules
   when: >
     (nftables_nat_prerouting_enabled | default(false) | bool) or
+    (nftables_nat_output_enabled | default(false) | bool) or
     (nftables_nat_postrouting_enabled | default(false) | bool)
 
 - name: NFTables | acl | Remove NAT rules file (if exists)
@@ -116,6 +117,7 @@
   register: __nftables_nat_rules_removed
   when: >
     not (nftables_nat_prerouting_enabled | default(false) | bool) and
+    not (nftables_nat_output_enabled | default(false) | bool) and
     not (nftables_nat_postrouting_enabled | default(false) | bool)
 
 - name: NFTables | acl | Check if inet nftables_nat table exists
@@ -128,6 +130,7 @@
   when: >
     (nftables_docker_aware | default(false) | bool) and
     not (nftables_nat_prerouting_enabled | default(false) | bool) and
+    not (nftables_nat_output_enabled | default(false) | bool) and
     not (nftables_nat_postrouting_enabled | default(false) | bool)
 
 - name: NFTables | acl | Remove stale inet nftables_nat table
@@ -140,6 +143,7 @@
   when: >
     (nftables_docker_aware | default(false) | bool) and
     not (nftables_nat_prerouting_enabled | default(false) | bool) and
+    not (nftables_nat_output_enabled | default(false) | bool) and
     not (nftables_nat_postrouting_enabled | default(false) | bool) and
     __nftables_nat_table_check.rc | default(1) == 0
 

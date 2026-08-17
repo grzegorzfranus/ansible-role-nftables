@@ -5,14 +5,14 @@
 # NFTables NAT Rules
 # =============================================================================
 # This file defines Network Address Translation (NAT) rules for the firewall.
-# It configures dedicated chains for NAT operations in prerouting and postrouting.
+# It configures dedicated chains for NAT operations in prerouting, output, and postrouting.
 # =============================================================================
 
-{% if nftables_nat_prerouting_enabled | default(false) or nftables_nat_postrouting_enabled | default(false) %}
+{% if (nftables_nat_prerouting_enabled | default(false) | bool) or (nftables_nat_postrouting_enabled | default(false) | bool) or (nftables_nat_output_enabled | default(false) | bool) %}
 # -----------------------------------------------------------------------------
 # Define NAT Table and Chains
 # -----------------------------------------------------------------------------
-{% if nftables_docker_aware | default(false) %}
+{% if nftables_docker_aware | default(false) | bool %}
 table inet nftables_nat
 delete table inet nftables_nat
 table inet nftables_nat {
@@ -20,7 +20,7 @@ table inet nftables_nat {
 table ip nat {
 {% endif %}
 
-    {% if nftables_nat_prerouting_enabled | default(false) %}
+    {% if nftables_nat_prerouting_enabled | default(false) | bool %}
     # Define chain for DNAT operations (destination NAT, port forwarding)
     chain prerouting {
         type nat hook prerouting priority -100; policy accept;
@@ -65,7 +65,51 @@ table ip nat {
     }
     {% endif %}
 
-    {% if nftables_nat_postrouting_enabled | default(false) %}
+    {% if nftables_nat_output_enabled | default(false) | bool %}
+    # Define chain for output NAT operations (DNAT, redirect on locally generated traffic)
+    chain output {
+        type nat hook output priority -100; policy accept;
+
+        {% for rule in nftables_nat_output_rules | default([]) %}
+        {%- set parts = [] -%}
+        {%- if rule.out_interface is defined %} {%- set _ = parts.append('oifname ' ~ rule.out_interface) %} {%- endif %}
+        {%- if rule.source is defined -%}
+            {%- if rule.source is string -%}
+                {%- set _ = parts.append('ip saddr ' ~ rule.source) -%}
+            {%- else -%}
+                {%- set _ = parts.append('ip saddr { ' ~ rule.source | join(', ') ~ ' }') -%}
+            {%- endif -%}
+        {%- endif -%}
+        {%- if rule.destination is defined -%}
+            {%- if rule.destination is string -%}
+                {%- set _ = parts.append('ip daddr ' ~ rule.destination) -%}
+            {%- else -%}
+                {%- set _ = parts.append('ip daddr { ' ~ rule.destination | join(', ') ~ ' }') -%}
+            {%- endif -%}
+        {%- endif -%}
+        {%- if rule.protocol is defined %}
+            {%- if rule.port is defined %}
+                {%- set _ = parts.append(rule.protocol ~ ' dport { ' ~ rule.port ~ ' }') %}
+            {%- else %}
+                {%- set _ = parts.append('meta l4proto ' ~ rule.protocol) %}
+            {%- endif %}
+        {%- endif %}
+        {%- if rule.nat_action == 'dnat' and rule.nat_to is defined %}
+            {%- set nat = 'dnat ip to ' ~ rule.nat_to %}
+        {%- elif rule.nat_action == 'redirect' and (rule.redirect_port is defined or rule.nat_to is defined) %}
+            {%- set redirect_target = rule.redirect_port | default(rule.nat_to) %}
+            {%- set nat = 'redirect to :' ~ redirect_target %}
+        {%- else %}
+            {%- set nat = '' %}
+        {%- endif %}
+        {% if nat %}
+        {{ parts | join(' ') }}{% if rule.counter | default(false) %} counter{% endif %}{% if rule.log | default(false) %} log prefix "[nftables] : nat : output : "{% endif %} {{ nat }} comment "{{ rule.comment | default('NAT output rule') }}"
+        {% endif %}
+        {% endfor %}
+    }
+    {% endif %}
+
+    {% if nftables_nat_postrouting_enabled | default(false) | bool %}
     # Define chain for SNAT operations (source NAT, masquerading)
     chain postrouting {
         type nat hook postrouting priority 100; policy accept;

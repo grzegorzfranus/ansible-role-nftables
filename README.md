@@ -27,7 +27,7 @@ flowchart TD
     A["00-base.rules<br>Base tables (inet filter), chains (input, forward, output),<br>connection tracking, loopback accept, drop logging"] --> B["10-firewall.rules<br>ICMP/Ping rate-limited policies &<br>reserved subnet anti-spoofing filters"]
     B --> C["20-cluster.rules<br>Trusted node-to-node communication<br>for multi-host cluster environments"]
     C --> D["30-user-defined.rules<br>Custom user-defined rules for input,<br>forwarding, and outbound traffic"]
-    D --> E["40-nat.rules<br>NAT tables (ip nat, or inet nftables_nat in<br>docker-aware mode) with DNAT prerouting<br>and SNAT / Masquerade postrouting"]
+    D --> E["40-nat.rules<br>NAT tables (ip nat, or inet nftables_nat in<br>docker-aware mode) with DNAT prerouting,<br>output redirection, and SNAT / Masquerade postrouting"]
 ```
 
 ### Modular Rule Evaluation Sequence
@@ -36,7 +36,43 @@ flowchart TD
 2. **`10-firewall.rules`**: Applies ICMP/ping rate limiting and blocks reserved/bogon IPv4 subnets from entering external interfaces.
 3. **`20-cluster.rules`**: Permits bidirectional traffic among explicitly configured cluster node IPs on defined service ports.
 4. **`30-user-defined.rules`**: Evaluates custom firewall rules defined by administrators for input, forward, and output chains.
-5. **`40-nat.rules`**: Defines the NAT table (`ip nat` by default, or `inet nftables_nat` when [Docker-Aware Mode](#docker-aware-mode) is enabled) for destination NAT (port forwarding) and source NAT / masquerading.
+5. **`40-nat.rules`**: Defines the NAT table (`ip nat` by default, or `inet nftables_nat` when [Docker-Aware Mode](#docker-aware-mode) is enabled) for destination NAT (prerouting / port forwarding), output NAT / redirection for local traffic, and source NAT / masquerading (postrouting).
+
+## 🧱 Table & Chain Coverage
+
+The role configures standard Netfilter families, tables, base chains, and user-defined chains:
+
+| Family | Table | Chain | Type / Hook / Priority | Purpose |
+| --- | --- | --- | --- | --- |
+| `inet` | `filter` | `input` | `filter` / `input` / `0` | Base incoming traffic filtering, loopback, conntrack, ICMP/ICMPv6, jump rules, drop logging |
+| `inet` | `filter` | `forward` | `filter` / `forward` / `0` | Base forwarded traffic filtering, docker bridge pass-through, jump rules, drop logging |
+| `inet` | `filter` | `output` | `filter` / `output` / `0` | Base outgoing traffic filtering, loopback, conntrack, ICMP/ICMPv6, jump rules, drop logging |
+| `inet` | `filter` | `existing` | user-defined | Connection tracking stateful rules (`ct state { established, related } accept`) |
+| `inet` | `filter` | `security_protection` | user-defined | Anti-spoofing, malformed packet drops, TCP invalid flag validation, and bogon filtering |
+| `inet` | `filter` | `cluster_input` | user-defined | Whitelisted ingress traffic from trusted cluster node IPs |
+| `inet` | `filter` | `cluster_output` | user-defined | Whitelisted egress traffic to trusted cluster node IPs |
+| `inet` | `filter` | `user_defined_input` | user-defined | Custom administrator ingress rules |
+| `inet` | `filter` | `user_defined_forward` | user-defined | Custom administrator transit/forwarding rules |
+| `inet` | `filter` | `user_defined_output` | user-defined | Custom administrator egress rules |
+| `ip` | `nat` | `prerouting` | `nat` / `prerouting` / `-100` | Standard IPv4 destination NAT (DNAT) and port forwarding / redirection |
+| `ip` | `nat` | `output` | `nat` / `output` / `-100` | Standard IPv4 destination NAT (DNAT) and local traffic redirection |
+| `ip` | `nat` | `postrouting` | `nat` / `postrouting` / `100` | Standard IPv4 source NAT (SNAT) and interface masquerading |
+| `inet` | `nftables_nat` | `prerouting` | `nat` / `prerouting` / `-100` | Docker-aware destination NAT (DNAT) and port forwarding / redirection |
+| `inet` | `nftables_nat` | `output` | `nat` / `output` / `-100` | Docker-aware destination NAT (DNAT) and local traffic redirection |
+| `inet` | `nftables_nat` | `postrouting` | `nat` / `postrouting` / `100` | Docker-aware source NAT (SNAT) and interface masquerading |
+
+### Non-Goals
+
+The following features and Netfilter components are explicitly out of scope:
+
+- **IPv6 NAT**: The role intentionally restricts NAT tables and rules to IPv4 via strict input assertions.
+- **NAT Input Hook**: Ingress NAT filtering (`type nat hook input`) is not managed.
+- **Mangle & Raw Table Equivalents**: Packet alteration hooks (raw at priority `-300`, mangle at priority `-150`, or `type route hook output`).
+- **Netdev Family**: Ingress filtering (`family netdev hook ingress`).
+- **ARP Family**: Layer 2 ARP filtering (`family arp`).
+- **Named Sets, Maps, and Flowtables**: Custom named sets, dictionaries, verdict maps, and flowtables.
+- **Conntrack Helpers & Timeouts**: `ct timeout` and `ct helper` policy objects.
+- **Named Quotas & Limits**: Standalone named quota and limit objects (inlined limits on individual rules are supported).
 
 ## 📋 Requirements
 
@@ -167,14 +203,14 @@ nftables_user_defined_forward_rules:
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
 | `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
+| `nftables_ipv6_enabled` | Enable or disable IPv6 address filtering support in cluster and user-defined rules | `false` |
 | `nftables_docker_aware_bridge_interfaces` | List of bridge interfaces allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
 | `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
 | `nftables_reboot_message` | Message displayed before system reboot | `"Reboot initialized by Ansible"` |
 | `nftables_reboot_wait` | Enable/disable waiting for system after reboot | `true` |
 | `nftables_reboot_wait_timeout` | Maximum timeout (seconds) to wait for reboot | `300` |
 | `nftables_reboot_connect_timeout` | Connection timeout (seconds) when waiting for reboot | `60` |
-| `nftables_reboot_wait_ctimeout` | Sleep interval (seconds) between connection attempts | `5` |
-| `nftables_reboot_wait_delay` | Delay (seconds) before connection polling begins | `10` |
+| `nftables_reboot_wait_delay` | Pre-reboot delay (seconds) before issuing reboot command | `10` |
 | `nftables_reboot_interval` | Enable/disable post-reboot delay interval | `true` |
 | `nftables_reboot_interval_seconds` | Duration (seconds) of post-reboot delay interval | `10` |
 
@@ -260,7 +296,7 @@ To disable this protection or customize the ranges, modify this variable in your
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_cluster_enabled` | Enable/disable cluster communication rules | `false` |
-| `nftables_cluster_nodes` | List of IPv4 addresses or CIDRs for cluster nodes | `[]` |
+| `nftables_cluster_nodes` | List of IP addresses or CIDRs for cluster nodes | `[]` |
 | `nftables_cluster_rules` | Rules for communication between cluster nodes | `[]` |
 
 **Cluster rule fields:**
@@ -274,7 +310,7 @@ To disable this protection or customize the ranges, modify this variable in your
 - `comment` (optional): Descriptive comment for the rule (string)
 
 > [!NOTE]
-> `nftables_cluster_nodes` accepts valid IPv4 addresses and CIDRs. IPv6 cluster node addresses are not supported.
+> `nftables_cluster_nodes` accepts valid IPv4 addresses and CIDRs by default. When `nftables_ipv6_enabled: true`, IPv6 addresses and CIDRs are also accepted and rendered into `ip6 saddr` / `ip6 daddr` rules. `nftables_ipv6_enabled` acts as a validation gate (rejecting IPv6 literals when `false`) rather than a template rendering switch. Base ICMPv6 control messages are always permitted.
 
 ### 7. User-Defined Rules Settings
 
@@ -290,8 +326,8 @@ To disable this protection or customize the ranges, modify this variable in your
 **User-defined rule fields:**
 - `in_interface` (optional): Input interface matching (`iifname`). Valid for `input` and `forward` rules only; specifying on `output` rules will fail validation (string)
 - `out_interface` (optional): Output interface matching (`oifname`). Valid for `forward` and `output` rules only; specifying on `input` rules will fail validation (string)
-- `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
-- `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
+- `source` (optional): Source IP address/network (string or list of strings for multiple sources)
+- `destination` (optional): Destination IP address/network (string or list of strings for multiple destinations)
 - `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
 - `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
 - `state` (optional): Connection state to match (e.g. `"new"`, `"established,related"`) - defaults to `"new"` if not specified
@@ -301,6 +337,9 @@ To disable this protection or customize the ranges, modify this variable in your
 - `log` (optional): Enable/disable logging (boolean)
 - `counter` (optional): Enable/disable packet/byte counting for the rule (boolean)
 - `comment` (optional): Description of the rule (string)
+
+> [!NOTE]
+> `source` and `destination` fields accept IPv4 addresses and CIDRs by default. When `nftables_ipv6_enabled: true`, IPv6 addresses and CIDRs are also supported (rendered with `ip6 saddr` / `ip6 daddr`). `nftables_ipv6_enabled` operates as a validation gate (rejecting IPv6 literals when `false`) rather than a template rendering switch. Rules with mixed IPv4 and IPv6 addresses split into dedicated IPv4 and IPv6 rules with ` (IPv4)` and ` (IPv6)` comment suffixes.
 
 **Example: Restrict SSH to WireGuard VPN interface (`in_interface`):**
 ```yaml
@@ -349,14 +388,19 @@ nftables_user_defined_input_rules:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `nftables_nat_prerouting_enabled` | Enable/disable NAT prerouting rules | `false` |
+| `nftables_nat_output_enabled` | Enable/disable NAT output rules (for locally-generated traffic) | `false` |
 | `nftables_nat_postrouting_enabled` | Enable/disable NAT postrouting rules | `false` |
 | `nftables_nat_prerouting_rules` | List of DNAT (destination NAT) and redirect rules | `[]` |
+| `nftables_nat_output_rules` | List of DNAT and redirect rules for locally-generated traffic | `[]` |
 | `nftables_nat_postrouting_rules` | List of SNAT (source NAT) and masquerading rules | `[]` |
 
+> [!NOTE]
+> NAT rules apply strictly to IPv4 traffic. IPv6 NAT is not supported.
+
 **NAT rule fields:**
-- `nat_action` (required): NAT action (`"dnat"`, `"redirect"` for prerouting; `"snat"`, `"masquerade"` for postrouting)
+- `nat_action` (required): NAT action (`"dnat"`, `"redirect"` for prerouting/output; `"snat"`, `"masquerade"` for postrouting)
 - `in_interface` (optional): Input interface matching. Valid in prerouting rules only (string)
-- `out_interface` (optional, required for `masquerade`): Output interface matching. Valid in postrouting rules only (string)
+- `out_interface` (optional, required for `masquerade`): Output interface matching. Valid in output and postrouting rules only (string)
 - `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
 - `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
@@ -396,6 +440,15 @@ nftables_nat_prerouting_rules:
     log: true
     comment: "Forward SSH from specific external IPs to internal server"
 
+nftables_nat_output_rules:
+  - out_interface: "eth0"
+    protocol: "tcp"
+    port: "8088"
+    nat_action: "redirect"
+    redirect_port: "8080"
+    counter: true
+    log: false
+    comment: "Transparently redirect outbound traffic on port 8088 to local proxy"
 
 nftables_nat_postrouting_rules:
   - out_interface: "eth0"
@@ -420,6 +473,9 @@ nftables_nat_postrouting_rules:
     log: true
     comment: "SNAT for multiple internal subnets to specific external networks"
 ```
+
+> [!WARNING]
+> Redirecting standard outbound ports (such as HTTP port `80`) via `nftables_nat_output_rules` intercepts all locally-generated outbound traffic to those ports, including system utilities and package managers (`apt`, `dnf`) fetching repository updates over HTTP. When defining output NAT redirection, ensure the target service/proxy is running, or scope the rules to specific destination subnets or custom ports (e.g. `8088`).
 
 ## 📌 Role Properties
 
@@ -593,7 +649,22 @@ In version 2.0.0, execution flow gating via the `nftables_role_action` variable 
 | `reboot` | `--tags nftables_reboot` |
 | `upgrade` | `--tags nftables_upgrade` |
 
-## CI/CD Pipeline
+## 🔄 Upgrade Procedure
+
+Package upgrade tasks in `tasks/upgrade.yml` are guarded by the `never` tag to prevent unexpected package upgrades during standard playbook execution.
+
+To upgrade the NFTables package to the latest available distribution release:
+
+```bash
+ansible-playbook -i inventory/hosts playbook.yml --tags nftables_upgrade
+```
+
+This procedure performs:
+1. Package manager cache update (`apt` / `dnf`).
+2. Upgrading the `nftables` package to `state: latest`.
+3. Notifying the handler to safely restart the `nftables` service and re-apply the active ruleset.
+
+## 🚀 CI/CD Pipeline
 
 This repository uses centralized, reusable GitHub Actions workflows from [github-workflows](https://github.com/grzegorzfranus/github-workflows) (`@main`) for quality assurance, security scanning, and release automation.
 
@@ -619,7 +690,7 @@ Automated via [Release Please](https://github.com/googleapis/release-please):
 3. **Merge Release PR** → creates Git version tag and GitHub Release automatically
 4. **Ansible Galaxy Publish** → publishes tagged release to Ansible Galaxy via `ansible-publish.yml`
 
-## Example Playbooks
+## 📖 Example Playbooks
 
 ### Basic Firewall Setup
 
