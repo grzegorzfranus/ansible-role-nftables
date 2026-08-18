@@ -89,7 +89,7 @@ nftables_reboot_interval_seconds: 10
 # 2. Logging Configuration
 # -----------------------------------------------------------------------------
 # Configuration for log rotation to manage NFTables log files
-# Valid values: dictionary with keys: archive_directory_path, frequency, count, missingok, compress, nocreate, dateext
+# Valid values: dictionary with keys: archive_directory_path, frequency, count, missingok, compress, nocreate, dateext, dateformat
 nftables_logrotate_options:
   # Directory where archived logs will be stored
   # Valid values: valid directory path string

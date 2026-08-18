@@ -59,6 +59,17 @@
     nftables_configure_logrotate: true
     nftables_service_enabled: true
 
+    # Simulates an existing consumer whose inventory predates the dateformat key:
+    # the whole dictionary is supplied, the new sub-key is not
+    nftables_logrotate_options:
+      archive_directory_path: "/var/log/nftables"
+      frequency: "daily"
+      count: 90
+      missingok: true
+      compress: true
+      nocreate: false
+      dateext: true
+
     # Enable common test rules
     nftables_user_defined_input_enabled: true
     nftables_user_defined_output_enabled: true
