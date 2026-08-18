@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.3.0...v2.4.0) (2026-08-18)
+
+
+### Features
+
+* **logrotate:** make dateformat configurable ([#78](https://github.com/grzegorzfranus/ansible-role-nftables/issues/78)) ([a147724](https://github.com/grzegorzfranus/ansible-role-nftables/commit/a1477247fd203f5da83bc70850e89db50b1b1c0b))
+
 ## [2.3.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.2.3...v2.3.0) (2026-08-17)
 
 
