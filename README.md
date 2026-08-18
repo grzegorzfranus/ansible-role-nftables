@@ -227,6 +227,7 @@ nftables_user_defined_forward_rules:
 | `nftables_logrotate_options.compress` | Compress rotated logs using gzip | `true` |
 | `nftables_logrotate_options.nocreate` | Don't create new empty log file | `false` |
 | `nftables_logrotate_options.dateext` | Add date extension to rotated logs | `true` |
+| `nftables_logrotate_options.dateformat` | Date suffix appended to rotated log filenames when dateext is enabled | `".%Y-%m-%d"` |
 
 ### 3. Base Filter Chain Policies
 
