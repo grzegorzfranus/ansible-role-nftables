@@ -112,6 +112,10 @@ nftables_logrotate_options:
   # Add date extension to rotated logs
   # Valid values: true, false
   dateext: true
+  # Date suffix appended to rotated log filenames when dateext is enabled
+  # Default preserves the historical suffix; the fleet standard "-%Y%m%d" is pinned in inventory
+  # Valid values: non-empty strftime format string, e.g. ".%Y-%m-%d", "-%Y%m%d"
+  dateformat: ".%Y-%m-%d"
   # Note: copytruncate is always enabled to ensure continuous logging without service interruption
 
 # -----------------------------------------------------------------------------

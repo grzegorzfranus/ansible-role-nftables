@@ -207,6 +207,20 @@
       register: _logrotate_result_
       ignore_errors: true
 
+    - name: Verify | Slurp rendered logrotate configuration
+      become: true
+      ansible.builtin.slurp:
+        src: "/etc/logrotate.d/nftables"
+      register: __verify_logrotate_slurp
+
+    - name: Verify | Assert rendered dateformat directive
+      ansible.builtin.assert:
+        that:
+          - "'dateext' in (__verify_logrotate_slurp.content | b64decode)"
+          - "'dateformat .%Y-%m-%d' in (__verify_logrotate_slurp.content | b64decode)"
+        fail_msg: "Rendered logrotate configuration does not contain the expected dateformat directive"
+        success_msg: "Rendered logrotate configuration contains the expected dateformat directive"
+
     # -----------------------------------------------------------------------------
     # 7. Test Results Summary
     # -----------------------------------------------------------------------------

@@ -55,6 +55,15 @@
   vars:
     nftables_service_enabled: true
     nftables_configure_logrotate: true
+    nftables_logrotate_options:
+      archive_directory_path: "/var/log/nftables"
+      frequency: "daily"
+      count: 90
+      missingok: true
+      compress: true
+      nocreate: false
+      dateext: true
+      dateformat: "-%Y%m%d"
     nftables_ipv6_enabled: true
     nftables_input_default_policy: "drop"
     nftables_forward_default_policy: "drop"

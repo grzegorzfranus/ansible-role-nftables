@@ -162,9 +162,14 @@
       - nftables_logrotate_options.nocreate is boolean
       - nftables_logrotate_options.dateext is defined
       - nftables_logrotate_options.dateext is boolean
+      - not (nftables_logrotate_options.dateext | bool) or
+        (nftables_logrotate_options.dateformat is defined and
+         nftables_logrotate_options.dateformat is string and
+         nftables_logrotate_options.dateformat | length > 0)
     fail_msg: >-
       nftables_logrotate_options contains invalid or incomplete settings
-      (archive_directory_path must be absolute path starting with '/', count >= 1)
+      (archive_directory_path must be absolute path starting with '/', count >= 1,
+      dateformat must be a non-empty string when dateext is true)
     success_msg: "Logrotate options validated"
 
 # -----------------------------------------------------------------------------
