@@ -203,7 +203,7 @@ nftables_user_defined_forward_rules:
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
 | `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
-| `nftables_ipv6_enabled` | Enable or disable IPv6 address filtering support in cluster and user-defined rules | `false` |
+| `nftables_ipv6_enabled` | Enable or disable IPv6 support. When false, emits a blanket `meta nfproto ipv6 drop` in all three base chains and omits the ICMPv6/MLD rules; when true, IPv6 addresses are additionally accepted in rule lists | `false` |
 | `nftables_docker_aware_bridge_interfaces` | List of bridge interfaces allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
 | `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
 | `nftables_reboot_message` | Message displayed before system reboot | `"Reboot initialized by Ansible"` |
