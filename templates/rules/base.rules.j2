@@ -33,6 +33,12 @@ table inet filter {
         iifname != lo ip daddr 127.0.0.0/8 drop comment "Drop traffic to loopback not coming from loopback"
         iifname != lo ip6 daddr ::1 drop comment "Drop traffic to loopback not coming from loopback"
 
+        # Drop every IPv6 packet when IPv6 support is disabled. Placed after the loopback
+        # rules so ::1 traffic on lo is still accepted above.
+        {% if not (nftables_ipv6_enabled | default(false) | bool) %}
+        meta nfproto ipv6 counter drop comment "Drop all IPv6 traffic (nftables_ipv6_enabled is false)"
+        {% endif %}
+
         # Reject invalid connections
         ct state invalid drop comment "Drop invalid packets"
 
@@ -40,11 +46,14 @@ table inet filter {
         jump existing
 
         # Mandatory ICMPv6 control messages (RFC 4861 Neighbor Discovery, RFC 4443 errors).
-        # These are permitted unconditionally regardless of nftables_ipv6_enabled, because
-        # blocking them breaks Neighbor Discovery (ND), Multicast Listener Discovery (MLD),
-        # and Path MTU Discovery (PMTUD).
+        # Emitted only when nftables_ipv6_enabled is true: they exist to keep Neighbor
+        # Discovery (ND), Multicast Listener Discovery (MLD) and Path MTU Discovery (PMTUD)
+        # working, which only matters while IPv6 is carried. With IPv6 disabled the blanket
+        # drop above already covers them and these rules would never match.
+        {% if nftables_ipv6_enabled | default(false) | bool %}
         icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert, packet-too-big, destination-unreachable, time-exceeded, parameter-problem } counter accept comment "Allow mandatory ICMPv6 control messages"
         icmpv6 type { mld-listener-query, mld-listener-report, mld-listener-done, mld2-listener-report } counter accept comment "Allow MLD multicast control messages"
+        {% endif %}
 
         # ICMP/Ping handling for input chain
         {% if nftables_ping_input.enabled | default(true) %}
@@ -69,12 +78,17 @@ table inet filter {
 
         # Log dropped packets if enabled
         {% if nftables_log_input_dropped | default(true) %}
-        limit rate {{ nftables_log_input_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_input_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : input : " flags all counter comment "Log dropped input packets"
+        limit rate {{ nftables_log_input_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_input_dropped_burst | default(10) }} packets log prefix "[nftables] : {{ nftables_input_default_policy | default('drop') }} : input : " flags all counter comment "Log dropped input packets"
         {% endif %}
     }
 
     chain forward {
         type filter hook forward priority 0; policy {{ nftables_forward_default_policy | default('drop') }};
+
+        # Drop every IPv6 packet when IPv6 support is disabled
+        {% if not (nftables_ipv6_enabled | default(false) | bool) %}
+        meta nfproto ipv6 counter drop comment "Drop all IPv6 traffic (nftables_ipv6_enabled is false)"
+        {% endif %}
 
         # Reject invalid connections
         ct state invalid drop comment "Drop invalid packets"
@@ -101,7 +115,7 @@ table inet filter {
 
         # Log dropped packets if enabled
         {% if nftables_log_forward_dropped | default(true) %}
-        limit rate {{ nftables_log_forward_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_forward_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : forward : " flags all counter comment "Log dropped forward packets"
+        limit rate {{ nftables_log_forward_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_forward_dropped_burst | default(10) }} packets log prefix "[nftables] : {{ nftables_forward_default_policy | default('drop') }} : forward : " flags all counter comment "Log dropped forward packets"
         {% endif %}
     }
 
@@ -111,6 +125,12 @@ table inet filter {
         # Allow loopback traffic (processed first for efficiency)
         oifname lo accept comment "Allow loopback traffic"
 
+        # Drop every IPv6 packet when IPv6 support is disabled. Placed after the loopback
+        # rule so ::1 traffic on lo is still accepted above.
+        {% if not (nftables_ipv6_enabled | default(false) | bool) %}
+        meta nfproto ipv6 counter drop comment "Drop all IPv6 traffic (nftables_ipv6_enabled is false)"
+        {% endif %}
+
         # Reject invalid connections
         ct state invalid drop comment "Drop invalid packets"
 
@@ -118,11 +138,14 @@ table inet filter {
         jump existing
 
         # Mandatory ICMPv6 control messages (RFC 4861 Neighbor Discovery, RFC 4443 errors).
-        # These are permitted unconditionally regardless of nftables_ipv6_enabled, because
-        # blocking them breaks Neighbor Discovery (ND), Multicast Listener Discovery (MLD),
-        # and Path MTU Discovery (PMTUD).
+        # Emitted only when nftables_ipv6_enabled is true: they exist to keep Neighbor
+        # Discovery (ND), Multicast Listener Discovery (MLD) and Path MTU Discovery (PMTUD)
+        # working, which only matters while IPv6 is carried. With IPv6 disabled the blanket
+        # drop above already covers them and these rules would never match.
+        {% if nftables_ipv6_enabled | default(false) | bool %}
         icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert, packet-too-big, destination-unreachable, time-exceeded, parameter-problem } counter accept comment "Allow mandatory ICMPv6 control messages"
         icmpv6 type { mld-listener-query, mld-listener-report, mld-listener-done, mld2-listener-report } counter accept comment "Allow MLD multicast control messages"
+        {% endif %}
 
         # ICMP/Ping handling for output chain
         {% if nftables_ping_output.enabled | default(true) %}
@@ -141,7 +164,7 @@ table inet filter {
 
         # Log dropped packets if enabled
         {% if nftables_log_output_dropped | default(true) %}
-        limit rate {{ nftables_log_output_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_output_dropped_burst | default(10) }} packets log prefix "[nftables] : drop : output : " flags all counter comment "Log dropped output packets"
+        limit rate {{ nftables_log_output_dropped_rate_limit | default('10/minute') }} burst {{ nftables_log_output_dropped_burst | default(10) }} packets log prefix "[nftables] : {{ nftables_output_default_policy | default('accept') }} : output : " flags all counter comment "Log dropped output packets"
         {% endif %}
     }
 
