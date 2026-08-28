@@ -431,13 +431,28 @@
     fail_msg: "Cluster rules 'counter' and 'log' must be boolean values, 'comment' must be a string"
     success_msg: "Cluster rules optional field types validated"
 
+- name: NFTables | assert | Validate cluster rules port range
+  vars:
+    __nftables_cluster_ports: >-
+      {{ nftables_cluster_rules
+         | selectattr('port', 'defined')
+         | map(attribute='port')
+         | map('int')
+         | list }}
+  ansible.builtin.assert:
+    that:
+      - __nftables_cluster_ports | select('lt', 1) | list | length == 0
+      - __nftables_cluster_ports | select('gt', 65535) | list | length == 0
+    fail_msg: "Cluster rules 'port' must be within the 1-65535 range"
+    success_msg: "Cluster rules port ranges validated"
+
 - name: NFTables | assert | Validate cluster rules burst requires rate_limit
   ansible.builtin.assert:
     that:
       - >
         (
           nftables_cluster_rules | selectattr('burst', 'defined') | list
-        ) | rejectattr('rate_limit', 'defined') | rejectattr('limit', 'defined') | list | length == 0
+        ) | rejectattr('rate_limit', 'defined') | list | length == 0
     fail_msg: "Cluster rules specifying 'burst' must also specify 'rate_limit'"
     success_msg: "Cluster rules burst and rate_limit dependencies validated"
 
@@ -517,6 +532,26 @@
         ) | select() | list | length
     fail_msg: "User-defined rules 'port' must be a numeric port, range (e.g. 1000-2000), or comma-separated list (e.g. 80,443)"
     success_msg: "User-defined rules port fields validated"
+
+- name: NFTables | assert | Validate user-defined rules port range
+  vars:
+    __nftables_user_defined_ports: >-
+      {{ (
+           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list)
+         )
+         | map('string')
+         | map('regex_findall', '[0-9]+')
+         | flatten
+         | map('int')
+         | list }}
+  ansible.builtin.assert:
+    that:
+      - __nftables_user_defined_ports | select('lt', 1) | list | length == 0
+      - __nftables_user_defined_ports | select('gt', 65535) | list | length == 0
+    fail_msg: "Every port in user-defined rules 'port' must be within the 1-65535 range, including each element of a range or comma-separated list"
+    success_msg: "User-defined rules port ranges validated"
 
 - name: NFTables | assert | Validate user-defined rules protocol is specified when port is defined
   ansible.builtin.assert:
@@ -1193,6 +1228,28 @@
         ) | select() | list | length
     fail_msg: "NAT rules 'port' must be numeric, a port range (e.g. 1000-2000), or a comma-separated list (e.g. 80,443)"
     success_msg: "NAT rules port fields validated"
+
+- name: NFTables | assert | Validate NAT rules port range
+  vars:
+    __nftables_nat_ports: >-
+      {{ (
+           (nftables_nat_prerouting_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_nat_output_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_nat_postrouting_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_nat_prerouting_rules | selectattr('redirect_port', 'defined') | map(attribute='redirect_port') | list) +
+           (nftables_nat_output_rules | selectattr('redirect_port', 'defined') | map(attribute='redirect_port') | list)
+         )
+         | map('string')
+         | map('regex_findall', '[0-9]+')
+         | flatten
+         | map('int')
+         | list }}
+  ansible.builtin.assert:
+    that:
+      - __nftables_nat_ports | select('lt', 1) | list | length == 0
+      - __nftables_nat_ports | select('gt', 65535) | list | length == 0
+    fail_msg: "Every port in NAT rules 'port' and 'redirect_port' must be within the 1-65535 range, including each element of a range or comma-separated list"
+    success_msg: "NAT rules port ranges validated"
 
 - name: NFTables | assert | Validate NAT rules protocol is specified when port is defined
   ansible.builtin.assert:
