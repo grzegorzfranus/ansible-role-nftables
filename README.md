@@ -594,9 +594,10 @@ suffix. To restore a previous ruleset:
 ```bash
 # List the available backups for a rule file
 ls -la /etc/nftables/00-base.rules*
+# 00-base.rules.14872.2026-08-28@10:15:42~
 
 # Restore a backup and validate it before activation
-sudo cp /etc/nftables/00-base.rules.<timestamp>~ /etc/nftables/00-base.rules
+sudo cp '/etc/nftables/00-base.rules.14872.2026-08-28@10:15:42~' /etc/nftables/00-base.rules
 sudo nft -c -f /etc/nftables/00-base.rules
 sudo systemctl restart nftables
 ```
