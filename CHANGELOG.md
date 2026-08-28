@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v3.0.0...v3.0.1) (2026-08-28)
+
+
+### Miscellaneous
+
+* **role:** align variable comments, template layout and fact gathering with role standard ([#91](https://github.com/grzegorzfranus/ansible-role-nftables/issues/91)) ([1766259](https://github.com/grzegorzfranus/ansible-role-nftables/commit/17662591bb1e6a0df460d18ca2f90fb561890d94))
+
 ## [3.0.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v2.4.2...v3.0.0) (2026-08-28)
 
 
