@@ -109,7 +109,7 @@
     fail_msg: "nftables_docker_aware_bridge_interfaces must be a list of interface name strings"
     success_msg: "Docker-aware bridge interfaces list validated"
 
-- name: NFTables | assert | Validate reboot parameters
+- name: NFTables | assert | Validate reboot trigger and message
   ansible.builtin.assert:
     that:
       - nftables_reboot_required is defined
@@ -117,6 +117,12 @@
       - nftables_reboot_message is defined
       - nftables_reboot_message is string
       - nftables_reboot_message | length > 0
+    fail_msg: "Reboot trigger and message parameters are invalid or empty"
+    success_msg: "Reboot trigger and message parameters validated"
+
+- name: NFTables | assert | Validate reboot wait timeouts
+  ansible.builtin.assert:
+    that:
       - nftables_reboot_wait is defined
       - nftables_reboot_wait is boolean
       - nftables_reboot_wait_timeout is defined
@@ -125,6 +131,12 @@
       - nftables_reboot_connect_timeout is defined
       - nftables_reboot_connect_timeout is integer
       - nftables_reboot_connect_timeout >= 1
+    fail_msg: "Reboot wait timeout parameters are invalid or out of range"
+    success_msg: "Reboot wait timeout parameters validated"
+
+- name: NFTables | assert | Validate reboot delay and interval
+  ansible.builtin.assert:
+    that:
       - nftables_reboot_wait_delay is defined
       - nftables_reboot_wait_delay is integer
       - nftables_reboot_wait_delay >= 0
@@ -133,8 +145,8 @@
       - nftables_reboot_interval_seconds is defined
       - nftables_reboot_interval_seconds is integer
       - nftables_reboot_interval_seconds >= 0
-    fail_msg: "Reboot configuration parameters are invalid, empty, or out of range"
-    success_msg: "Reboot configuration parameters validated"
+    fail_msg: "Reboot delay and interval parameters are invalid or out of range"
+    success_msg: "Reboot delay and interval parameters validated"
 
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
