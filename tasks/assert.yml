@@ -109,7 +109,7 @@
     fail_msg: "nftables_docker_aware_bridge_interfaces must be a list of interface name strings"
     success_msg: "Docker-aware bridge interfaces list validated"
 
-- name: NFTables | assert | Validate reboot parameters
+- name: NFTables | assert | Validate reboot trigger and message
   ansible.builtin.assert:
     that:
       - nftables_reboot_required is defined
@@ -117,6 +117,12 @@
       - nftables_reboot_message is defined
       - nftables_reboot_message is string
       - nftables_reboot_message | length > 0
+    fail_msg: "Reboot trigger and message parameters are invalid or empty"
+    success_msg: "Reboot trigger and message parameters validated"
+
+- name: NFTables | assert | Validate reboot wait timeouts
+  ansible.builtin.assert:
+    that:
       - nftables_reboot_wait is defined
       - nftables_reboot_wait is boolean
       - nftables_reboot_wait_timeout is defined
@@ -125,6 +131,12 @@
       - nftables_reboot_connect_timeout is defined
       - nftables_reboot_connect_timeout is integer
       - nftables_reboot_connect_timeout >= 1
+    fail_msg: "Reboot wait timeout parameters are invalid or out of range"
+    success_msg: "Reboot wait timeout parameters validated"
+
+- name: NFTables | assert | Validate reboot delay and interval
+  ansible.builtin.assert:
+    that:
       - nftables_reboot_wait_delay is defined
       - nftables_reboot_wait_delay is integer
       - nftables_reboot_wait_delay >= 0
@@ -133,8 +145,8 @@
       - nftables_reboot_interval_seconds is defined
       - nftables_reboot_interval_seconds is integer
       - nftables_reboot_interval_seconds >= 0
-    fail_msg: "Reboot configuration parameters are invalid, empty, or out of range"
-    success_msg: "Reboot configuration parameters validated"
+    fail_msg: "Reboot delay and interval parameters are invalid or out of range"
+    success_msg: "Reboot delay and interval parameters validated"
 
 # -----------------------------------------------------------------------------
 # 2. Logging Configuration
@@ -203,27 +215,43 @@
     fail_msg: "nftables_output_default_policy must be one of: accept, drop, reject"
     success_msg: "Output default policy validated: {{ nftables_output_default_policy }}"
 
-- name: NFTables | assert | Validate logging options for dropped packets
+- name: NFTables | assert | Validate input chain dropped packet logging
   ansible.builtin.assert:
     that:
       - nftables_log_input_dropped is defined
       - nftables_log_input_dropped is boolean
-      - nftables_log_forward_dropped is defined
-      - nftables_log_forward_dropped is boolean
-      - nftables_log_output_dropped is defined
-      - nftables_log_output_dropped is boolean
       - nftables_log_input_dropped_rate_limit is defined
       - nftables_log_input_dropped_rate_limit is string
       - nftables_log_input_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_input_dropped_burst is defined
       - nftables_log_input_dropped_burst is integer
       - nftables_log_input_dropped_burst >= 1
+    fail_msg: >-
+      Input chain dropped packet logging options contain invalid values
+      (rate limits must match format 'X/period' where period is second, minute, hour, day)
+    success_msg: "Input chain dropped packet logging options validated"
+
+- name: NFTables | assert | Validate forward chain dropped packet logging
+  ansible.builtin.assert:
+    that:
+      - nftables_log_forward_dropped is defined
+      - nftables_log_forward_dropped is boolean
       - nftables_log_forward_dropped_rate_limit is defined
       - nftables_log_forward_dropped_rate_limit is string
       - nftables_log_forward_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_forward_dropped_burst is defined
       - nftables_log_forward_dropped_burst is integer
       - nftables_log_forward_dropped_burst >= 1
+    fail_msg: >-
+      Forward chain dropped packet logging options contain invalid values
+      (rate limits must match format 'X/period' where period is second, minute, hour, day)
+    success_msg: "Forward chain dropped packet logging options validated"
+
+- name: NFTables | assert | Validate output chain dropped packet logging
+  ansible.builtin.assert:
+    that:
+      - nftables_log_output_dropped is defined
+      - nftables_log_output_dropped is boolean
       - nftables_log_output_dropped_rate_limit is defined
       - nftables_log_output_dropped_rate_limit is string
       - nftables_log_output_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
@@ -231,9 +259,9 @@
       - nftables_log_output_dropped_burst is integer
       - nftables_log_output_dropped_burst >= 1
     fail_msg: >-
-      Dropped packet logging options contain invalid values
+      Output chain dropped packet logging options contain invalid values
       (rate limits must match format 'X/period' where period is second, minute, hour, day)
-    success_msg: "Dropped packet logging options validated"
+    success_msg: "Output chain dropped packet logging options validated"
 
 # -----------------------------------------------------------------------------
 # 4. ICMP/Ping Settings
@@ -431,13 +459,28 @@
     fail_msg: "Cluster rules 'counter' and 'log' must be boolean values, 'comment' must be a string"
     success_msg: "Cluster rules optional field types validated"
 
+- name: NFTables | assert | Validate cluster rules port range
+  vars:
+    __nftables_cluster_ports: >-
+      {{ nftables_cluster_rules
+         | selectattr('port', 'defined')
+         | map(attribute='port')
+         | map('int')
+         | list }}
+  ansible.builtin.assert:
+    that:
+      - __nftables_cluster_ports | select('lt', 1) | list | length == 0
+      - __nftables_cluster_ports | select('gt', 65535) | list | length == 0
+    fail_msg: "Cluster rules 'port' must be within the 1-65535 range"
+    success_msg: "Cluster rules port ranges validated"
+
 - name: NFTables | assert | Validate cluster rules burst requires rate_limit
   ansible.builtin.assert:
     that:
       - >
         (
           nftables_cluster_rules | selectattr('burst', 'defined') | list
-        ) | rejectattr('rate_limit', 'defined') | rejectattr('limit', 'defined') | list | length == 0
+        ) | rejectattr('rate_limit', 'defined') | list | length == 0
     fail_msg: "Cluster rules specifying 'burst' must also specify 'rate_limit'"
     success_msg: "Cluster rules burst and rate_limit dependencies validated"
 
@@ -517,6 +560,26 @@
         ) | select() | list | length
     fail_msg: "User-defined rules 'port' must be a numeric port, range (e.g. 1000-2000), or comma-separated list (e.g. 80,443)"
     success_msg: "User-defined rules port fields validated"
+
+- name: NFTables | assert | Validate user-defined rules port range
+  vars:
+    __nftables_user_defined_ports: >-
+      {{ (
+           (nftables_user_defined_input_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_user_defined_forward_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_user_defined_output_rules | selectattr('port', 'defined') | map(attribute='port') | list)
+         )
+         | map('string')
+         | map('regex_findall', '[0-9]+')
+         | flatten
+         | map('int')
+         | list }}
+  ansible.builtin.assert:
+    that:
+      - __nftables_user_defined_ports | select('lt', 1) | list | length == 0
+      - __nftables_user_defined_ports | select('gt', 65535) | list | length == 0
+    fail_msg: "Every port in user-defined rules 'port' must be within the 1-65535 range, including each element of a range or comma-separated list"
+    success_msg: "User-defined rules port ranges validated"
 
 - name: NFTables | assert | Validate user-defined rules protocol is specified when port is defined
   ansible.builtin.assert:
@@ -929,18 +992,36 @@
     fail_msg: "NAT enabled flags must be boolean values"
     success_msg: "NAT enabled flags validated"
 
-- name: NFTables | assert | Validate NAT rules list structure
+- name: NFTables | assert | Validate NAT prerouting rules list
   ansible.builtin.assert:
     that:
       - nftables_nat_prerouting_rules is defined
       - nftables_nat_prerouting_rules is sequence
+      - not (nftables_nat_prerouting_enabled | bool) or (nftables_nat_prerouting_rules | length > 0)
+    fail_msg: "nftables_nat_prerouting_rules must be a sequence and not empty when prerouting NAT is enabled"
+    success_msg: "NAT prerouting rules list validated"
+
+- name: NFTables | assert | Validate NAT postrouting rules list
+  ansible.builtin.assert:
+    that:
       - nftables_nat_postrouting_rules is defined
       - nftables_nat_postrouting_rules is sequence
+      - not (nftables_nat_postrouting_enabled | bool) or (nftables_nat_postrouting_rules | length > 0)
+    fail_msg: "nftables_nat_postrouting_rules must be a sequence and not empty when postrouting NAT is enabled"
+    success_msg: "NAT postrouting rules list validated"
+
+- name: NFTables | assert | Validate NAT output rules list
+  ansible.builtin.assert:
+    that:
       - nftables_nat_output_rules is defined
       - nftables_nat_output_rules is sequence
-      - not (nftables_nat_prerouting_enabled | bool) or (nftables_nat_prerouting_rules | length > 0)
-      - not (nftables_nat_postrouting_enabled | bool) or (nftables_nat_postrouting_rules | length > 0)
       - not (nftables_nat_output_enabled | bool) or (nftables_nat_output_rules | length > 0)
+    fail_msg: "nftables_nat_output_rules must be a sequence and not empty when output NAT is enabled"
+    success_msg: "NAT output rules list validated"
+
+- name: NFTables | assert | Validate NAT rules are dictionaries
+  ansible.builtin.assert:
+    that:
       - >
         (
           nftables_nat_prerouting_rules +
@@ -952,10 +1033,8 @@
           nftables_nat_postrouting_rules +
           nftables_nat_output_rules
         ) | length
-    fail_msg: >-
-      NAT rules must be sequences of dictionary rule definitions;
-      when prerouting, postrouting, or output NAT is enabled, the corresponding rules list must not be empty
-    success_msg: "NAT rules list structures validated"
+    fail_msg: "NAT rules must be sequences of dictionary rule definitions"
+    success_msg: "NAT rules dictionary structure validated"
 
 - name: NFTables | assert | Validate NAT rules have mandatory nat_action
   ansible.builtin.assert:
@@ -1193,6 +1272,28 @@
         ) | select() | list | length
     fail_msg: "NAT rules 'port' must be numeric, a port range (e.g. 1000-2000), or a comma-separated list (e.g. 80,443)"
     success_msg: "NAT rules port fields validated"
+
+- name: NFTables | assert | Validate NAT rules port range
+  vars:
+    __nftables_nat_ports: >-
+      {{ (
+           (nftables_nat_prerouting_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_nat_output_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_nat_postrouting_rules | selectattr('port', 'defined') | map(attribute='port') | list) +
+           (nftables_nat_prerouting_rules | selectattr('redirect_port', 'defined') | map(attribute='redirect_port') | list) +
+           (nftables_nat_output_rules | selectattr('redirect_port', 'defined') | map(attribute='redirect_port') | list)
+         )
+         | map('string')
+         | map('regex_findall', '[0-9]+')
+         | flatten
+         | map('int')
+         | list }}
+  ansible.builtin.assert:
+    that:
+      - __nftables_nat_ports | select('lt', 1) | list | length == 0
+      - __nftables_nat_ports | select('gt', 65535) | list | length == 0
+    fail_msg: "Every port in NAT rules 'port' and 'redirect_port' must be within the 1-65535 range, including each element of a range or comma-separated list"
+    success_msg: "NAT rules port ranges validated"
 
 - name: NFTables | assert | Validate NAT rules protocol is specified when port is defined
   ansible.builtin.assert:

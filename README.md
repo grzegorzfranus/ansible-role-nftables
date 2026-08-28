@@ -301,7 +301,7 @@ To disable this protection or customize the ranges, modify this variable in your
 | `nftables_cluster_rules` | Rules for communication between cluster nodes | `[]` |
 
 **Cluster rule fields:**
-- `port` (required): Destination port (integer e.g. `5432`)
+- `port` (required): Destination port (integer within the `1`-`65535` range, e.g. `5432`)
 - `protocol` (optional): Protocol (e.g. `"tcp"`, `"udp"`), defaults to `"tcp"`
 - `state` (optional): Connection state match (e.g. `"new,established,related"`), defaults to `"new,established,related"`
 - `rate_limit` (optional): Rate limit for cluster traffic (e.g. `"10/second"`, `"100/minute"`)
@@ -330,7 +330,7 @@ To disable this protection or customize the ranges, modify this variable in your
 - `source` (optional): Source IP address/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IP address/network (string or list of strings for multiple destinations)
 - `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
-- `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string
+- `port` (optional): Single port (e.g. `22`), range (e.g. `1000-2000`), or comma-separated list (e.g. `22,80,443`) as a string. Every component must fall within the `1`-`65535` range
 - `state` (optional): Connection state to match (e.g. `"new"`, `"established,related"`) - defaults to `"new"` if not specified
 - `rate_limit` (optional): Rate limit in format `"X/period"` where period can be: second, minute, hour, day (e.g. `"10/minute"`)
 - `burst` (optional): Burst value for the rate limit (integer)
@@ -405,9 +405,9 @@ nftables_user_defined_input_rules:
 - `source` (optional): Source IPv4 address/network (string or list of strings for multiple sources)
 - `destination` (optional): Destination IPv4 address/network (string or list of strings for multiple destinations)
 - `protocol` (optional, required if `port` is specified): Protocol (`"tcp"`, `"udp"`)
-- `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string
+- `port` (optional): Single port (e.g. `80`), range (e.g. `1000-2000`), or comma-separated list (e.g. `80,443`) as a string. Every component must fall within the `1`-`65535` range
 - `nat_to` (required for dnat/snat, optional for redirect): Target IPv4 address with optional port for dnat (e.g. `"192.0.2.100:80"`), or IPv4 address without port for snat (e.g. `"203.0.113.2"`)
-- `redirect_port` (required for redirect if `nat_to` is omitted): Target port for redirect (integer or string matching `^\d{1,5}$`). Note that `redirect` only supports a single port destination; multi-port lists and ranges are not supported by nftables `redirect`.
+- `redirect_port` (required for redirect if `nat_to` is omitted): Target port for redirect (integer or string within the `1`-`65535` range). Note that `redirect` only supports a single port destination; multi-port lists and ranges are not supported by nftables `redirect`.
 - `counter` (optional): Enable/disable packet/byte counting for the rule (boolean)
 - `log` (optional): Enable/disable logging (boolean)
 - `comment` (optional): Description of the rule (string)
@@ -519,6 +519,23 @@ sudo nft list table ip nat
 # View active NAT rules in docker-aware mode (if NAT is enabled)
 sudo nft list table inet nftables_nat
 ```
+
+## 🔄 Migration from 2.x
+
+Cluster rules no longer accept two undocumented aliases that the template used
+as fallbacks. Rename them in `nftables_cluster_rules` before upgrading:
+
+| Removed key | Replacement | Notes |
+|---|---|---|
+| `ct_state` | `state` | Same connection tracking state list; `state` always took precedence when both were set |
+| `limit` | `rate_limit` | `rate_limit` is format-checked against `<count>/<period>`; `limit` never was |
+
+Rules that already use `state` and `rate_limit` need no change.
+
+Every rule list now declares its element fields in `meta/argument_specs.yml`, so
+Ansible rejects unknown keys in a rule dictionary before the role runs. A typo
+such as `protocl` fails immediately with the list of supported field names,
+instead of being silently ignored while rendering the ruleset.
 
 ## 🔄 Migration from 1.x
 
