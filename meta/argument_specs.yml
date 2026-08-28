@@ -302,6 +302,35 @@ argument_specs:
         type: list
         elements: dict
         default: []
+        options:
+          port:
+            description: "Destination port opened towards the cluster nodes."
+            type: int
+            required: true
+          protocol:
+            description: "Transport protocol the rule matches. Defaults to tcp when omitted."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          state:
+            description: "Connection tracking states the rule matches, as a comma-separated list. Defaults to new,established,related when omitted."
+            type: str
+          rate_limit:
+            description: "Rate limit for the matched traffic in the form <count>/<period>, where period is second, minute, hour, or day."
+            type: str
+          burst:
+            description: "Burst packet allowance applied on top of rate_limit. Requires rate_limit."
+            type: int
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
 
       # -------------------------------------------------------------------------
       # 7. User-Defined Rules Settings
