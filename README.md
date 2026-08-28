@@ -532,6 +532,11 @@ as fallbacks. Rename them in `nftables_cluster_rules` before upgrading:
 
 Rules that already use `state` and `rate_limit` need no change.
 
+Every rule list now declares its element fields in `meta/argument_specs.yml`, so
+Ansible rejects unknown keys in a rule dictionary before the role runs. A typo
+such as `protocl` fails immediately with the list of supported field names,
+instead of being silently ignored while rendering the ruleset.
+
 ## 🔄 Migration from 1.x
 
 In version 2.0.0, execution flow gating via the `nftables_role_action` variable has been removed and replaced with native Ansible tags prefixed with `nftables_`. This ensures proper tag propagation and standard Ansible playbook execution semantics.
