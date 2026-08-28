@@ -121,36 +121,54 @@ nftables_logrotate_options:
 # -----------------------------------------------------------------------------
 # 3. Base Filter Chain Policies
 # -----------------------------------------------------------------------------
-# Default policy for base filter chains (Options: 'accept', 'drop', 'reject')
+# Default policy for the base filter input chain (traffic destined for this host)
 # Valid values: accept, drop, reject
 nftables_input_default_policy: "drop"
+
+# Default policy for the base filter forward chain (traffic routed through this host)
 # Valid values: accept, drop, reject
 nftables_forward_default_policy: "drop"
+
+# Default policy for the base filter output chain (traffic originating from this host)
 # Valid values: accept, drop, reject
 nftables_output_default_policy: "drop"
 
-# Logging options for dropped packets in base filter chains
-# Enable/disable logging for packets dropped by respective chains
+# Enable/disable logging of packets dropped by the base filter input chain
 # Valid values: true, false
 nftables_log_input_dropped: true
+
+# Enable/disable logging of packets dropped by the base filter forward chain
 # Valid values: true, false
 nftables_log_forward_dropped: true
+
+# Enable/disable logging of packets dropped by the base filter output chain
 # Valid values: true, false
 nftables_log_output_dropped: true
 
-# Rate limit settings for logging dropped packets
-# Syntax: "X/period" where period can be: second, minute, hour, day
-# Format example: "10/minute" means max 10 logs per minute
+# Maximum logging rate for packets dropped by the input chain
+# Syntax: "X/period" where period is second, minute, hour or day (e.g. "10/minute")
 # Valid values: rate limit string matching '^\d+/(second|minute|hour|day)$'
 nftables_log_input_dropped_rate_limit: "10/minute"
+
+# Number of input chain log entries allowed to exceed the rate limit in a single burst
 # Valid values: integer >= 1
 nftables_log_input_dropped_burst: 10
+
+# Maximum logging rate for packets dropped by the forward chain
+# Syntax: "X/period" where period is second, minute, hour or day (e.g. "10/minute")
 # Valid values: rate limit string matching '^\d+/(second|minute|hour|day)$'
 nftables_log_forward_dropped_rate_limit: "10/minute"
+
+# Number of forward chain log entries allowed to exceed the rate limit in a single burst
 # Valid values: integer >= 1
 nftables_log_forward_dropped_burst: 10
+
+# Maximum logging rate for packets dropped by the output chain
+# Syntax: "X/period" where period is second, minute, hour or day (e.g. "10/minute")
 # Valid values: rate limit string matching '^\d+/(second|minute|hour|day)$'
 nftables_log_output_dropped_rate_limit: "10/minute"
+
+# Number of output chain log entries allowed to exceed the rate limit in a single burst
 # Valid values: integer >= 1
 nftables_log_output_dropped_burst: 10
 
@@ -229,11 +247,15 @@ nftables_cluster_rules: []
 # -----------------------------------------------------------------------------
 # 7. User-Defined Rules Settings
 # -----------------------------------------------------------------------------
-# Enable/disable user-defined rules for each chain
+# Enable/disable user-defined rules on the input chain (traffic destined for this host)
 # Valid values: true, false
 nftables_user_defined_input_enabled: false
+
+# Enable/disable user-defined rules on the forward chain (traffic routed through this host)
 # Valid values: true, false
 nftables_user_defined_forward_enabled: false
+
+# Enable/disable user-defined rules on the output chain (traffic originating from this host)
 # Valid values: true, false
 nftables_user_defined_output_enabled: false
 
@@ -332,11 +354,15 @@ nftables_user_defined_output_rules: []
 # -----------------------------------------------------------------------------
 # 8. NAT Rules Settings
 # -----------------------------------------------------------------------------
-# Enable/disable NAT rules for each chain
+# Enable/disable NAT rules on the prerouting chain (destination NAT for inbound traffic)
 # Valid values: true, false
 nftables_nat_prerouting_enabled: false
+
+# Enable/disable NAT rules on the postrouting chain (source NAT and masquerading for outbound traffic)
 # Valid values: true, false
 nftables_nat_postrouting_enabled: false
+
+# Enable/disable NAT rules on the output chain (destination NAT for locally generated traffic)
 # Valid values: true, false
 nftables_nat_output_enabled: false
 
