@@ -712,7 +712,8 @@ ansible-role-nftables/
 │   ├── reboot.yml                  # System reboot tasks (when required)
 │   └── upgrade.yml                 # Package upgrade tasks
 ├── templates/
-│   ├── nftables.conf.j2            # Main NFTables configuration loader
+│   ├── nftables/
+│   │   └── nftables.conf.j2        # Main NFTables configuration loader
 │   ├── logrotate/
 │   │   └── nftables.j2             # Logrotate configuration template
 │   ├── rsyslog/

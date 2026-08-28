@@ -29,6 +29,7 @@
 - name: NFTables | prerequisites | Gather service facts
   become: true
   ansible.builtin.service_facts:
+  changed_when: false
 
 - name: NFTables | prerequisites | Stop and disable conflicting firewall services
   become: true
