@@ -355,18 +355,162 @@ argument_specs:
         type: list
         elements: dict
         default: []
+        options:
+          in_interface:
+            description: "Input network interface the rule matches."
+            type: str
+          out_interface:
+            description: "Output network interface the rule matches."
+            type: str
+          source:
+            description: "Source IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          destination:
+            description: "Destination IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          protocol:
+            description: "Transport protocol the rule matches."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          port:
+            description: "Destination port, range, or comma-separated list of ports the rule matches."
+            type: str
+          state:
+            description: "Connection tracking states the rule matches, as a comma-separated list."
+            type: str
+          rate_limit:
+            description: "Rate limit for the matched traffic in the form <count>/<period>, where period is second, minute, hour, or day."
+            type: str
+          burst:
+            description: "Burst packet allowance applied on top of rate_limit."
+            type: int
+          action:
+            description: "Action to perform on matched traffic."
+            type: str
+            choices:
+              - "accept"
+              - "drop"
+              - "reject"
+              - "return"
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
 
       nftables_user_defined_forward_rules:
         description: "List of custom user-defined forward firewall rules."
         type: list
         elements: dict
         default: []
+        options:
+          in_interface:
+            description: "Input network interface the rule matches."
+            type: str
+          out_interface:
+            description: "Output network interface the rule matches."
+            type: str
+          source:
+            description: "Source IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          destination:
+            description: "Destination IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          protocol:
+            description: "Transport protocol the rule matches."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          port:
+            description: "Destination port, range, or comma-separated list of ports the rule matches."
+            type: str
+          state:
+            description: "Connection tracking states the rule matches, as a comma-separated list."
+            type: str
+          rate_limit:
+            description: "Rate limit for the matched traffic in the form <count>/<period>, where period is second, minute, hour, or day."
+            type: str
+          burst:
+            description: "Burst packet allowance applied on top of rate_limit."
+            type: int
+          action:
+            description: "Action to perform on matched traffic."
+            type: str
+            choices:
+              - "accept"
+              - "drop"
+              - "reject"
+              - "return"
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
 
       nftables_user_defined_output_rules:
         description: "List of custom user-defined output firewall rules."
         type: list
         elements: dict
         default: []
+        options:
+          in_interface:
+            description: "Input network interface the rule matches."
+            type: str
+          out_interface:
+            description: "Output network interface the rule matches."
+            type: str
+          source:
+            description: "Source IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          destination:
+            description: "Destination IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          protocol:
+            description: "Transport protocol the rule matches."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          port:
+            description: "Destination port, range, or comma-separated list of ports the rule matches."
+            type: str
+          state:
+            description: "Connection tracking states the rule matches, as a comma-separated list."
+            type: str
+          rate_limit:
+            description: "Rate limit for the matched traffic in the form <count>/<period>, where period is second, minute, hour, or day."
+            type: str
+          burst:
+            description: "Burst packet allowance applied on top of rate_limit."
+            type: int
+          action:
+            description: "Action to perform on matched traffic."
+            type: str
+            choices:
+              - "accept"
+              - "drop"
+              - "reject"
+              - "return"
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
 
       # -------------------------------------------------------------------------
       # 8. NAT Rules Settings
