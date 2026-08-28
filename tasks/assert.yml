@@ -992,18 +992,36 @@
     fail_msg: "NAT enabled flags must be boolean values"
     success_msg: "NAT enabled flags validated"
 
-- name: NFTables | assert | Validate NAT rules list structure
+- name: NFTables | assert | Validate NAT prerouting rules list
   ansible.builtin.assert:
     that:
       - nftables_nat_prerouting_rules is defined
       - nftables_nat_prerouting_rules is sequence
+      - not (nftables_nat_prerouting_enabled | bool) or (nftables_nat_prerouting_rules | length > 0)
+    fail_msg: "nftables_nat_prerouting_rules must be a sequence and not empty when prerouting NAT is enabled"
+    success_msg: "NAT prerouting rules list validated"
+
+- name: NFTables | assert | Validate NAT postrouting rules list
+  ansible.builtin.assert:
+    that:
       - nftables_nat_postrouting_rules is defined
       - nftables_nat_postrouting_rules is sequence
+      - not (nftables_nat_postrouting_enabled | bool) or (nftables_nat_postrouting_rules | length > 0)
+    fail_msg: "nftables_nat_postrouting_rules must be a sequence and not empty when postrouting NAT is enabled"
+    success_msg: "NAT postrouting rules list validated"
+
+- name: NFTables | assert | Validate NAT output rules list
+  ansible.builtin.assert:
+    that:
       - nftables_nat_output_rules is defined
       - nftables_nat_output_rules is sequence
-      - not (nftables_nat_prerouting_enabled | bool) or (nftables_nat_prerouting_rules | length > 0)
-      - not (nftables_nat_postrouting_enabled | bool) or (nftables_nat_postrouting_rules | length > 0)
       - not (nftables_nat_output_enabled | bool) or (nftables_nat_output_rules | length > 0)
+    fail_msg: "nftables_nat_output_rules must be a sequence and not empty when output NAT is enabled"
+    success_msg: "NAT output rules list validated"
+
+- name: NFTables | assert | Validate NAT rules are dictionaries
+  ansible.builtin.assert:
+    that:
       - >
         (
           nftables_nat_prerouting_rules +
@@ -1015,10 +1033,8 @@
           nftables_nat_postrouting_rules +
           nftables_nat_output_rules
         ) | length
-    fail_msg: >-
-      NAT rules must be sequences of dictionary rule definitions;
-      when prerouting, postrouting, or output NAT is enabled, the corresponding rules list must not be empty
-    success_msg: "NAT rules list structures validated"
+    fail_msg: "NAT rules must be sequences of dictionary rule definitions"
+    success_msg: "NAT rules dictionary structure validated"
 
 - name: NFTables | assert | Validate NAT rules have mandatory nat_action
   ansible.builtin.assert:
