@@ -203,27 +203,43 @@
     fail_msg: "nftables_output_default_policy must be one of: accept, drop, reject"
     success_msg: "Output default policy validated: {{ nftables_output_default_policy }}"
 
-- name: NFTables | assert | Validate logging options for dropped packets
+- name: NFTables | assert | Validate input chain dropped packet logging
   ansible.builtin.assert:
     that:
       - nftables_log_input_dropped is defined
       - nftables_log_input_dropped is boolean
-      - nftables_log_forward_dropped is defined
-      - nftables_log_forward_dropped is boolean
-      - nftables_log_output_dropped is defined
-      - nftables_log_output_dropped is boolean
       - nftables_log_input_dropped_rate_limit is defined
       - nftables_log_input_dropped_rate_limit is string
       - nftables_log_input_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_input_dropped_burst is defined
       - nftables_log_input_dropped_burst is integer
       - nftables_log_input_dropped_burst >= 1
+    fail_msg: >-
+      Input chain dropped packet logging options contain invalid values
+      (rate limits must match format 'X/period' where period is second, minute, hour, day)
+    success_msg: "Input chain dropped packet logging options validated"
+
+- name: NFTables | assert | Validate forward chain dropped packet logging
+  ansible.builtin.assert:
+    that:
+      - nftables_log_forward_dropped is defined
+      - nftables_log_forward_dropped is boolean
       - nftables_log_forward_dropped_rate_limit is defined
       - nftables_log_forward_dropped_rate_limit is string
       - nftables_log_forward_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
       - nftables_log_forward_dropped_burst is defined
       - nftables_log_forward_dropped_burst is integer
       - nftables_log_forward_dropped_burst >= 1
+    fail_msg: >-
+      Forward chain dropped packet logging options contain invalid values
+      (rate limits must match format 'X/period' where period is second, minute, hour, day)
+    success_msg: "Forward chain dropped packet logging options validated"
+
+- name: NFTables | assert | Validate output chain dropped packet logging
+  ansible.builtin.assert:
+    that:
+      - nftables_log_output_dropped is defined
+      - nftables_log_output_dropped is boolean
       - nftables_log_output_dropped_rate_limit is defined
       - nftables_log_output_dropped_rate_limit is string
       - nftables_log_output_dropped_rate_limit is match('^\d+/(second|minute|hour|day)$')
@@ -231,9 +247,9 @@
       - nftables_log_output_dropped_burst is integer
       - nftables_log_output_dropped_burst >= 1
     fail_msg: >-
-      Dropped packet logging options contain invalid values
+      Output chain dropped packet logging options contain invalid values
       (rate limits must match format 'X/period' where period is second, minute, hour, day)
-    success_msg: "Dropped packet logging options validated"
+    success_msg: "Output chain dropped packet logging options validated"
 
 # -----------------------------------------------------------------------------
 # 4. ICMP/Ping Settings
