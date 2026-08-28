@@ -6,7 +6,6 @@ run-name: "Release: ${{ github.ref_name }} by @${{ github.actor }}"
   push:
     branches: [main]
 
-
 permissions:
   contents: read
 

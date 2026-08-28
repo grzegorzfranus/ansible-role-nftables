@@ -520,119 +520,6 @@ sudo nft list table ip nat
 sudo nft list table inet nftables_nat
 ```
 
-## 🛡️ Security Features
-
-- ✅ **Atomic Rule Pre-Validation**: Every rendered rule file is validated with `nft -c -f` before installation to prevent broken firewall configurations.
-- ✅ **Strict Default-Drop Policies**: Input, forward, and output chains default to `drop` policy to enforce least-privilege traffic flow.
-- ✅ **Stateful Connection Tracking**: Explicitly enforces established/related tracking to prevent unsolicited connection hijacking.
-- ✅ **Anti-Spoofing Bogon Filters**: Blocks unroutable and reserved private IP subnets from entering external interfaces.
-- ✅ **Rate-Limited Logging**: Rate-limits ICMP packets and dropped packet logging to prevent denial-of-service via log disk saturation.
-- ✅ **Conflict Daemon Mitigation**: Stops and disables legacy and competing firewall services (`firewalld`, `iptables`, `ufw`, `netfilter-persistent`).
-
-## 🧪 Check Mode Behavior
-
-- Configuration template rendering and file permission checks run normally in Check Mode.
-- Mutating package installation and systemd service changes are safely skipped.
-
-## 🌐 Network Resilience
-
-- Rule syntax is verified prior to service reload, ensuring existing kernel tables remain active if an invalid configuration is supplied.
-- Established connections are maintained across service reloads thanks to kernel netfilter state persistence.
-
-## 🔧 Troubleshooting
-
-### Validate Configuration Syntax
-
-```bash
-# Test complete configuration syntax
-sudo nft -c -f /etc/nftables.conf
-```
-
-### View Service Logs
-
-```bash
-# View systemd journal for NFTables service
-sudo journalctl -u nftables -f --no-pager
-```
-
-### View Firewall Drop Logs
-
-```bash
-# Inspect dedicated dropped packet logs (if rsyslog/logrotate configured)
-sudo tail -f /var/log/nftables/nftables.log
-```
-
-## 📁 File Structure
-
-```
-ansible-role-nftables/
-├── .ansible-lint               # Ansible-lint configuration (shared profile)
-├── .gitignore                  # Git ignore patterns
-├── .yamllint                   # Yamllint configuration
-├── .release-please-manifest.json # Release Please version manifest
-├── release-please-config.json  # Release Please changelog & release settings
-├── .github/
-│   └── workflows/              # GitHub Actions CI/CD workflows
-│       ├── ci.yml              # CI workflow with reusable ansible-ci
-│       └── release.yml         # Release Please & Galaxy publication
-├── defaults/
-│   └── main.yml                # Default configuration variables
-├── handlers/
-│   └── main.yml                # Service reload and restart handlers
-├── meta/
-│   ├── argument_specs.yml      # Declarative argument specifications
-│   └── main.yml                # Role metadata and Galaxy specifications
-├── molecule/                   # Molecule testing framework
-│   └── default/                # Default testing scenario
-│       ├── converge.yml
-│       ├── molecule.yml
-│       ├── prepare.yml
-│       └── verify.yml
-├── tasks/
-│   ├── main.yml                # Main task orchestration dispatcher
-│   ├── assert.yml              # Preflight parameter assertions
-│   ├── prerequisites.yml       # Conflict service cleanup & fact gathering
-│   ├── install.yml             # Package installation
-│   ├── configure.yml           # Base service & config directory setup
-│   ├── acl.yml                 # Rule template deployment & service verification
-│   ├── logrotate.yml           # Logrotate & rsyslog drop logging configuration
-│   ├── reboot.yml              # System reboot tasks (when required)
-│   └── upgrade.yml             # Package upgrade tasks
-├── templates/
-│   ├── nftables.conf.j2        # Main NFTables configuration loader
-│   ├── logrotate/
-│   │   └── nftables.j2         # Logrotate configuration template
-│   ├── rsyslog/
-│   │   └── nftables.conf.j2    # Rsyslog configuration template
-│   └── rules/
-│       ├── base.rules.j2       # 00-base rules template
-│       ├── firewall.rules.j2   # 10-firewall rules template
-│       ├── cluster.rules.j2    # 20-cluster rules template
-│       ├── user_defined.rules.j2 # 30-user-defined rules template
-│       └── nat.rules.j2        # 40-nat rules template
-└── vars/
-    ├── main.yml                # Global internal variables
-    ├── debian.yml              # Debian-specific variables
-    ├── ubuntu.yml              # Ubuntu-specific variables
-    └── redhat.yml              # RedHat/EL-specific variables
-```
-
-## 🏷️ Tags
-
-Use `--tags` to execute specific portions of the role:
-
-| Tag | Description |
-|-----|-------------|
-| `always` | Tasks that always run (variable loading and assertions) |
-| `nftables_setup` | Meta tag covering prerequisites, installation, and configuration |
-| `nftables_requirements` | System prerequisites and kernel module verification |
-| `nftables_reboot` | System reboot tasks (when required) |
-| `nftables_install` | Package installation tasks |
-| `nftables_configure` | Service configuration, directory structure, ACLs, and logrotate |
-| `nftables_rules` | Firewall rule template rendering and deployment |
-| `nftables_logrotate` | Log rotation and rsyslog configuration |
-| `nftables_upgrade` | Package upgrade tasks (tagged `never` by default) |
-
 ## 🔄 Migration from 1.x
 
 In version 2.0.0, execution flow gating via the `nftables_role_action` variable has been removed and replaced with native Ansible tags prefixed with `nftables_`. This ensures proper tag propagation and standard Ansible playbook execution semantics.
@@ -664,6 +551,183 @@ This procedure performs:
 1. Package manager cache update (`apt` / `dnf`).
 2. Upgrading the `nftables` package to `state: latest`.
 3. Notifying the handler to safely restart the `nftables` service and re-apply the active ruleset.
+
+## 🛡️ Security Features
+
+- ✅ **Atomic Rule Pre-Validation**: Every rendered rule file is validated with `nft -c -f` before installation to prevent broken firewall configurations.
+- ✅ **Strict Default-Drop Policies**: Input, forward, and output chains default to `drop` policy to enforce least-privilege traffic flow.
+- ✅ **Stateful Connection Tracking**: Explicitly enforces established/related tracking to prevent unsolicited connection hijacking.
+- ✅ **Anti-Spoofing Bogon Filters**: Blocks unroutable and reserved private IP subnets from entering external interfaces.
+- ✅ **Rate-Limited Logging**: Rate-limits ICMP packets and dropped packet logging to prevent denial-of-service via log disk saturation.
+- ✅ **Conflict Daemon Mitigation**: Stops and disables legacy and competing firewall services (`firewalld`, `iptables`, `ufw`, `netfilter-persistent`).
+
+### Uninstall
+
+This role does not implement an automated removal path. Remove the managed
+firewall configuration manually on the target host:
+
+```bash
+# Stop and disable the firewall service
+sudo systemctl disable --now nftables
+
+# Remove the rendered rule files and the configuration loader
+sudo rm -rf /etc/nftables
+sudo rm -f /etc/nftables.conf              # Debian / Ubuntu
+sudo rm -f /etc/sysconfig/nftables.conf    # RedHat / EL
+
+# Remove the logging integration
+sudo rm -f /etc/rsyslog.d/55-nftables.conf /etc/logrotate.d/nftables
+sudo systemctl restart rsyslog
+```
+
+> [!CAUTION]
+> Removing the ruleset leaves the host without packet filtering. Ensure an
+> alternative firewall or a trusted network boundary is in place before running
+> these commands on an internet-facing system.
+
+### Roll-back Capabilities
+
+Every configuration and rule file is deployed with `backup: true`, so the
+previous revision is preserved next to the active file with a timestamped
+suffix. To restore a previous ruleset:
+
+```bash
+# List the available backups for a rule file
+ls -la /etc/nftables/00-base.rules*
+# 00-base.rules.14872.2026-08-28@10:15:42~
+
+# Restore a backup and validate it before activation
+sudo cp '/etc/nftables/00-base.rules.14872.2026-08-28@10:15:42~' /etc/nftables/00-base.rules
+sudo nft -c -f /etc/nftables/00-base.rules
+sudo systemctl restart nftables
+```
+
+## 🧪 Check Mode Behavior
+
+- Configuration template rendering and file permission checks run normally in Check Mode.
+- Mutating package installation and systemd service changes are safely skipped.
+
+## 🌐 Network Resilience
+
+- Rule syntax is verified prior to service reload, ensuring existing kernel tables remain active if an invalid configuration is supplied.
+- Established connections are maintained across service reloads thanks to kernel netfilter state persistence.
+
+## 🧰 Repository Management
+
+- The `nftables`, `rsyslog`, and `logrotate` packages are installed from the
+  distribution's own package repositories. This role does not add, configure, or
+  require any third-party repository or GPG key.
+- Package upgrades are opt-in and never run implicitly; see [Upgrade Procedure](#-upgrade-procedure).
+
+## 🔧 Troubleshooting
+
+### Validate Configuration Syntax
+
+```bash
+# Test complete configuration syntax
+sudo nft -c -f /etc/nftables.conf
+```
+
+### View Service Logs
+
+```bash
+# View systemd journal for NFTables service
+sudo journalctl -u nftables -f --no-pager
+```
+
+### View Firewall Drop Logs
+
+```bash
+# Inspect dedicated dropped packet logs (if rsyslog/logrotate configured)
+sudo tail -f /var/log/nftables/nftables.log
+```
+
+## 📁 File Structure
+
+```
+ansible-role-nftables/
+├── .ansible-lint                   # Ansible-lint configuration (shared profile)
+├── .gitignore                      # Git ignore patterns
+├── .yamllint                       # Yamllint configuration
+├── .release-please-manifest.json   # Release Please version manifest
+├── release-please-config.json      # Release Please changelog & release settings
+├── CHANGELOG.md                    # Automatically generated changelog
+├── LICENSE                         # Apache-2.0 license
+├── README.md                       # Role documentation
+├── .github/
+│   ├── ISSUE_TEMPLATE/             # Issue report templates (bug, feature, task)
+│   │   ├── bug_report.yml
+│   │   ├── config.yml
+│   │   ├── feature_request.yml
+│   │   └── task.yml
+│   ├── PULL_REQUEST_TEMPLATE/      # Pull request description template
+│   │   └── pull_request_template.md
+│   ├── workflows/                  # Centralized GitHub Actions CI/CD workflows
+│   │   ├── ci.yml                  # CI workflow with reusable ansible-ci
+│   │   └── release.yml             # Release Please & Galaxy publication
+│   └── dependabot.yml              # Dependabot configuration for GitHub Actions
+├── defaults/
+│   └── main.yml                    # Default configuration variables
+├── handlers/
+│   └── main.yml                    # Service reload and restart handlers
+├── meta/
+│   ├── argument_specs.yml          # Declarative argument specifications
+│   └── main.yml                    # Role metadata and Galaxy specifications
+├── molecule/                       # Molecule testing framework
+│   ├── default/                    # Baseline testing scenario
+│   │   ├── converge.yml
+│   │   ├── molecule.yml
+│   │   ├── prepare.yml
+│   │   └── verify.yml
+│   └── cluster-and-security/       # Cluster, security and NAT rules scenario
+│       ├── converge.yml
+│       ├── molecule.yml
+│       ├── prepare.yml
+│       └── verify.yml
+├── tasks/
+│   ├── main.yml                    # Main task orchestration dispatcher
+│   ├── assert.yml                  # Preflight parameter assertions
+│   ├── prerequisites.yml           # Conflict service cleanup & fact gathering
+│   ├── install.yml                 # Package installation
+│   ├── configure.yml               # Base service & config directory setup
+│   ├── acl.yml                     # Rule template deployment & service verification
+│   ├── logrotate.yml               # Logrotate & rsyslog drop logging configuration
+│   ├── reboot.yml                  # System reboot tasks (when required)
+│   └── upgrade.yml                 # Package upgrade tasks
+├── templates/
+│   ├── nftables.conf.j2            # Main NFTables configuration loader
+│   ├── logrotate/
+│   │   └── nftables.j2             # Logrotate configuration template
+│   ├── rsyslog/
+│   │   └── nftables.conf.j2        # Rsyslog configuration template
+│   └── rules/
+│       ├── base.rules.j2           # 00-base rules template
+│       ├── firewall.rules.j2       # 10-firewall rules template
+│       ├── cluster.rules.j2        # 20-cluster rules template
+│       ├── user_defined.rules.j2   # 30-user-defined rules template
+│       └── nat.rules.j2            # 40-nat rules template
+└── vars/
+    ├── main.yml                    # Global internal variables
+    ├── debian.yml                  # Debian-specific variables
+    ├── ubuntu.yml                  # Ubuntu-specific variables
+    └── redhat.yml                  # RedHat/EL-specific variables
+```
+
+## 🏷️ Tags
+
+Use `--tags` to execute specific portions of the role:
+
+| Tag | Description |
+|-----|-------------|
+| `always` | Tasks that always run (variable loading and assertions) |
+| `nftables_setup` | Meta tag covering prerequisites, installation, and configuration |
+| `nftables_requirements` | System prerequisites and kernel module verification |
+| `nftables_reboot` | System reboot tasks (when required) |
+| `nftables_install` | Package installation tasks |
+| `nftables_configure` | Service configuration, directory structure, ACLs, and logrotate |
+| `nftables_rules` | Firewall rule template rendering and deployment |
+| `nftables_logrotate` | Log rotation and rsyslog configuration |
+| `nftables_upgrade` | Package upgrade tasks (tagged `never` by default) |
 
 ## 🚀 CI/CD Pipeline
 
