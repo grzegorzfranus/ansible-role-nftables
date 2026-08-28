@@ -535,15 +535,150 @@ argument_specs:
         type: list
         elements: dict
         default: []
+        options:
+          nat_action:
+            description: "NAT action to perform on matched packets."
+            type: str
+            choices:
+              - "dnat"
+              - "redirect"
+              - "snat"
+              - "masquerade"
+          in_interface:
+            description: "Input network interface the rule matches."
+            type: str
+          out_interface:
+            description: "Output network interface the rule matches."
+            type: str
+          source:
+            description: "Source IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          destination:
+            description: "Destination IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          protocol:
+            description: "Transport protocol the rule matches."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          port:
+            description: "Destination port, range, or comma-separated list of ports the rule matches."
+            type: str
+          nat_to:
+            description: "Target address and/or port mapping for DNAT or SNAT."
+            type: str
+          redirect_port:
+            description: "Local redirect target port or port range."
+            type: raw
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
 
       nftables_nat_output_rules:
         description: "List of DNAT / redirect output rules for locally generated traffic."
         type: list
         elements: dict
         default: []
+        options:
+          nat_action:
+            description: "NAT action to perform on matched packets."
+            type: str
+            choices:
+              - "dnat"
+              - "redirect"
+              - "snat"
+              - "masquerade"
+          in_interface:
+            description: "Input network interface the rule matches."
+            type: str
+          out_interface:
+            description: "Output network interface the rule matches."
+            type: str
+          source:
+            description: "Source IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          destination:
+            description: "Destination IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          protocol:
+            description: "Transport protocol the rule matches."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          port:
+            description: "Destination port, range, or comma-separated list of ports the rule matches."
+            type: str
+          nat_to:
+            description: "Target address and/or port mapping for DNAT or SNAT."
+            type: str
+          redirect_port:
+            description: "Local redirect target port or port range."
+            type: raw
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
 
       nftables_nat_postrouting_rules:
         description: "List of SNAT / masquerading postrouting rules for outbound connections."
         type: list
         elements: dict
         default: []
+        options:
+          nat_action:
+            description: "NAT action to perform on matched packets."
+            type: str
+            choices:
+              - "dnat"
+              - "redirect"
+              - "snat"
+              - "masquerade"
+          in_interface:
+            description: "Input network interface the rule matches."
+            type: str
+          out_interface:
+            description: "Output network interface the rule matches."
+            type: str
+          source:
+            description: "Source IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          destination:
+            description: "Destination IP address, CIDR prefix, or list of addresses to match."
+            type: raw
+          protocol:
+            description: "Transport protocol the rule matches."
+            type: str
+            choices:
+              - "tcp"
+              - "udp"
+          port:
+            description: "Destination port, range, or comma-separated list of ports the rule matches."
+            type: str
+          nat_to:
+            description: "Target address and/or port mapping for DNAT or SNAT."
+            type: str
+          redirect_port:
+            description: "Local redirect target port or port range."
+            type: raw
+          counter:
+            description: "Attach a packet and byte counter to the rule."
+            type: bool
+          log:
+            description: "Log packets matched by the rule."
+            type: bool
+          comment:
+            description: "Descriptive comment rendered into the ruleset."
+            type: str
