@@ -201,6 +201,7 @@ nftables_user_defined_forward_rules:
 |----------|-------------|---------|
 | `nftables_service_enabled` | Enable/disable NFTables service on boot | `true` |
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
+| `nftables_backup_enabled` | Enable/disable keeping a timestamped backup before a file is overwritten | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
 | `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
 | `nftables_ipv6_enabled` | Enable or disable IPv6 support. When false, emits a blanket `meta nfproto ipv6 drop` in all three base chains and omits the ICMPv6/MLD rules; when true, IPv6 addresses are additionally accepted in rule lists | `false` |
