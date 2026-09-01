@@ -27,6 +27,11 @@ argument_specs:
         type: bool
         default: true
 
+      nftables_backup_enabled:
+        description: "Enable or disable keeping a timestamped backup of a file before the role overwrites it."
+        type: bool
+        default: true
+
       nftables_configure_security_rules:
         description: "Enable or disable security protection rules (malformed packets, invalid TCP flags, port scan prevention)."
         type: bool

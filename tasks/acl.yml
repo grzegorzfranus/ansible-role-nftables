@@ -28,7 +28,7 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
   register: __nftables_security_rules
   when: >
@@ -51,7 +51,7 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
   register: __nftables_cluster_rules
   when: >
@@ -74,7 +74,7 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
   register: __nftables_user_defined_rules
   when: >
@@ -101,7 +101,7 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
   register: __nftables_nat_rules
   when: >
@@ -155,7 +155,7 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
   register: __nftables_base_rules
 

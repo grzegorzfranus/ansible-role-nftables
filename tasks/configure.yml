@@ -40,7 +40,7 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
   notify: NFTables | handlers | Restart nftables service
 
@@ -61,5 +61,5 @@
     owner: root
     group: root
     mode: "0600"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
   notify: NFTables | handlers | Restart rsyslog service

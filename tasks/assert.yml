@@ -69,6 +69,14 @@
     fail_msg: "nftables_configure_logrotate must be a boolean (true/false)"
     success_msg: "Logrotate configuration flag validated: {{ nftables_configure_logrotate }}"
 
+- name: NFTables | assert | Validate backup configuration flag
+  ansible.builtin.assert:
+    that:
+      - nftables_backup_enabled is defined
+      - nftables_backup_enabled is boolean
+    fail_msg: "nftables_backup_enabled must be a boolean (true/false)"
+    success_msg: "Backup configuration flag validated: {{ nftables_backup_enabled }}"
+
 - name: NFTables | assert | Validate security rules configuration flag
   ansible.builtin.assert:
     that:

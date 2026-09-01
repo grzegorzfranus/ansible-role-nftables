@@ -28,5 +28,5 @@
     owner: root
     group: root
     mode: "0644"
-    backup: true
+    backup: "{{ nftables_backup_enabled | bool }}"
     validate: logrotate -d %s
