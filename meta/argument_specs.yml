@@ -38,7 +38,7 @@ argument_specs:
         default: false
 
       nftables_docker_aware:
-        description: "Enable Docker-aware firewall mode to prevent flushing Docker iptables-nft tables and isolate NAT chains."
+        description: "Enable Docker-aware firewall mode to preserve foreign tables (Docker, K3s) across reload/stop/restart and isolate NAT chains."
         type: bool
         default: false
 
@@ -48,7 +48,7 @@ argument_specs:
         default: false
 
       nftables_docker_aware_bridge_interfaces:
-        description: "Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode."
+        description: "Container interfaces (examples docker0, cni0, flannel.1) allowed for container egress and inter-container traffic in Docker-aware mode."
         type: list
         elements: str
         default:

@@ -48,6 +48,16 @@
           paths:
             - "../../vars"
 
+    - name: Verify | Determine if node is in docker-aware mode
+      ansible.builtin.set_fact:
+        _verify_docker_aware: >-
+          {{
+            ((ansible_facts['distribution'] == 'Ubuntu' and
+              ansible_facts['distribution_version'] in ['24.04', '26.04']) or
+             (ansible_facts['distribution'] == 'Rocky' and
+              ansible_facts['distribution_major_version'] == '9')) | bool
+          }}
+
     # -----------------------------------------------------------------------------
     # 2. Package Verification
     # -----------------------------------------------------------------------------
@@ -149,7 +159,7 @@
         cmd: nft list chain inet filter forward
       register: _docker_forward_check_
       changed_when: false
-      when: ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04'
+      when: _verify_docker_aware | bool
       failed_when: "'docker0' not in _docker_forward_check_.stdout"
 
     - name: Verify | Check for interface matching in user_defined_input chain
@@ -171,7 +181,7 @@
         cmd: nft list table ip nat
       register: _legacy_nat_table_
       changed_when: false
-      when: not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04')
+      when: not (_verify_docker_aware | bool)
       failed_when: >
         'dnat to 192.0.2.100:80' not in _legacy_nat_table_.stdout or
         'log prefix "[nftables] : nat : prerouting : "' not in _legacy_nat_table_.stdout or
@@ -184,13 +194,116 @@
         cmd: nft list table inet nftables_nat
       register: _docker_nat_table_
       changed_when: false
-      when: ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04'
+      when: _verify_docker_aware | bool
       failed_when: >
         'dnat ip to 192.0.2.100:80' not in _docker_nat_table_.stdout or
         'log prefix "[nftables] : nat : prerouting : "' not in _docker_nat_table_.stdout or
         'masquerade' not in _docker_nat_table_.stdout or
         'snat ip to 203.0.113.2' not in _docker_nat_table_.stdout or
         'log prefix "[nftables] : nat : postrouting : "' not in _docker_nat_table_.stdout
+
+    - name: Verify | Check systemd drop-in file status (on legacy nodes)
+      ansible.builtin.stat:
+        path: "{{ __nftables_systemd_dropin_path }}"
+      register: _dropin_legacy_stat_
+      when: not (_verify_docker_aware | bool)
+
+    - name: Verify | Assert systemd drop-in file does not exist (on legacy nodes)
+      ansible.builtin.assert:
+        that:
+          - not _dropin_legacy_stat_.stat.exists
+        fail_msg: "Systemd drop-in file unexpectedly exists on legacy node"
+        success_msg: "Systemd drop-in file does not exist on legacy node"
+      when: not (_verify_docker_aware | bool)
+
+    - name: Verify | Check systemd drop-in file status (on docker-aware test node)
+      ansible.builtin.stat:
+        path: "{{ __nftables_systemd_dropin_path }}"
+      register: _dropin_docker_stat_
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Slurp systemd drop-in configuration (on docker-aware test node)
+      become: true
+      ansible.builtin.slurp:
+        src: "{{ __nftables_systemd_dropin_path }}"
+      register: _dropin_docker_slurp_
+      when:
+        - _verify_docker_aware | bool
+        - _dropin_docker_stat_.stat.exists
+
+    - name: Verify | Assert systemd drop-in file exists and contains expected directives (on docker-aware test node)
+      ansible.builtin.assert:
+        that:
+          - _dropin_docker_stat_.stat.exists
+          - "'ExecStop=-/usr/sbin/nft delete table inet filter' in (_dropin_docker_slurp_.content | b64decode)"
+          - "'ExecReload=/usr/sbin/nft -f' in (_dropin_docker_slurp_.content | b64decode)"
+        fail_msg: "Systemd drop-in file is missing or does not contain expected directives"
+        success_msg: "Systemd drop-in file exists and contains expected directives"
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Create foreign probe table (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: nft add table ip foreign_probe
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Create chain in foreign probe table (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: "nft add chain ip foreign_probe probe '{ type filter hook input priority 10; policy accept; }'"
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Reload nftables service (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: systemctl reload nftables
+      when: _verify_docker_aware | bool
+
+    - name: Verify | List nftables tables after reload (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: nft list tables
+      register: _tables_after_reload_
+      changed_when: false
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Assert foreign table preserved after reload (on docker-aware test node)
+      ansible.builtin.assert:
+        that:
+          - "'table ip foreign_probe' in _tables_after_reload_.stdout"
+          - "'table inet filter' in _tables_after_reload_.stdout"
+        fail_msg: "Foreign probe table or inet filter table missing after reload"
+        success_msg: "Foreign probe table and inet filter table preserved after reload"
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Restart nftables service (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: systemctl restart nftables
+      when: _verify_docker_aware | bool
+
+    - name: Verify | List nftables tables after restart (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: nft list tables
+      register: _tables_after_restart_
+      changed_when: false
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Assert foreign table preserved after restart (on docker-aware test node)
+      ansible.builtin.assert:
+        that:
+          - "'table ip foreign_probe' in _tables_after_restart_.stdout"
+          - "'table inet filter' in _tables_after_restart_.stdout"
+        fail_msg: "Foreign probe table or inet filter table missing after restart"
+        success_msg: "Foreign probe table and inet filter table preserved after restart"
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Delete foreign probe table (on docker-aware test node)
+      become: true
+      ansible.builtin.command:
+        cmd: nft delete table ip foreign_probe
+      when: _verify_docker_aware | bool
 
     # -----------------------------------------------------------------------------
     # 6. Logging Configuration Verification

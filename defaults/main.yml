@@ -47,7 +47,7 @@ nftables_backup_enabled: true
 # Valid values: true, false
 nftables_configure_security_rules: false
 
-# Enable Docker-aware firewall mode to prevent flushing Docker iptables-nft tables
+# Enable Docker-aware firewall mode to preserve foreign tables (Docker, K3s) across reload/stop/restart
 # and isolate role NAT chains in a dedicated 'inet nftables_nat' table
 # Valid values: true, false
 nftables_docker_aware: false
@@ -57,7 +57,8 @@ nftables_docker_aware: false
 # Valid values: true, false
 nftables_ipv6_enabled: false
 
-# Bridge interfaces allowed for container egress and inter-container traffic in Docker-aware mode
+# Container interfaces (examples docker0, cni0, flannel.1) allowed for container egress
+# and inter-container traffic in Docker-aware mode
 # Valid values: list of interface name strings e.g. ["docker0"]
 nftables_docker_aware_bridge_interfaces:
   - "docker0"

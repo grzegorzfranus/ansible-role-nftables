@@ -159,7 +159,7 @@
     validate: nft -c -f %s
   register: __nftables_base_rules
 
-- name: NFTables | acl | Restart and verify nftables service
+- name: NFTables | acl | Reload and verify nftables service
   when: >
     (__nftables_default_rules_removed.changed | default(false) | bool) or
     (__nftables_base_rules.changed | default(false) | bool) or
@@ -174,11 +174,11 @@
     (__nftables_nat_table_removed.changed | default(false) | bool)
 
   block:
-    - name: NFTables | acl | Force restart nftables service
+    - name: NFTables | acl | Reload nftables service
       become: true
       ansible.builtin.service:
         name: "{{ __nftables_service_name }}"
-        state: restarted
+        state: reloaded
 
     - name: NFTables | acl | Pause for 5 seconds to load nftables service
       ansible.builtin.pause:

@@ -14,4 +14,4 @@
     name: "{{ __nftables_package_name }}"
     state: latest
     update_cache: true
-  notify: NFTables | handlers | Restart nftables service
+  notify: NFTables | handlers | Reload nftables service

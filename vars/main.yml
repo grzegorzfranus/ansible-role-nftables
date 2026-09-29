@@ -24,6 +24,12 @@
 # Note: This may be overridden in OS-specific vars if needed
 __nftables_service_name: "nftables"
 
+# Systemd drop-in directory for service override configuration
+__nftables_systemd_dropin_directory: "/etc/systemd/system/{{ __nftables_service_name }}.service.d"
+
+# Path to systemd drop-in configuration file to preserve foreign tables
+__nftables_systemd_dropin_path: "{{ __nftables_systemd_dropin_directory }}/10-preserve-foreign-tables.conf"
+
 # -----------------------------------------------------------------------------
 # 2. Package Settings
 # -----------------------------------------------------------------------------

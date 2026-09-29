@@ -5,6 +5,46 @@
 # Configures NFTables service state, directories, configuration files, and rsyslog integration.
 # =============================================================================
 
+- name: NFTables | configure | Create systemd drop-in directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ __nftables_systemd_dropin_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: >
+    (nftables_docker_aware | default(false) | bool)
+
+- name: NFTables | configure | Deploy systemd drop-in configuration
+  become: true
+  ansible.builtin.template:
+    src: systemd/10-preserve-foreign-tables.conf.j2
+    dest: "{{ __nftables_systemd_dropin_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  register: __nftables_systemd_dropin_deployed
+  when: >
+    (nftables_docker_aware | default(false) | bool)
+
+- name: NFTables | configure | Remove systemd drop-in configuration
+  become: true
+  ansible.builtin.file:
+    path: "{{ __nftables_systemd_dropin_path }}"
+    state: absent
+  register: __nftables_systemd_dropin_removed
+  when: >
+    not (nftables_docker_aware | default(false) | bool)
+
+- name: NFTables | configure | Reload systemd daemon
+  become: true
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: >
+    (__nftables_systemd_dropin_deployed.changed | default(false) | bool) or
+    (__nftables_systemd_dropin_removed.changed | default(false) | bool)
+
 - name: NFTables | configure | Enable NFTables service on system startup
   become: true
   ansible.builtin.service:
@@ -42,7 +82,7 @@
     mode: "0600"
     backup: "{{ nftables_backup_enabled | bool }}"
     validate: nft -c -f %s
-  notify: NFTables | handlers | Restart nftables service
+  notify: NFTables | handlers | Reload nftables service
 
 - name: NFTables | configure | Create directory for log files
   become: true
