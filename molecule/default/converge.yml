@@ -142,7 +142,13 @@
         comment: "SNAT for DMZ subnet"
 
     nftables_reboot_required: false
-    nftables_docker_aware: "{{ (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04') | bool }}"
+    nftables_docker_aware: >-
+      {{
+        ((ansible_facts['distribution'] == 'Ubuntu' and
+          ansible_facts['distribution_version'] in ['24.04', '26.04']) or
+         (ansible_facts['distribution'] == 'Rocky' and
+          ansible_facts['distribution_major_version'] == '9')) | bool
+      }}
 
   tasks:
     - name: Converge | Include NFTables role

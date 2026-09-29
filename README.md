@@ -171,9 +171,13 @@ nftables_docker_aware_bridge_interfaces:
 
 #### What Docker-Aware Mode Changes
 
-1. **Scoped Table Flush**: Replaces global `flush ruleset` with atomic table flushing (`table inet filter` declare/delete/define), ensuring Docker's `ip filter` and `ip nat` tables are untouched during service reloads.
+1. **Scoped Table Flush**: In the ruleset templates, replaces global `flush ruleset` with scoped table replacement (`table inet filter` declare/delete/define), ensuring the configuration itself only replaces the role's own filter table rather than wiping the entire ruleset.
 2. **Dedicated NAT Table**: Relocates the role's NAT rules from `table ip nat` to a dedicated `table inet nftables_nat`. This prevents collision with Docker's native NAT chains (`DOCKER`, `POSTROUTING`).
-3. **Container Egress Forwarding**: Automatically allows outbound container traffic from specified bridge interfaces (`iifname "docker0" accept`) in the `forward` chain. Return traffic is automatically permitted via existing connection tracking (`ct state established,related`).
+3. **Container Egress Forwarding**: Automatically allows outbound container traffic from specified container interfaces (examples `docker0`, `cni0`, `flannel.1`) configured in `nftables_docker_aware_bridge_interfaces` (`iifname "docker0" accept`) in the `forward` chain. Return traffic is automatically permitted via existing connection tracking (`ct state established,related`).
+4. **Systemd Drop-In for Foreign Table Preservation**: Deploys a systemd drop-in override (`10-preserve-foreign-tables.conf`) to prevent vendor unit commands from flushing foreign tables:
+   - On Debian/Ubuntu, overrides vendor `ExecStop=/usr/sbin/nft flush ruleset` with `ExecStop=-/usr/sbin/nft delete table inet filter` (and `table inet nftables_nat` when NAT is enabled).
+   - On RHEL/Rocky Linux, overrides vendor `ExecReload=/sbin/nft 'flush ruleset; include "/etc/sysconfig/nftables.conf";'` with `ExecReload=/usr/sbin/nft -f /etc/sysconfig/nftables.conf`, and overrides vendor `ExecStop=/sbin/nft flush ruleset` with scoped table deletion.
+   - The role reloads the service instead of restarting it on configuration changes. With the drop-in in place, `systemctl restart nftables` and `systemctl stop nftables` then only remove the role's own tables, preserving foreign tables created by Docker, K3s, or other container engines.
 
 #### Published Ports Consequence (Inbound Container Access)
 
@@ -203,9 +207,9 @@ nftables_user_defined_forward_rules:
 | `nftables_configure_logrotate` | Enable/disable logrotate configuration for NFTables logs | `true` |
 | `nftables_backup_enabled` | Enable/disable keeping a timestamped backup before a file is overwritten | `true` |
 | `nftables_configure_security_rules` | Enable/disable additional security protection rules | `false` |
-| `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve Docker iptables rules and isolate NAT | `false` |
+| `nftables_docker_aware` | Enable Docker-aware firewall mode to preserve foreign tables (Docker, K3s) across reload/stop/restart and isolate NAT | `false` |
 | `nftables_ipv6_enabled` | Enable or disable IPv6 support. When false, emits a blanket `meta nfproto ipv6 drop` in all three base chains and omits the ICMPv6/MLD rules; when true, IPv6 addresses are additionally accepted in rule lists | `false` |
-| `nftables_docker_aware_bridge_interfaces` | List of bridge interfaces allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
+| `nftables_docker_aware_bridge_interfaces` | List of container interfaces (examples `docker0`, `cni0`, `flannel.1`) allowed for container egress forwarding in Docker-aware mode | `["docker0"]` |
 | `nftables_reboot_required` | Flag indicating whether a reboot is required after configuration changes | `false` |
 | `nftables_reboot_message` | Message displayed before system reboot | `"Reboot initialized by Ansible"` |
 | `nftables_reboot_wait` | Enable/disable waiting for system after reboot | `true` |

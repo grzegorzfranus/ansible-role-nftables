@@ -1,0 +1,19 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+# =============================================================================
+# NFTables Systemd Override Configuration
+# =============================================================================
+# In Docker-aware mode, overrides default ExecReload and ExecStop commands
+# to avoid flushing foreign Netfilter tables (such as Docker or K3s tables).
+# Only the tables managed by this role are reloaded or deleted on service stop.
+# =============================================================================
+
+[Service]
+ExecReload=
+ExecReload=/usr/sbin/nft -f {{ __nftables_config_path }}
+ExecStop=
+ExecStop=-/usr/sbin/nft delete table inet filter
+{% if (nftables_nat_prerouting_enabled | default(false) | bool) or (nftables_nat_output_enabled | default(false) | bool) or (nftables_nat_postrouting_enabled | default(false) | bool) %}
+ExecStop=-/usr/sbin/nft delete table inet nftables_nat
+{% endif %}

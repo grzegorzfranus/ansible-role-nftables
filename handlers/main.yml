@@ -6,7 +6,7 @@
 # service management operations. Handlers run only once at the end of plays,
 # even if notified multiple times.
 #
-# Each handler restarts a specific service after configuration changes.
+# Each handler reloads or restarts a specific service after configuration changes.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -22,9 +22,11 @@
     not (ansible_facts['virtualization_type'] is defined and
       ansible_facts['virtualization_type'] == 'docker')
 
-- name: NFTables | handlers | Restart nftables service
-  listen: "NFTables | handlers | Restart nftables service"
+- name: NFTables | handlers | Reload nftables service
+  listen:
+    - "NFTables | handlers | Reload nftables service"
+    - "NFTables | handlers | Restart nftables service"
   become: true
   ansible.builtin.service:
     name: "{{ __nftables_service_name }}"
-    state: restarted
+    state: reloaded
