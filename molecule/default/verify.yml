@@ -162,6 +162,24 @@
       when: _verify_docker_aware | bool
       failed_when: "'docker0' not in _docker_forward_check_.stdout"
 
+    - name: Verify | Check user-defined forward rules precede the docker0 bridge accept (on docker-aware test node)
+      ansible.builtin.assert:
+        that:
+          - "'jump user_defined_forward' in _docker_forward_check_.stdout"
+          - >-
+            _docker_forward_check_.stdout.find('jump user_defined_forward') <
+            _docker_forward_check_.stdout.find('iifname "docker0" accept')
+        fail_msg: "jump user_defined_forward must come before the docker-aware bridge accept in the forward chain"
+        success_msg: "User-defined forward rules are evaluated before the docker-aware bridge accepts"
+      when: _verify_docker_aware | bool
+
+    - name: Verify | Check for the container deny rule in user_defined_forward chain
+      ansible.builtin.command:
+        cmd: nft list chain inet filter user_defined_forward
+      register: _user_forward_chain_
+      changed_when: false
+      failed_when: "'iifname \"docker0\" oifname \"eth0\"' not in _user_forward_chain_.stdout"
+
     - name: Verify | Check for interface matching in user_defined_input chain
       ansible.builtin.command:
         cmd: nft list chain inet filter user_defined_input

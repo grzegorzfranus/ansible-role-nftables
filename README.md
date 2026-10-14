@@ -172,7 +172,19 @@ nftables_docker_aware_bridge_interfaces:
 
 1. **Scoped Table Flush**: In the ruleset templates, replaces global `flush ruleset` with scoped table replacement (`table inet filter` declare/delete/define), ensuring the configuration itself only replaces the role's own filter table rather than wiping the entire ruleset.
 2. **Dedicated NAT Table**: Relocates the role's NAT rules from `table ip nat` to a dedicated `table inet nftables_nat`. This prevents collision with Docker's native NAT chains (`DOCKER`, `POSTROUTING`).
-3. **Container Egress Forwarding**: Automatically allows outbound container traffic from specified container interfaces (examples `docker0`, `cni0`, `flannel.1`) configured in `nftables_docker_aware_bridge_interfaces` (`iifname "docker0" accept`) in the `forward` chain. Return traffic is automatically permitted via existing connection tracking (`ct state established,related`).
+3. **Container Egress Forwarding**: Automatically allows outbound container traffic from specified container interfaces (examples `docker0`, `cni0`, `flannel.1`) configured in `nftables_docker_aware_bridge_interfaces` (`iifname "docker0" accept`) in the `forward` chain. Return traffic is automatically permitted via existing connection tracking (`ct state established,related`). When `nftables_user_defined_forward_enabled` is `true`, the `user_defined_forward` chain is evaluated **before** these bridge accepts, so a user-defined forward rule can deny selected container traffic; packets that match no user rule fall through to the bridge accepts.
+
+```yaml
+nftables_user_defined_forward_enabled: true
+nftables_user_defined_forward_rules:
+  - in_interface: "docker0"
+    out_interface: "wg0"
+    protocol: "tcp"
+    port: 2202
+    state: "new"
+    action: "drop"
+    comment: "Deny SSH from containers to the WireGuard mesh"
+```
 4. **Systemd Drop-In for Foreign Table Preservation**: Deploys a systemd drop-in override (`10-preserve-foreign-tables.conf`) to prevent vendor unit commands from flushing foreign tables:
    - On Debian/Ubuntu, overrides vendor `ExecStop=/usr/sbin/nft flush ruleset` with `ExecStop=-/usr/sbin/nft delete table inet filter` (and `table inet nftables_nat` when NAT is enabled).
    - On RHEL/Rocky Linux, overrides vendor `ExecReload=/sbin/nft 'flush ruleset; include "/etc/sysconfig/nftables.conf";'` with `ExecReload=/usr/sbin/nft -f /etc/sysconfig/nftables.conf`, and overrides vendor `ExecStop=/sbin/nft flush ruleset` with scoped table deletion.
@@ -195,6 +207,7 @@ nftables_user_defined_forward_rules:
 
 - **Legacy → Docker-Aware**: When switching from legacy to Docker-aware mode, the final legacy run already flushed existing tables. After setting `nftables_docker_aware: true` and applying the role, restart the Docker daemon once (`sudo systemctl restart docker`) to recreate Docker's iptables rules if needed.
 - **Docker-Aware → Legacy**: Switching back to legacy mode will issue a `flush ruleset` on next run, removing Docker's rules until the Docker daemon is restarted.
+- **Forward rule order**: The `user_defined_forward` chain is evaluated before the Docker-aware bridge accepts. A user-defined forward rule that also matches traffic from a bridge interface (for example a broad `drop` by destination) now applies to container traffic too; scope such rules with `in_interface` if containers must stay unaffected.
 
 ## 📊 Variables
 
