@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v3.2.0...v3.3.0) (2026-10-14)
+
+
+### Features
+
+* **nftables:** evaluate user-defined forward rules before Docker-aware bridge accepts ([#103](https://github.com/grzegorzfranus/ansible-role-nftables/issues/103)) ([dcf76b7](https://github.com/grzegorzfranus/ansible-role-nftables/commit/dcf76b7a512848d7ed3e8f5e71a00c181805fa96))
+
 ## [3.2.0](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v3.1.1...v3.2.0) (2026-09-29)
 
 
