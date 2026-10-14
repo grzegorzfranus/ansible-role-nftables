@@ -96,16 +96,17 @@ table inet filter {
         # Allow established/related connections
         jump existing
 
+        # Jump to user-defined forward chain if enabled; evaluated before the docker-aware bridge
+        # accepts so that user rules can also deny container traffic, unmatched packets fall through
+        {% if nftables_user_defined_forward_enabled | default(false) %}
+        jump user_defined_forward
+        {% endif %}
+
         # Allow container egress and inter-container traffic in docker-aware mode
         {% if nftables_docker_aware | default(false) %}
         {% for bridge_if in nftables_docker_aware_bridge_interfaces | default(['docker0']) %}
         iifname "{{ bridge_if }}" accept comment "Allow container egress and inter-container traffic"
         {% endfor %}
-        {% endif %}
-
-        # Jump to user-defined forward chain if enabled
-        {% if nftables_user_defined_forward_enabled | default(false) %}
-        jump user_defined_forward
         {% endif %}
 
         # Jump to security protection chain if enabled (evaluated after whitelists)

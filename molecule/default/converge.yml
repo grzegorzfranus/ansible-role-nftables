@@ -72,6 +72,7 @@
 
     # Enable common test rules
     nftables_user_defined_input_enabled: true
+    nftables_user_defined_forward_enabled: true
     nftables_user_defined_output_enabled: true
 
     # Test input rules
@@ -90,6 +91,18 @@
         comment: "Allow SSH for testing"
 
     # Test output rules
+    # Test forward rules: a container deny that must precede the docker-aware bridge accepts
+    nftables_user_defined_forward_rules:
+      - in_interface: "docker0"
+        out_interface: "eth0"
+        protocol: "tcp"
+        port: "2202"
+        state: "new"
+        action: "drop"
+        counter: true
+        log: false
+        comment: "Deny SSH from containers through eth0"
+
     nftables_user_defined_output_rules:
       - out_interface: "eth0"
         protocol: "tcp"
