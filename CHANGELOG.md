@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.3](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v3.3.2...v3.3.3) (2026-10-19)
+
+
+### CI/CD
+
+* **release:** delete the release PR's CI run before the Merge Check Gate status ([#111](https://github.com/grzegorzfranus/ansible-role-nftables/issues/111)) ([#112](https://github.com/grzegorzfranus/ansible-role-nftables/issues/112)) ([8352b68](https://github.com/grzegorzfranus/ansible-role-nftables/commit/8352b68b1cfecaec5474d312960ca48a29c6d1d3))
+
 ## [3.3.2](https://github.com/grzegorzfranus/ansible-role-nftables/compare/v3.3.1...v3.3.2) (2026-10-18)
 
 
